@@ -11,6 +11,7 @@ importFrom("utils", "read.table")
 export("blockpfGaussianOpt",
        "pfLineartBS",
        "pfLineartBSOnlinePlot",
+       "radiataBS", 
        "pfNonlinBS",
        "simGaussian",
        "simLineart",

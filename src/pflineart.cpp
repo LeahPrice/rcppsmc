@@ -70,16 +70,20 @@ extern "C" SEXP pfLineartBS(SEXP dataS, SEXP partS, SEXP usefS, SEXP funS) {
         smc::sampler<cv_state> Sampler(lNumber, SMC_HISTORY_NONE);  
         smc::moveset<cv_state> Moveset(fInitialise, fMove, NULL);
 
-        Sampler.SetResampleParams(SMC_RESAMPLE_RESIDUAL, 0.5);
+        Sampler.SetResampleParams(SMC_RESAMPLE_RESIDUAL, 1.01 * lNumber);
+        //Sampler.SetResampleParams(SMC_RESAMPLE_RESIDUAL, 0.5);
         Sampler.SetMoveSet(Moveset);
         Sampler.Initialise();
 
-        Rcpp::NumericVector Xm(lIterates), Xv(lIterates), Ym(lIterates), Yv(lIterates);
+        Rcpp::NumericVector Xm(lIterates), Xv(lIterates), Ym(lIterates), Yv(lIterates), IntermNC(lIterates), myRatioNC(lIterates), myESS(lIterates);
 
         Xm(0) = Sampler.Integrate(integrand_mean_x, NULL);
         Xv(0) = Sampler.Integrate(integrand_var_x, (void*)&Xm(0));
         Ym(0) = Sampler.Integrate(integrand_mean_y, NULL);
         Yv(0) = Sampler.Integrate(integrand_var_y, (void*)&Ym(0));
+        IntermNC(0) = Sampler.GetLogNCStep();
+        myRatioNC(0) = Sampler.GetLogNCPath();
+        myESS(0) = Sampler.GetESS();
 
         for(int n=1; n < lIterates; ++n) {
             Sampler.Iterate();
@@ -88,6 +92,9 @@ extern "C" SEXP pfLineartBS(SEXP dataS, SEXP partS, SEXP usefS, SEXP funS) {
             Xv(n) = Sampler.Integrate(integrand_var_x, (void*)&Xm(n));
             Ym(n) = Sampler.Integrate(integrand_mean_y, NULL);
             Yv(n) = Sampler.Integrate(integrand_var_y, (void*)&Ym(n));
+            IntermNC(n) = Sampler.GetLogNCStep();
+            myRatioNC(n) = Sampler.GetLogNCPath();
+			myESS(n) = Sampler.GetESS();
 
             if (useF) f(Xm, Ym);
         }
@@ -95,7 +102,10 @@ extern "C" SEXP pfLineartBS(SEXP dataS, SEXP partS, SEXP usefS, SEXP funS) {
         return Rcpp::DataFrame::create(Rcpp::Named("Xm") = Xm,
                                        Rcpp::Named("Xv") = Xv,
                                        Rcpp::Named("Ym") = Ym,
-                                       Rcpp::Named("Yv") = Yv);
+                                       Rcpp::Named("Yv") = Yv,
+                                       Rcpp::Named("IntermNC") = IntermNC,
+                                       Rcpp::Named("MyRatioNC") = myRatioNC,
+                                       Rcpp::Named("MyESS") = myESS);
     }
     catch(smc::exception  e) {
         Rcpp::Rcout << e;       	// not cerr, as R doesn't like to mix with i/o 
