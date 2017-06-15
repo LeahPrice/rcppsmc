@@ -29,6 +29,8 @@
 #include <algorithm>
 #include <cstdlib>
 #include <iostream>
+#include <RcppArmadillo.h>
+#include <typeinfo>
 
 #include "rngR.h"
 #include "history.h"
@@ -44,8 +46,8 @@ enum ResampleType { SMC_RESAMPLE_MULTINOMIAL = 0,
 
 ///Storage types for the history of the particle system. 
 enum HistoryType { SMC_HISTORY_NONE = 0, 
-                   SMC_HISTORY_RAM };
-
+                   SMC_HISTORY_RAM };	
+				   
 namespace smc {
 
 /// A template class for an interacting particle system suitable for SMC sampling
@@ -66,14 +68,14 @@ protected:
   ///The effective sample size at which resampling should be used.
   double dResampleThreshold;
   ///Structure used internally for resampling.
-  double* dRSWeights;
+  arma::vec dRSWeights;
   ///Structure used internally for resampling.
-  unsigned int* uRSCount;
+  arma::Col<unsigned int> uRSCount;
   ///Structure used internally for resampling.
-  unsigned int* uRSIndices;
+  arma::Col<unsigned int> uRSIndices;
   
   ///The particles within the system.
-  particle<Space> *pParticles;
+  particle<Space> pParticles;
   ///The set of moves available.
   moveset<Space> Moves;
   
@@ -86,7 +88,6 @@ protected:
   HistoryType htHistoryMode;
   ///The historical process associated with the particle system.
   history<particle<Space> > History;
-  
   ///The current log sum of the unnormalised weights
   double CurrLogSumExp;
   ///An estimate of the overall ratio of normalising constants
@@ -104,7 +105,7 @@ public:
   ///Calculates and Returns the Effective Sample Size.
   double GetESS(void) const;
   ///Returns a pointer to the History of the particle system
-  const history<particle<Space> > * GetHistory(void) const { return &History; }
+  const history<particle<Space> > * GetHistory(void) const { return &History; }																												   
   ///Returns the current estimate of the log normalising constant ratio over the entire path
   double GetLogNCPath(void) const { return dlogNCPath; }
   ///Returns the current estimate of the log normalising constant ratio over the last step
@@ -115,12 +116,14 @@ public:
   double GetNCStep(void) const { return exp(dlogNCIt); }
   ///Returns the number of particles within the system.
   long GetNumber(void) const {return N;}
-  ///Return the value of particle n
-  const Space &  GetParticleValue(int n) const { return pParticles[n].GetValue(); }
-  ///Return the logarithmic unnormalized weight of particle n
-  double GetParticleLogWeight(int n) const { return pParticles[n].GetLogWeight(); }
-  ///Return the unnormalized weight of particle n
-  double GetParticleWeight(int n) const { return pParticles[n].GetWeight(); }
+  ///Return the value of particles
+  const std::vector<Space> &  GetParticleValue(void) { return pParticles.GetValue(); }
+  ///Return the logarithmic unnormalized weights of particles
+  arma::vec GetParticleLogWeight(void) { return pParticles.GetLogWeight(); }
+  ///Return the unnormalized weights of particls
+  arma::vec GetParticleWeight(void) { return pParticles.GetWeight(); }  
+  ///Return the unnormalized weights of particls
+  double GetParticleWeightN(int n) { return pParticles.GetWeightN(n); }  
   ///Returns the current evolution time of the system.
   long GetTime(void) const {return T;}
   ///Initialise the sampler and its constituent particles.
@@ -142,15 +145,9 @@ public:
   ///Resample the particle set using the specified resmpling scheme.
   void Resample(ResampleType lMode);
   ///Sets the entire moveset to the one which is supplied
-  void SetMoveSet(moveset<Space>& pNewMoveset) { Moves = pNewMoveset; }
+  void SetMoveSet(moveset<Space>& pNewMoveset) {Moves = pNewMoveset;}
   ///Set Resampling Parameters
   void SetResampleParams(ResampleType rtMode, double dThreshold);
-  ///Dump a specified particle to the specified output stream in a human readable form
-  std::ostream & StreamParticle(std::ostream & os, long n);
-  ///Dump the entire particle set to the specified output stream in a human readable form
-  std::ostream & StreamParticles(std::ostream & os);
-  ///Allow a human readable version of the sampler configuration to be produced using the stream operator.
-  /// std::ostream & operator<< (std::ostream& os, sampler<Space> & s);
   
 private:
   ///Duplication of smc::sampler is not currently permitted.
@@ -175,82 +172,46 @@ protected:
 /// \tparam Space The class used to represent a point in the sample space.
 template <class Space>
 sampler<Space>::sampler(long lSize, HistoryType htHM)
-{
-  pRng = new rng();
+{pRng = new rng();
   N = lSize;
-  pParticles = new particle<Space>[lSize];
   
-  //Allocate some storage for internal workspaces
-  dRSWeights = new double[N];
-  ///Structure used internally for resampling.
-  uRSCount  = new unsigned[N];
-  ///Structure used internally for resampling.
-  uRSIndices = new unsigned[N];
+   //particle<Space>* pParticles; 
+  //pParticles = new particle<Space>;
   
-  //Some workable defaults.
+  // //Allocate some storage for internal workspaces
+  // dRSWeights = new double[N];
+  // ///Structure used internally for resampling.
+  // uRSCount  = new unsigned[N];
+  // ///Structure used internally for resampling.
+  // uRSIndices = new unsigned[N];
+  
+  //Some workable defaults.	
   htHistoryMode = htHM;
   rtResampleMode = SMC_RESAMPLE_STRATIFIED;
   dResampleThreshold = 0.5 * N;
 }
-
-#if 0
-/// The constructor prepares a sampler for use but does not assign any moves to the moveset, initialise the particles
-/// or otherwise perform any sampling related tasks. Its main function is to allocate a region of memory in which to
-/// store the particle set and to initialise a random number generator.
-///
-/// \param lSize The number of particles present in the ensemble (at time 0 if this is a variable quantity)
-/// \param htHM The history mode to use: set this to SMC_HISTORY_RAM to store the whole history of the system and SMC_HISTORY_NONE to avoid doing so.
-/// \param rngType The type of random number generator to use
-/// \param rngSeed The seed to use for the random number generator
-/// \tparam Space The class used to represent a point in the sample space.
-template <class Space>
-sampler<Space>::sampler(long lSize, HistoryType htHM, const gsl_rng_type* rngType, unsigned long rngSeed)
-{
-  pRng = new rng(rngType, rngSeed);
-  N = lSize;
-  pParticles = new particle<Space>[lSize];
-  
-  //Allocate some storage for internal workspaces
-  dRSWeights = new double[N];
-  ///Structure used internally for resampling.
-  uRSCount  = new unsigned[N];
-  ///Structure used internally for resampling.
-  uRSIndices = new unsigned[N];
-  
-  //Some workable defaults.
-  htHistoryMode  = SMC_HISTORY_RAM;
-  rtResampleMode = SMC_RESAMPLE_STRATIFIED;
-  dResampleThreshold = 0.5 * N;
-}
-#endif
 
 template <class Space>
 sampler<Space>::~sampler()
 {
   delete pRng;
   
-  if (pParticles)
-    delete [] pParticles;
-  if (dRSWeights)
-    delete [] dRSWeights;
-  if (uRSCount)
-    delete [] uRSCount;
-  if (uRSIndices)
-    delete [] uRSIndices;
+  //if (pParticles)
+    //delete pParticles;
+  //if (dRSWeights)
+  //  delete [] dRSWeights;
+  //if (uRSCount)
+  //  delete [] uRSCount;
+  //if (uRSIndices)
+  //  delete [] uRSIndices;
 }
 
 
 template <class Space>
 double sampler<Space>::GetESS(void) const
 {
-  long double sum = 0;
-  long double sumsq = 0;
-  
-  for(int i = 0; i < N; i++) 
-    sum += expl(pParticles[i].GetLogWeight());
-  
-  for(int i = 0; i < N; i++)
-    sumsq += expl(2.0*(pParticles[i].GetLogWeight()));
+	double sum = arma::sum(exp(pParticles.GetLogWeight()));
+	double sumsq = arma::sum(exp(2.0*pParticles.GetLogWeight()));
   
   return expl(-log(sumsq) + 2*log(sum));
 }
@@ -258,14 +219,8 @@ double sampler<Space>::GetESS(void) const
 template <class Space>
 double sampler<Space>::GetLogSumExp(void) const
 {
-  long double sum = 0;
-  
-  //Normalise the weights
-  double dMaxWeight = -std::numeric_limits<double>::infinity();
-  for(int i = 0; i < N; i++)
-    dMaxWeight = std::max(dMaxWeight, pParticles[i].GetLogWeight());
-  for(int i = 0; i < N; i++)
-    sum += exp(pParticles[i].GetLogWeight() - dMaxWeight);
+	double dMaxWeight = arma::max(pParticles.GetLogWeight());
+	double sum = arma::sum(exp(pParticles.GetLogWeight() - dMaxWeight*arma::ones(N)));
   
   return (dMaxWeight + log(sum));
 }
@@ -289,18 +244,21 @@ void sampler<Space>::Initialise(void)
   dlogNCIt = 0;
   dlogNCPath = 0;
   
-  for(int i = 0; i < N; i++) 
-    pParticles[i] = Moves.DoInit(pRng);
   
+  // particle<Space> myParticles; 
+  // myParticles = Moves.DoInit(pRng);
+  // pParticles = myParticles;
+  pParticles = Moves.DoInit(pRng);
+
   //Scaling weights by 1/N (mostly for evidence computation)
-  for(int i = 0; i < N; i++)
-  pParticles[i].SetLogWeight(pParticles[i].GetLogWeight() - log(static_cast<double>(N)));
+	
+	pParticles.SetLogWeight(pParticles.GetLogWeight() - log(static_cast<double>(N))*arma::ones(N));
   
-  if(htHistoryMode != SMC_HISTORY_NONE) {
-    while(History.Pop());
+   if(htHistoryMode != SMC_HISTORY_NONE) {
+    while(History.Pop()!=NULL);
     nResampled = 0;
     History.Push(N, pParticles, 0, historyflags(nResampled));
-  }
+  }    
   
   //Estimate the normalising constant
   CurrLogSumExp = GetLogSumExp();
@@ -308,8 +266,7 @@ void sampler<Space>::Initialise(void)
   dlogNCPath += dlogNCIt;
   
   //Normalise the weights to sensible values....
-  for(int i = 0; i < N; i++)
-    pParticles[i].SetLogWeight(pParticles[i].GetLogWeight() - CurrLogSumExp);
+  pParticles.SetLogWeight(pParticles.GetLogWeight() - CurrLogSumExp*arma::ones(N));
   
   //Check if the ESS is below some reasonable threshold and resample if necessary.
   double ESS = GetESS();
@@ -320,6 +277,9 @@ void sampler<Space>::Initialise(void)
   else {
   nResampled = 0;
   }
+  //A possible MCMC step could be included here.
+    if(Moves.DoMCMC(0,pParticles, pRng))
+      nAccepted++;
   
   return;
 }
@@ -338,8 +298,8 @@ double sampler<Space>::Integrate(double(*pIntegrand)(const Space&,void*), void *
   long double wSum = 0;
   for(int i =0; i < N; i++)
   {
-    rValue += expl(pParticles[i].GetLogWeight()) * pIntegrand(pParticles[i].GetValue(), pAuxiliary);
-    wSum  += expl(pParticles[i].GetLogWeight());
+    rValue += expl(pParticles.GetLogWeightN(i)) * pIntegrand(pParticles.GetValueN(i), pAuxiliary);
+    wSum  += expl(pParticles.GetLogWeightN(i));
   }
   
   rValue /= wSum;
@@ -388,6 +348,7 @@ void sampler<Space>::IterateBack(void)
   if(htHistoryMode == SMC_HISTORY_NONE)
     throw SMC_EXCEPTION(SMCX_MISSING_HISTORY, "An attempt to undo an iteration was made; unforunately, the system history has not been stored.");
   
+  //History.Pop(&N, pParticles, &nAccepted, NULL);
   History.Pop(&N, &pParticles, &nAccepted, NULL);
   T--;
   return;
@@ -397,9 +358,7 @@ template <class Space>
 double sampler<Space>::IterateEss(void)
 {
   //Initially, the current particle set should be appended to the historical process.
-  if(htHistoryMode != SMC_HISTORY_NONE)
-    History.Push(N, pParticles, nAccepted, historyflags(nResampled));
-  
+    
   nAccepted = 0;
   
   //Move the particle set.
@@ -409,10 +368,9 @@ double sampler<Space>::IterateEss(void)
   CurrLogSumExp = GetLogSumExp();
   dlogNCIt = CalcLogNC();
   dlogNCPath += dlogNCIt;
-  
+		
   //Normalise the weights
-  for(int i = 0; i < N; i++)
-    pParticles[i].SetLogWeight(pParticles[i].GetLogWeight() - CurrLogSumExp);
+  pParticles.SetLogWeight(pParticles.GetLogWeight()  - CurrLogSumExp*arma::ones(N));
   
   //Check if the ESS is below some reasonable threshold and resample if necessary.
   //A mechanism for setting this threshold is required.
@@ -424,10 +382,8 @@ double sampler<Space>::IterateEss(void)
   else
     nResampled = 0;
   //A possible MCMC step could be included here.
-  for(int i = 0; i < N; i++) {
-    if(Moves.DoMCMC(T+1,pParticles[i], pRng))
+    if(Moves.DoMCMC(T+1,pParticles, pRng))
       nAccepted++;
-  }
   // Increment the evolution time.
   T++;
   
@@ -444,132 +400,112 @@ void sampler<Space>::IterateUntil(long lTerminate)
 template <class Space>
 void sampler<Space>::MoveParticles(void)
 {
-  for(int i = 0; i < N; i++) {
-    Moves.DoMove(T+1,pParticles[i], pRng);
+    Moves.DoMove(T+1,pParticles, pRng);
     //  pParticles[i].Set(pNew.value, pNew.logweight);
-  }
 }
 
 template <class Space>
 void sampler<Space>::Resample(ResampleType lMode)
 {
   //Resampling is done in place.
-  double dWeightSum = 0;
   unsigned uMultinomialCount;
   
   //First obtain a count of the number of children each particle has.
   switch(lMode) {
   case SMC_RESAMPLE_MULTINOMIAL:
     //Sample from a suitable multinomial vector
-    for(int i = 0; i < N; ++i)
-      dRSWeights[i] = pParticles[i].GetWeight();
-    pRng->Multinomial(N,N,dRSWeights,uRSCount);
+    dRSWeights = pParticles.GetWeight();
+	//uRSCount = arma::zeros<arma::Col<unsigned int> >((int)N);
+    //pRng->Multinomial(N,N,dRSWeights,uRSCount.memptr());
+    uRSCount = pRng->Multinomial(N,N,dRSWeights);
     break;
     
+	
   case SMC_RESAMPLE_RESIDUAL:
-    //Sample from a suitable multinomial vector and add the integer replicate
-    //counts afterwards.
-    dWeightSum = 0;
-    for(int i = 0; i < N; ++i) {
-      dRSWeights[i] = pParticles[i].GetWeight();
-      dWeightSum += dRSWeights[i];
-    }
-    
-    uMultinomialCount = N;
-    for(int i = 0; i < N; ++i) {
-      dRSWeights[i] = N*dRSWeights[i] / dWeightSum;
-      uRSIndices[i] = unsigned(floor(dRSWeights[i])); //Reuse temporary storage.
-      dRSWeights[i] = (dRSWeights[i] - uRSIndices[i]);
-      uMultinomialCount -= uRSIndices[i];
-    }
-    pRng->Multinomial(uMultinomialCount,N,dRSWeights,uRSCount);
-    for(int i = 0; i < N; ++i) 
-      uRSCount[i] += uRSIndices[i];
-    break;
-    
-    
+    dRSWeights = exp(log((double)N)*arma::ones(N) + pParticles.GetLogWeight() - GetLogSumExp()*arma::ones(N));
+	
+	uRSIndices = arma::zeros<arma::Col<unsigned int> >((int)N);
+	//uRSCount = arma::zeros<arma::Col<unsigned int> >((int)N);
+	
+	for(int i = 0; i < N; ++i)
+		uRSIndices(i) = unsigned(floor(dRSWeights(i))); //Reuse temporary storage.
+	dRSWeights = dRSWeights - uRSIndices;
+	uMultinomialCount = N - arma::sum(uRSIndices);
+	
+	//pRng->Multinomial(uMultinomialCount,N,dRSWeights,uRSCount.memptr());
+	uRSCount = pRng->Multinomial(uMultinomialCount,N,dRSWeights);
+	uRSCount += uRSIndices;
+	
+	break;
+	
   case SMC_RESAMPLE_STRATIFIED:
   default:
   {
     // Procedure for stratified sampling
-    dWeightSum = 0;
-    double dWeightCumulative = 0;
-    // Calculate the normalising constant of the weight vector
-    for(int i = 0; i < N; i++)
-      dWeightSum += exp(pParticles[i].GetLogWeight());
     //Generate a random number between 0 and 1/N times the sum of the weights
     double dRand = pRng->Uniform(0,1.0 / ((double)N));
     
-    int j = 0, k = 0;
-    for(int i = 0; i < N; ++i)
-      uRSCount[i] = 0;
-    
-    dWeightCumulative = exp(pParticles[0].GetLogWeight()) / dWeightSum;
+    arma::vec dWeightCumulative = arma::cumsum(exp(pParticles.GetLogWeight() - GetLogSumExp()));
+	
+    int k = 0;
+	int j = 0;
+	uRSCount = arma::zeros<arma::Col<unsigned int> >((int)N);
     while(j < N) {
-      while((dWeightCumulative - dRand) > ((double)j)/((double)N) && j < N) {
-        uRSCount[k]++;
+      while((dWeightCumulative(k) - dRand) > ((double)j)/((double)N) && j < N) {
+        uRSCount(k)++;
         j++;
         dRand = pRng->Uniform(0,1.0 / ((double)N));
       }
       k++;
-      dWeightCumulative += exp(pParticles[k].GetLogWeight()) / dWeightSum;
     }
     break;
   }
-    
+  
   case SMC_RESAMPLE_SYSTEMATIC:
   {
     // Procedure for stratified sampling but with a common RV for each stratum
-    dWeightSum = 0;
-    double dWeightCumulative = 0;
-    // Calculate the normalising constant of the weight vector
-    for(int i = 0; i < N; i++) 
-      dWeightSum += exp(pParticles[i].GetLogWeight());
     //Generate a random number between 0 and 1/N times the sum of the weights
     double dRand = pRng->Uniform(0,1.0 / ((double)N));
     
     int j = 0, k = 0;
-    for(int i = 0; i < N; ++i)
-      uRSCount[i] = 0;
-    
-    dWeightCumulative = exp(pParticles[0].GetLogWeight()) / dWeightSum;
-    while(j < N) {
-      while((dWeightCumulative - dRand) > ((double)j)/((double)N) && j < N) {
-        uRSCount[k]++;
+	uRSCount = arma::zeros<arma::Col<unsigned int> >((int)N);
+    arma::vec dWeightCumulative = arma::cumsum(exp(pParticles.GetLogWeight() - GetLogSumExp()*arma::ones(N)));
+    while(k < N) {
+      while((dWeightCumulative(k) - dRand) > ((double)j)/((double)N) && j < N) {
+        uRSCount(k)++;
         j++;
-        
       }
       k++;
-      dWeightCumulative += exp(pParticles[k].GetLogWeight()) / dWeightSum;
     }
     break;
-    
-  }
+   }
+   
   }
   
+  uRSIndices = arma::zeros<arma::Col<unsigned int> >((int)N);
   //Map count to indices to allow in-place resampling
   for (int i=0, j=0; i<N; ++i) {
-    if (uRSCount[i]>0) {
-      uRSIndices[i] = i;
-      while (uRSCount[i]>1) {
-        while (uRSCount[j]>0) ++j; // find next free spot
-        uRSIndices[j++] = i; // assign index
-        --uRSCount[i]; // decrement number of remaining offsprings
+    if (uRSCount(i)>0) {
+      uRSIndices(i) = i;
+      while (uRSCount(i)>1) {
+        while (uRSCount(j)>0) ++j; // find next free spot
+        uRSIndices(j++) = i; // assign index
+        --uRSCount(i); // decrement number of remaining offsprings
       }
     }
   }
-  
+  Space Current;
   //Perform the replication of the chosen.
   for(int i = 0; i < N ; ++i) {
-    if(uRSIndices[i] != static_cast<unsigned int>(i))
-      pParticles[i].SetValue(pParticles[uRSIndices[i]].GetValue());
-  for(int i = 0; i < N; i++){
-	  //Set equal normalised weights
-	  pParticles[i].SetLogWeight(- log(static_cast<double>(N)));
+	if(uRSIndices(i) != static_cast<unsigned int>(i)){
+	Current = pParticles.GetValueN((int)uRSIndices(i));
+    pParticles.SetValueN(Current,i);
 	}
   }
-} 
-
+  //Set equal normalised weights
+  pParticles.SetLogWeight(- log(static_cast<double>(N))*arma::ones(N));
+} 				
+	  
 /// This function configures the resampling parameters, allowing the specification of both the resampling
 /// mode and the threshold at which resampling is used.
 ///
@@ -595,42 +531,5 @@ void sampler<Space>::SetResampleParams(ResampleType rtMode, double dThreshold)
     dResampleThreshold = dThreshold;
 }
 
-template <class Space>
-std::ostream & sampler<Space>::StreamParticle(std::ostream & os, long n)
-{
-  os << pParticles[n] << std::endl;
-  return os;
-}
-
-template <class Space>
-std::ostream & sampler<Space>::StreamParticles(std::ostream & os)
-{
-  for(int i = 0; i < N - 1; i++)
-    os << pParticles[i] << std::endl;
-  os << pParticles[N-1] << std::endl;
-  
-  return os;
-}
-
-}
-
-namespace std {
-/// Produce a human-readable display of the state of an smc::sampler class using the stream operator.
-
-/// \param os The output stream to which the display should be made.
-/// \param s  The sampler which is to be displayed.
-template <class Space>
-std::ostream & operator<< (std::ostream & os, smc::sampler<Space> & s)
-{
-  os << "Sampler Configuration:" << std::endl;
-  os << "======================" << std::endl;
-  os << "Evolution Time:   " << s.GetTime() << std::endl;
-  os << "Particle Set Size:" << s.GetNumber() << std::endl;
-  os << std::endl;
-  os << "Particle Set:" << std::endl;
-  s.StreamParticles(os);
-  os << std::endl;
-  return os;
-}
 }
 #endif

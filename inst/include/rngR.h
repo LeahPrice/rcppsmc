@@ -30,7 +30,8 @@
 #ifndef __SMC_RNGR_H
 #define __SMC_RNGR_H 1.0
 
-#include <Rcpp.h>
+#include <RcppArmadillo.h>
+#include <typeinfo>
 
 namespace smc {
     /// A GSL-RNG information handling class (not templated)
@@ -98,21 +99,38 @@ namespace smc {
         //gsl_rng* GetRaw(void);
 
         ///Generate a multinomial random vector with parameters (n,w[1:k]) and store it in X
-        void Multinomial(unsigned n, unsigned k, double* w, unsigned* X) {
+        // Note could change this so that it gives X as an output rather than pointer to a basically empty X as input.
+		void Multinomial(unsigned n, unsigned k, arma::vec w, unsigned int * X) {		
             Rcpp::IntegerVector v(k);
-            double sum = 0.0;
-            unsigned int i;
-            for (i=0; i<k; i++) sum += w[i]; 
-            for (i=0; i<k; i++) w[i] = w[i] / sum;
-
+			w = w/arma::sum(w);
+			
+			double * w_mem = w.memptr();
+			
             // R sources:  rmultinom(int n, double* prob, int K, int* rN);
-            rmultinom(static_cast<int>(n), const_cast<double*>(w), static_cast<int>(k), &(v[0]));
-
-            for (i=0; i<k; i++) {
+            rmultinom(static_cast<int>(n), const_cast<double*>(w_mem), static_cast<int>(k), &(v[0]));
+			
+			for (unsigned int i=0; i<k; i++) {
                 X[i] = static_cast<unsigned int>(v[i]);
-            }
+            }			
+			
         }
 
+        ///Generate a multinomial random vector with parameters (n,w[1:k]) and store it in X
+        // Note could change this so that it gives X as an output rather than pointer to a basically empty X as input.
+		arma::Col<unsigned int> Multinomial(unsigned n, unsigned k, arma::vec w) {		
+            arma::Col<unsigned int> X(k);
+			Rcpp::IntegerVector v(k);
+			w = w/arma::sum(w);
+			
+			double * w_mem = w.memptr();
+			
+            // R sources:  rmultinom(int n, double* prob, int K, int* rN);
+            rmultinom(static_cast<int>(n), const_cast<double*>(w_mem), static_cast<int>(k), &(v[0]));
+			
+			X = Rcpp::as<arma::Col<unsigned int> >(v);
+			return X;
+        }
+		
         ///Returns a random integer generated uniformly between the minimum and maximum values specified
         long UniformDiscrete(long lMin, long lMax) {
             return ::Rf_runif(static_cast<double>(lMin), static_cast<double>(lMax));

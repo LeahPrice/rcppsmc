@@ -9,9 +9,10 @@ importFrom("stats", "rnorm", "rt")
 importFrom("utils", "read.table")
 
 export("blockpfGaussianOpt",
-       "pfLineartBS",
+		"pfLineartBS",
        "pfLineartBSOnlinePlot",
        "radiataBS", 
+       "radiataPPBS", 
        "pfNonlinBS",
        "simGaussian",
        "simLineart",

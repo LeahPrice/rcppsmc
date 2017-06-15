@@ -25,9 +25,10 @@
 // along with RcppSMC.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "smctc.h"
+#include <RcppArmadillo.h>
 
 namespace nonlinbs {
-    double logLikelihood(long lTime, const double & X);
+    arma::vec logLikelihood(long lTime, const std::vector<double> & X);
 
     smc::particle<double> fInitialise(smc::rng *pRng);
     long fSelect(long lTime, const smc::particle<double> & p, smc::rng *pRng);

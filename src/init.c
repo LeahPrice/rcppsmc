@@ -4,24 +4,26 @@
 #include <R_ext/Rdynload.h>
 
 /* FIXME: 
-   Check these declarations against the C/Fortran source code.
-*/
+ Check these declarations against the C/Fortran source code.
+ */
 
 /* .Call calls */
 extern SEXP blockpfGaussianOpt(SEXP, SEXP, SEXP);
 extern SEXP pfLineartBS(SEXP, SEXP, SEXP, SEXP);
 extern SEXP pfNonlinBS(SEXP, SEXP);
-extern SEXP radiataBS(SEXP, SEXP, SEXP, SEXP);
+extern SEXP radiataBS(SEXP, SEXP);
+extern SEXP radiataPPBS(SEXP, SEXP, SEXP);
 
 static const R_CallMethodDef CallEntries[] = {
-    {"blockpfGaussianOpt", (DL_FUNC) &blockpfGaussianOpt, 3},
-    {"pfLineartBS",        (DL_FUNC) &pfLineartBS,        4},
-    {"pfNonlinBS",         (DL_FUNC) &pfNonlinBS,         2},
-    {"radiataBS",         (DL_FUNC) &radiataBS,         2},
-    {NULL, NULL, 0}
+  {"blockpfGaussianOpt", (DL_FUNC) &blockpfGaussianOpt, 3},
+  {"pfLineartBS",        (DL_FUNC) &pfLineartBS,        4},
+  {"pfNonlinBS",         (DL_FUNC) &pfNonlinBS,         2},
+  {"radiataBS",         (DL_FUNC) &radiataBS,         2},
+  {"radiataPPBS",         (DL_FUNC) &radiataPPBS,         3},
+  {NULL, NULL, 0}
 };
 
 void R_init_RcppSMC(DllInfo *dll) {
-    R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
-    R_useDynamicSymbols(dll, FALSE);
+  R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
+  R_useDynamicSymbols(dll, FALSE);
 }

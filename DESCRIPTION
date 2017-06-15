@@ -13,4 +13,4 @@ Description: R access to the Sequential Monte Carlo Template Classes
 License: GPL (>= 2)
 LazyLoad: yes
 Imports: Rcpp (>= 0.11.0), methods
-LinkingTo: Rcpp
+LinkingTo: Rcpp, RcppArmadillo

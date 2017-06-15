@@ -4,7 +4,7 @@
 
 
 #include "smctc.h"
-#include "radiata.h"
+#include "radiata_pp.h"
 #include "rngR.h"
 #include <RcppArmadillo.h>
 
@@ -17,23 +17,20 @@
 #include <cmath>
 //#include <gsl/gsl_randist.h>
 
-namespace radiata {
+namespace radiata_pp {	
 const double std_alpha = 50.0;
 const double std_beta = 11.0;
 const double std_phi = 0.2;
-
 const double a_prior = 3.0;
 const double b_prior = pow(2.0*300.0*300.0,-1.0);
 }
-
 using namespace std;
-using namespace radiata;
+using namespace radiata_pp;
 
 
-// radiataBS() function callable from R via Rcpp::
-extern "C" SEXP radiataBS(SEXP dataS, SEXP partS) { 	
+// radiataPPBS() function callable from R via Rcpp:: 
+extern "C" SEXP radiataPPBS(SEXP dataS, SEXP tempS, SEXP partS) { 	
   
-  long lIterates;
   
   try {
     
@@ -47,15 +44,20 @@ extern "C" SEXP radiataBS(SEXP dataS, SEXP partS) {
     y.data_y = data.col(1);
     mean_x = arma::sum(y.data_x)/lIterates;
     
+    temps = Rcpp::as<arma::vec>(tempS); //so we expect a matrix
+    long lTemps = temps.n_rows;
+    
+    
     //Initialise and run the sampler
-    smc::sampler<rad_state> Sampler(lNumber, SMC_HISTORY_NONE);  
+    //smc::sampler<rad_state> Sampler(lNumber);  
+    smc::sampler<rad_state> Sampler(lNumber, SMC_HISTORY_RAM);
     smc::moveset<rad_state> Moveset(fInitialise, fMove, fMCMC);
     
     Sampler.SetResampleParams(SMC_RESAMPLE_SYSTEMATIC, 0.5);
     Sampler.SetMoveSet(Moveset);
     Sampler.Initialise();
     
-    Rcpp::NumericVector alpham(lIterates), alphav(lIterates), betam(lIterates), betav(lIterates), phim(lIterates), phiv(lIterates), ESS(lIterates);
+    Rcpp::NumericVector alpham(lTemps), alphav(lTemps), betam(lTemps), betav(lTemps), phim(lTemps), phiv(lTemps), ESS(lTemps);
     
     alpham(0) = Sampler.Integrate(integrand_mean_alpha, NULL);
     alphav(0) = Sampler.Integrate(integrand_var_alpha, (void*)&alpham(0));
@@ -66,7 +68,7 @@ extern "C" SEXP radiataBS(SEXP dataS, SEXP partS) {
     ESS(0) = Sampler.GetESS();
     
     
-    for(int n=1; n < lIterates; ++n) {
+    for(int n=1; n < lTemps; ++n) {
       Sampler.Iterate();
       
       alpham(n) = Sampler.Integrate(integrand_mean_alpha, NULL);
@@ -77,10 +79,9 @@ extern "C" SEXP radiataBS(SEXP dataS, SEXP partS) {
       phiv(n) = Sampler.Integrate(integrand_var_phi, (void*)&phim(n));
       ESS(n) = Sampler.GetESS();
     }
-    
-	double logNC = Sampler.GetLogNCPath();
 	
-    //return Rcpp::DataFrame::create		   
+	double logNC = Sampler.GetLogNCPath();
+								   
     return Rcpp::List::create(Rcpp::Named("alpham") = alpham,
                                    Rcpp::Named("alphav") = alphav,
                                    Rcpp::Named("betam") = betam,
@@ -97,7 +98,7 @@ extern "C" SEXP radiataBS(SEXP dataS, SEXP partS) {
   return R_NilValue;          	// to provide a return 
 }
 
-namespace radiata {
+namespace radiata_pp {
 double integrand_mean_alpha(const rad_state& s, void *){ return s.alpha;}
 double integrand_mean_beta(const rad_state& s, void *){ return s.beta;}
 double integrand_mean_phi(const rad_state& s, void *){ return s.phi;}
@@ -120,19 +121,20 @@ double integrand_var_phi(const rad_state& s, void* vmx){
   return d*d;
 }
 
+
 ///The function corresponding to the log likelihood at specified time and position (up to normalisation)
 
 ///  \param lTime The current time (i.e. the index of the current distribution)
 ///  \param X     The state to consider 
-arma::vec logWeight(long lTime, const std::vector<rad_state> & X){
+arma::vec logLikelihood(const std::vector<rad_state> & X){
   arma::vec log_normpdf(lNumber);
-  double mean_reg;
   double sigma;
+  arma::vec mean_reg(lIterates);
   
   for (unsigned int i=0; i<lNumber; i++){
-    mean_reg = X[i].alpha + X[i].beta*(y.data_x(lTime) - mean_x);
     sigma = pow(expl(X[i].phi),0.5);
-    log_normpdf(i) = -log(sigma) - pow(y.data_y(lTime) - mean_reg,2.0)/(2.0*sigma*sigma) -0.5*log(2.0*M_PI);
+    mean_reg = X[i].alpha*arma::ones(lIterates) + X[i].beta*(y.data_x - mean_x*arma::ones(lIterates));
+    log_normpdf(i) = arma::sum(-log(sigma)*arma::ones(lIterates) - pow(y.data_y - mean_reg,2.0)/(2.0*sigma*sigma) -0.5*log(2.0*M_PI)*arma::ones(lIterates));	
   }
   
   return log_normpdf;
@@ -142,23 +144,31 @@ arma::vec logWeight(long lTime, const std::vector<rad_state> & X){
 
 ///  \param lTime The current time (i.e. the index of the current distribution)
 ///  \param X     The state to consider 
-double logPosterior(long lTime, const rad_state & X){
-  
-  double log_prior = -log(1000.0)- pow(X.alpha - 3000.0,2.0)/(2.0*1000.0*1000.0) -log(100.0)- pow(X.beta - 185.0,2.0)/(2.0*100.0*100.0) + X.phi-1.0/b_prior/expl(X.phi) -X.phi*(a_prior+1.0);
+double logLikelihood_single(const rad_state & X){
   
   double sigma = pow(expl(X.phi),0.5);
+  arma::vec mean_reg = X.alpha*arma::ones(lIterates) + X.beta*(y.data_x - mean_x*arma::ones(lIterates));
+  double log_normpdf = arma::sum(-log(sigma)*arma::ones(lIterates) - pow(y.data_y - mean_reg,2.0)/(2.0*sigma*sigma) -0.5*log(2.0*M_PI)*arma::ones(lIterates));	
   
-  double log_normpdf;
-  
-  if (lTime==0){
-    double mean_reg = X.alpha + X.beta*(y.data_x(0) - mean_x);
-    log_normpdf = -log(sigma) - pow(y.data_y(0) - mean_reg,2.0)/(2.0*sigma*sigma) -0.5*log(2.0*M_PI);
-  } else{
-    arma::vec mean_reg = X.alpha*arma::ones(lTime) + X.beta*(y.data_x.rows(0,lTime-1) - mean_x*arma::ones(lTime));
-    log_normpdf = arma::sum(-log(sigma)*arma::ones(lTime) - pow(y.data_y.rows(0,lTime-1) - mean_reg,2.0)/(2.0*sigma*sigma) -0.5*log(2.0*M_PI)*arma::ones(lTime));
+  return log_normpdf;
+}
+
+///The function corresponding to the log posterior at specified time and position (up to normalisation)
+
+///  \param X     The state to consider 
+arma::vec logPrior(const std::vector<rad_state> & X){
+  arma::vec log_prior(lNumber);
+  for (unsigned int i=0; i<lNumber; i++){
+    log_prior(i) = -log(1000.0)- pow(X[i].alpha - 3000.0,2.0)/(2.0*1000.0*1000.0) -log(100.0)- pow(X[i].beta - 185.0,2.0)/(2.0*100.0*100.0) + X[i].phi-1.0/b_prior/expl(X[i].phi) -X[i].phi*(a_prior+1.0);
   }
-  
-  return (log_normpdf + log_prior);
+  return log_prior;
+}
+
+///The function corresponding to the log posterior at specified time and position (up to normalisation)
+
+///  \param X     The state to consider 
+double logPrior_single(const rad_state & X){
+  return -log(1000.0)- pow(X.alpha - 3000.0,2.0)/(2.0*1000.0*1000.0) -log(100.0)- pow(X.beta - 185.0,2.0)/(2.0*100.0*100.0) + X.phi-1.0/b_prior/expl(X.phi) -X.phi*(a_prior+1.0);
 }
 
 ///A function to initialise particles
@@ -175,7 +185,7 @@ smc::particle<rad_state> fInitialise(smc::rng *pRng)
     value[i].phi = log(pow(pRng->Gamma(3,pow(2.0*300.0*300.0,-1.0)),-1.0));
   }
   
-  return smc::particle<rad_state>(value,logWeight(0,value));
+  return smc::particle<rad_state>(value,temps(0)*logLikelihood(value));
 }
 
 ///The proposal function.
@@ -187,7 +197,7 @@ void fMove(long lTime, smc::particle<rad_state > & pFrom, smc::rng *pRng)
 {
   std::vector<rad_state> * cv_to = pFrom.GetValuePointer();  
   
-  pFrom.AddToLogWeight(logWeight(lTime, *cv_to));
+  pFrom.AddToLogWeight((temps(lTime) - temps(lTime-1))*logLikelihood(*cv_to));
 }
 
 ///The proposal function.
@@ -197,7 +207,6 @@ void fMove(long lTime, smc::particle<rad_state > & pFrom, smc::rng *pRng)
 ///\param pRng  A random number generator.
 int fMCMC(long lTime, smc::particle<rad_state > & pFrom, smc::rng *pRng)
 {
-  //Rcpp::Rcout << "lTime is " << lTime << std::endl;
   double MH_ratio;
   double dRand;
   int count = 0;
@@ -214,7 +223,7 @@ int fMCMC(long lTime, smc::particle<rad_state > & pFrom, smc::rng *pRng)
       cv_to_new.beta = pRng->Normal(cv_to->beta,std_beta);
       cv_to_new.phi = pRng->Normal(cv_to->phi,std_phi);
       
-      MH_ratio = exp(logPosterior(lTime, cv_to_new) - logPosterior(lTime, *cv_to));
+      MH_ratio = exp(temps(lTime)*(logLikelihood_single(cv_to_new) - logLikelihood_single(*cv_to)) + logPrior_single(cv_to_new) - logPrior_single(*cv_to));
       dRand = pRng->Uniform(0,1);
       
       if (MH_ratio>dRand){

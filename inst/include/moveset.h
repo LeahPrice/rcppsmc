@@ -59,7 +59,7 @@ namespace smc {
 	      int (*pfNewMCMC)(long,particle<Space> &,rng*));
       
       ///Initialise a particle
-      particle<Space> DoInit(rng * pRng) { return (*pfInitialise)(pRng);};
+      particle<Space> DoInit(rng * pRng) {return (*pfInitialise)(pRng);};
       ///Perform an MCMC move on a particle
       int DoMCMC(long lTime, particle<Space> & pFrom, rng* pRng);
       ///Select an appropriate move at time lTime and apply it to pFrom
@@ -75,12 +75,12 @@ namespace smc {
 
       /// \brief Set the MCMC function
       /// \param pfNewMCMC  The function which performs an MCMC move
-      void SetMCMCFunction(int (*pfNewMCMC)(long,particle<Space> &,rng*)) { pfMCMC = pfNewMCMC;}
+      void SetMCMCFunction(int (*pfNewMCMC)(long,particle<Space> &,rng*)) {pfMCMC = pfNewMCMC;}
 
       /// \brief Set the move selection function
       /// \param pfMoveSelectNew returns the index of move to perform at the specified time given a specified particle
       void SetMoveSelectionFunction(long (*pfMoveSelectNew)(long , const particle<Space> &, rng*))
-	{pfMoveSelect = pfMoveSelectNew; };
+	{pfMoveSelect = pfMoveSelectNew;};
 
       ///Set the individual move functions to the supplied array of such functions
       void SetMoveFunctions(long nMoves, void (**pfNewMoves)(long, particle<Space> &, rng*));
@@ -141,15 +141,13 @@ namespace smc {
 
   template <class Space>
   moveset<Space>::~moveset()
-  {
-    if(pfMoves)
+  {    if(pfMoves)
       delete [] pfMoves;
   }
 
   template <class Space>
   int moveset<Space>::DoMCMC(long lTime, particle<Space> & pFrom, rng *pRng)
-  {
-    if(pfMCMC) {
+  {    if(pfMCMC) {
       return pfMCMC(lTime,pFrom,pRng);
     }
     else {
@@ -190,8 +188,7 @@ namespace smc {
     SetInitialisor(pFrom.pfInitialise);
     SetMCMCFunction(pFrom.pfMCMC);
     SetMoveSelectionFunction(pFrom.pfMoveSelect);
-    SetMoveFunctions(pFrom.number, pFrom.pfMoves);        
-    
+    SetMoveFunctions(pFrom.number, pFrom.pfMoves);       
     return *this;
   }
 }

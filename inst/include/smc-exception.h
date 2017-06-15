@@ -33,7 +33,7 @@
 ///Exception thrown if a file cannot be accessed.
 #define SMCX_FILE_NOT_FOUND 0x0020
 ///Exception thrown if the sampler attempts to access history data which wasn't stored.
-#define SMCX_MISSING_HISTORY 0x0010
+#define SMCX_MISSING_HISTORY 0x0010							   
 ///Exception thrown if an attempt is made to instantiate a class of which a single instance is permitted more than once.
 #define SMCX_MULTIPLE_INSTANTIATION 0x1000
 

@@ -24,13 +24,13 @@
 
 using namespace std;
 
-smc::particle<vector<double> > fInitialiseBSPFG(smc::rng *pRng);
-//long fSelectBSPFG(long lTime, const smc::particle<vector<double> > & p, smc::rng *pRng);
-void fMoveBSPFG(long lTime, smc::particle<vector<double> > & pFrom, smc::rng *pRng);
-
 namespace BSPFG {
-    extern Rcpp::NumericVector y; 
-}
-using BSPFG::y;
+	smc::particle<vector<double> > fInitialise(smc::rng *pRng);
+	//long fSelect(long lTime, const smc::particle<vector<double> > & p, smc::rng *pRng);
+	void fMove(long lTime, smc::particle<vector<double> > & pFrom, smc::rng *pRng);
 
-extern long lLag;
+    Rcpp::NumericVector y; 
+	long lLag;
+	long lNumber;	
+}
+
