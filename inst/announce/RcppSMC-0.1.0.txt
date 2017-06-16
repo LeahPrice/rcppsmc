@@ -51,15 +51,6 @@ package:
       in the context of the ubiquitous nonlinear model which was used in
       section 4.1 of that paper.
 
-   radiataBS() provides a data annealing implementation of the problem of 
-      estimating the parameters of a linear regression based on data
-	  presented in Williams (1959, Wiley). Specific details
-	  about the model can be found in South, Pettitt and Drovandi (2017).
-
-   radiataPPBS() provides a likelihood annealing implementation for the
-      same problem. The temperatures (starting at 0 and ending at 1)
-	  must be specified.
-
 These examples are hopefully of some pedagogic interest and provide templates
 which can be used to guide the implementation of more complicated algorithms
 using the Rcpp/SMCTC-combination.

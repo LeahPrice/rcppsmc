@@ -6,7 +6,7 @@
 	\item Switching to armadillo vectors. The particle class is now
 		  on the whole population of particles level.
     \item Added an example \code{radiataPPBS} for a likelihood annealing
-		  version of the radiata linear regression problem.
+		  version of the radiata pine linear regression problem.
   }
 }
 

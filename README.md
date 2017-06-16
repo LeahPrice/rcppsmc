@@ -8,13 +8,13 @@ This package provides R with access to the
 [Sequential Monte Carlo Template Classes](https://www.jstatsoft.org/article/view/v030i06/‎) 
 by Johansen (Journal of Statistical Software, 2009, v30, i6).
 
-At present, two additional examples have been added, and the first 
+At present, three additional examples have been added, and the first 
 example from the JSS paper has been extended. Further integration 
 and extensions are planned.
 
 ### Authors
 
-Dirk Eddelbuettel and Adam M. Johansen
+Dirk Eddelbuettel, Adam M. Johansen and Leah F. South
 
 ### License
 

@@ -1,3 +1,21 @@
+2017-06-16  Leah South  <leah.south@hdr.qut.edu.au>
+
+	* Switching to the particle set on the population level rather than the individual particle level.
+
+2017-06-06  Leah South  <leah.south@hdr.qut.edu.au>
+
+	* inst/include/sampler.h: added ability to estimate the ratio of normalising constants
+	* man/pfLineartBS.RD: Idem
+	* inst/include/pflineart.h: Idem
+	* src/pflineart.cpp: Idem
+	* inst/include/radiata.h: a new example based on estimating the parameters of a linear regression
+	* R/radiataBS.R: Idem
+	* man/radiataBS.RD: Idem
+	* src/radiata.cpp: Idem
+	* src/init.c: Adding the radiataBS function
+	* inst/sampleData/radiata-data.csv: default data for the radiata example
+	* NAMESPACE: added radiataBS
+
 2017-03-04  Dirk Eddelbuettel  <edd@debian.org>
 
 	* NAMESPACE: Use .registration=TRUE on useDynLib

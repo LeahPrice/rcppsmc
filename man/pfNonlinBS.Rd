@@ -24,7 +24,8 @@
 }
 \value{
   The \code{pfNonlinBS} function returns two vectors, the first containing the posterior
-  filtering means; the second the posterior filtering standard deviations.
+  filtering means; the second the posterior filtering standard deviations. The log estimate
+  of the ratio of normalising constants between the final and initial distibutions is also returned.
 
   The \code{simNonlin} function returns a list containing the state and data sequences. 
 }
