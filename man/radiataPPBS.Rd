@@ -19,10 +19,10 @@
   \item{data}{A two-column matrix or dataframe containing x and y
     values. The data set from Williams (1959) is used as the
     default if no data is supplied.}
-  \item{temperatures}{Here the targets are defined by $P(y|\theta)^{\gamma_t}P(\theta)$
-  where $0=\gamma_0\leq \ldots \leq \gamma_T = 1$ can be referred to
-  as the temperatures, $P(y|\theta)$ is the likelihood and $P(\theta)$
-  is the prior. An example temperature schedule is used if this is not specified.}
+  \item{temperatures}{Here the targets are defined by \eqn{P(y|\theta)^{\gamma_t}P(\theta)}
+  where \eqn{0=\gamma_0\le \ldots \le \gamma_T = 1} can be referred to
+  as the temperatures, \eqn{P(y|\theta)} is the likelihood and \eqn{P(\theta)}
+  is the prior. An example temperature schedule is used if one is not specified.}
   \item{particles}{An integer specifying the number of particles.}
 }
 \value{
@@ -32,7 +32,7 @@
   evidence (normalising constant of the posterior) are also returned.
 }
 \details{
-  The \code{radiataBS} function provides a simple example for
+  The \code{radiataPPBS} function provides a simple example for
   \pkg{RcppSMC}.
 }
 \references{

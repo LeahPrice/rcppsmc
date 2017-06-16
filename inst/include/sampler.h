@@ -88,8 +88,6 @@ protected:
   HistoryType htHistoryMode;
   ///The historical process associated with the particle system.
   history<particle<Space> > History;
-  ///The current log sum of the unnormalised weights
-  double CurrLogSumExp;
   ///An estimate of the overall ratio of normalising constants
   double dlogNCPath;
   ///An estimate of the latest iteration's ratio of normalising constants
@@ -158,8 +156,6 @@ private:
 protected:
   ///Returns the crude normalising constant ratio estimate implied by the weights.
   double CalcLogNC(void) const;
-  ///Computing the log sum of the unnormalised weights in a stable way
-  double GetLogSumExp(void) const;
 };
 
 
@@ -217,7 +213,7 @@ double sampler<Space>::GetESS(void) const
 }
 
 template <class Space>
-double sampler<Space>::GetLogSumExp(void) const
+double sampler<Space>::CalcLogNC(void) const
 {
 	double dMaxWeight = arma::max(pParticles.GetLogWeight());
 	double sum = arma::sum(exp(pParticles.GetLogWeight() - dMaxWeight*arma::ones(N)));
@@ -225,13 +221,6 @@ double sampler<Space>::GetLogSumExp(void) const
   return (dMaxWeight + log(sum));
 }
 
-//I guess could be moved to earlier.
-template <class Space>
-double sampler<Space>::CalcLogNC(void) const
-{  
-  //return (CurrLogSumExp - log(static_cast<long double>(N)));
-  return (CurrLogSumExp);
-}
 
 /// At present this function resets the system evolution time to 0 and calls the moveset initialisor to assign each
 /// particle in the ensemble.
@@ -261,12 +250,11 @@ void sampler<Space>::Initialise(void)
   }    
   
   //Estimate the normalising constant
-  CurrLogSumExp = GetLogSumExp();
   dlogNCIt = CalcLogNC();
   dlogNCPath += dlogNCIt;
   
   //Normalise the weights to sensible values....
-  pParticles.SetLogWeight(pParticles.GetLogWeight() - CurrLogSumExp*arma::ones(N));
+  pParticles.SetLogWeight(pParticles.GetLogWeight() - dlogNCIt*arma::ones(N));
   
   //Check if the ESS is below some reasonable threshold and resample if necessary.
   double ESS = GetESS();
@@ -365,12 +353,11 @@ double sampler<Space>::IterateEss(void)
   MoveParticles();
   
   //Estimate the normalising constant
-  CurrLogSumExp = GetLogSumExp();
   dlogNCIt = CalcLogNC();
   dlogNCPath += dlogNCIt;
 		
   //Normalise the weights
-  pParticles.SetLogWeight(pParticles.GetLogWeight()  - CurrLogSumExp*arma::ones(N));
+  pParticles.SetLogWeight(pParticles.GetLogWeight()  - dlogNCIt*arma::ones(N));
   
   //Check if the ESS is below some reasonable threshold and resample if necessary.
   //A mechanism for setting this threshold is required.
@@ -422,7 +409,7 @@ void sampler<Space>::Resample(ResampleType lMode)
     
 	
   case SMC_RESAMPLE_RESIDUAL:
-    dRSWeights = exp(log((double)N)*arma::ones(N) + pParticles.GetLogWeight() - GetLogSumExp()*arma::ones(N));
+    dRSWeights = exp(log((double)N)*arma::ones(N) + pParticles.GetLogWeight() - CalcLogNC()*arma::ones(N));
 	
 	uRSIndices = arma::zeros<arma::Col<unsigned int> >((int)N);
 	//uRSCount = arma::zeros<arma::Col<unsigned int> >((int)N);
@@ -445,7 +432,7 @@ void sampler<Space>::Resample(ResampleType lMode)
     //Generate a random number between 0 and 1/N times the sum of the weights
     double dRand = pRng->Uniform(0,1.0 / ((double)N));
     
-    arma::vec dWeightCumulative = arma::cumsum(exp(pParticles.GetLogWeight() - GetLogSumExp()));
+    arma::vec dWeightCumulative = arma::cumsum(exp(pParticles.GetLogWeight() - CalcLogNC()));
 	
     int k = 0;
 	int j = 0;
@@ -469,7 +456,7 @@ void sampler<Space>::Resample(ResampleType lMode)
     
     int j = 0, k = 0;
 	uRSCount = arma::zeros<arma::Col<unsigned int> >((int)N);
-    arma::vec dWeightCumulative = arma::cumsum(exp(pParticles.GetLogWeight() - GetLogSumExp()*arma::ones(N)));
+    arma::vec dWeightCumulative = arma::cumsum(exp(pParticles.GetLogWeight() - CalcLogNC()*arma::ones(N)));
     while(k < N) {
       while((dWeightCumulative(k) - dRand) > ((double)j)/((double)N) && j < N) {
         uRSCount(k)++;

@@ -35,10 +35,10 @@
   \item{len}{Length of sequence to simulate}
 }
 \value{
-  The \code{pfLineartBS} function returns a \code{data.frame} containing as many rows as in
-  the input data, and four columns corresponding to the estimated \eqn{x}{x} and
+  The \code{pfLineartBS} function returns a \code{list} containing the estimated \eqn{x}{x} and
   \eqn{y}{y} coordinates as well as the estimated velocity in these two
-  directions.
+  directions. The log estimate of the ratio of normalising constants between the
+  final and initial distibutions is also returned.
 
   The \code{simLineart} function returns a list containing the vector of
   states and the associated vector of observations.

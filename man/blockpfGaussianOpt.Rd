@@ -31,8 +31,9 @@
   The \code{blockpfGaussianOpt} function returns a matrix containing the final
   sample paths and a vector containing their weights.
 
-  The \code{simGaussian} function returns a list containing the state and data
-  sequences. 
+  The \code{simGaussian} function returns a list containing the state, data
+  sequences and the log estimate of the ratio of normalising constants between
+  the final and initial distibutions. 
 }
 \details{
   The \code{blockpfGaussianOpt} function provides a simple example for
