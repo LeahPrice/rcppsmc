@@ -117,9 +117,9 @@ public:
   ///Return the value of particles
   const std::vector<Space> &  GetParticleValue(void) { return pParticles.GetValue(); }
   ///Return the logarithmic unnormalized weights of particles
-  arma::vec GetParticleLogWeight(void) { return pParticles.GetLogWeight(); }
+  arma::vec GetParticleLogWeight(void) const { return pParticles.GetLogWeight(); }
   ///Return the unnormalized weights of particls
-  arma::vec GetParticleWeight(void) { return pParticles.GetWeight(); }  
+  arma::vec GetParticleWeight(void) const { return pParticles.GetWeight(); }  
   ///Return the unnormalized weights of particls
   double GetParticleWeightN(int n) { return pParticles.GetWeightN(n); }  
   ///Returns the current evolution time of the system.

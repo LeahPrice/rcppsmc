@@ -63,9 +63,9 @@ namespace smc {
     /// The null constructor creates an empty history element.
     historyelement();
     /// A constructor with four arguments initialises the particle set.
-    historyelement(long lNumber, Particle pNew, int nAccepts, historyflags hf);
+    historyelement(long lNumber, const Particle & pNew, int nAccepts, historyflags hf);
     /// A constructor with six arguments initialises the whole structure.
-    historyelement(long lNumber, Particle pNew, historyelement<Particle>* pParent, historyelement<Particle>* pChild, int nAccepts, historyflags  hf);
+    historyelement(long lNumber, const Particle & pNew, historyelement<Particle>* pParent, historyelement<Particle>* pChild, int nAccepts, historyflags  hf);
 
     /// The destructor tidies up.
     ~historyelement();
@@ -81,17 +81,19 @@ namespace smc {
     /// Returns the number of particles present.
     long GetNumber(void) const {return number;} 
     /// Returns a pointer to the current particle set.
-    Particle GetValues(void) const { return value; }
+    Particle const & GetValues(void) const { return value; }
+    /// Returns a pointer to the current particle set.
+    Particle * GetPointers(void) { return &value; }
     /// Add a new history element with the specified values after the current one and maintain the list structure.
-    void InsertAfter(long lNumber, Particle pNew);
+    void InsertAfter(long lNumber, const Particle & pNew);
     /// Integrate the supplied function according to the empirical measure of the particle ensemble.
-    long double Integrate(long lTime, double (*pIntegrand)(long,const Particle,void*), void* pAuxiliary);
+    long double Integrate(long lTime, double (*pIntegrand)(long,const Particle &,void*), void* pAuxiliary);
     /// Sets the elements parent.
     void SetLast(historyelement<Particle>* pParent) {pLast = pParent; }
     /// Sets the elements child.
     void SetNext(historyelement<Particle>* pChild) {pNext = pChild; }
     /// Sets the particle set to the specified values.    
-    void SetValue(long lNumber, Particle pNew);
+    void SetValue(long lNumber, const Particle & pNew);
 
     /// Returns the number of MCMC moves accepted during this iteration.
     int AcceptCount(void) {return nAccepted; }
@@ -141,7 +143,7 @@ namespace smc {
   /// \param hf      The historyflags associated with the particle generation
 
   template <class Particle>
-  historyelement<Particle>::historyelement(long lNumber, Particle pNew, int nAccepts, historyflags hf) :
+  historyelement<Particle>::historyelement(long lNumber, const Particle & pNew, int nAccepts, historyflags hf) :
     flags(hf)
   {
     number = lNumber;
@@ -164,7 +166,7 @@ namespace smc {
   /// \param nAccepts The number of MCMC moves that were accepted during this particle generation
   /// \param hf      The historyflags associated with the particle generation
   template <class Particle>
-  historyelement<Particle>::historyelement(long lNumber, Particle pNew,
+  historyelement<Particle>::historyelement(long lNumber, const Particle & pNew,
 					   historyelement<Particle>* pParent, historyelement<Particle>* pChild,
 					   int nAccepts, historyflags hf) :
     flags(hf)
@@ -200,7 +202,7 @@ namespace smc {
   /// \param pAuxiliary A pointer to additional information which is passed to the integrand function
 
   template <class Particle>
-  long double historyelement<Particle>::Integrate(long lTime, double (*pIntegrand)(long,const Particle,void*), void* pAuxiliary)
+  long double historyelement<Particle>::Integrate(long lTime, double (*pIntegrand)(long,const Particle &,void*), void* pAuxiliary)
   {
 	long double rValue = 0;
 	long double wSum = 0;
@@ -219,7 +221,7 @@ namespace smc {
   /// \param pNew The value of the particle generation to be inserted
 
   template <class Particle>
-  void historyelement<Particle>::InsertAfter(long lNumber, Particle pNew)
+  void historyelement<Particle>::InsertAfter(long lNumber, const Particle & pNew)
   {
     pNext = new historyelement<Particle>(lNumber, pNew, this, pNext);    
   }
@@ -254,7 +256,7 @@ namespace smc {
       ///Returns the number of generations recorded within the history.
       long GetLength (void) const { return lLength; }
       ///Integrate the supplied function over the path of the particle ensemble.
-      double IntegratePathSampling(double (*pIntegrand)(long,const Particle,void*), double (*pWidth)(long,void*), void* pAuxiliary);
+      double IntegratePathSampling(double (*pIntegrand)(long,const Particle &,void*), double (*pWidth)(long,void*), void* pAuxiliary);
       double IntegratePathSamplingFinalStep(double (*pIntegrand)(long,const Particle&,void*), void* pAuxiliary) const;
 
       ///Output a vector indicating the number of accepted MCMC moves at each time instance
@@ -267,7 +269,7 @@ namespace smc {
       ///Remove the terminal particle generation from the list and stick it in the supplied data structures
       void Pop(long* plNumber, Particle* ppNew, int* pnAccept, historyflags * phf);
       ///Append the supplied particle generation to the end of the list.
-      void Push(long lNumber, Particle pNew, int nAccept, historyflags hf);
+      void Push(long lNumber, const Particle & pNew, int nAccept, historyflags hf);
 
 
       ///Display the list of particles in a human readable form.
@@ -347,7 +349,7 @@ namespace smc {
   /// \param pAuxiliary  A pointer to auxiliary data to pass to both of the above functions
 
   template <class Particle>
-  double history<Particle>::IntegratePathSampling(double (*pIntegrand)(long,const Particle,void*), double (*pWidth)(long,void*), void* pAuxiliary)
+  double history<Particle>::IntegratePathSampling(double (*pIntegrand)(long,const Particle &,void*), double (*pWidth)(long,void*), void* pAuxiliary)
   {
     long lTime = 0;
     long double rValue = 0.0;
@@ -380,7 +382,7 @@ namespace smc {
     if(lLength == 0)
       return NULL;
 
-    Particle rValue = pLeaf->GetValues();
+    Particle * rValue = pLeaf->GetPointers();
 
     lLength--;
 
@@ -392,7 +394,7 @@ namespace smc {
       pLeaf->SetNext(NULL);
 
     }
-    return (&rValue);
+    return rValue;
   }
 
   /// Pop operates as the usual stack operation
@@ -439,7 +441,7 @@ namespace smc {
   /// \param hf      The historyflags associated with this generation of the system.
 
   template <class Particle>
-  void history<Particle>::Push(long lNumber, Particle pNew, int nAccepts, historyflags hf)
+  void history<Particle>::Push(long lNumber, const Particle & pNew, int nAccepts, historyflags hf)
   {
     if(lLength == 0) {
       pRoot = new historyelement<Particle>(lNumber, pNew, nAccepts, hf);

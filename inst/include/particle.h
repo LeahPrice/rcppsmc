@@ -44,7 +44,7 @@ namespace smc {
     public:
       particle();
       /// Constructor which initialises the particles value and weight.
-      particle(std::vector<Space> sInit,arma::vec dLogWeight);
+      particle(const std::vector<Space> &sInit,const arma::vec & dLogWeight);
       /// The copy constructor performs a shallow copy.
       particle(const particle<Space> & pFrom);
       /// The assignment operator performs a shallow copy.
@@ -55,7 +55,7 @@ namespace smc {
       /// Returns the particle's value 
       std::vector<Space> const & GetValue(void) const {return value;}
       /// Returns the particle's value 
-      Space GetValueN(int n) {return value[n];}
+      Space const & GetValueN(int n) {return value[n];}
       /// Returns a pointer to the value to allow for more efficient changes
       std::vector<Space>* GetValuePointer(void) {return &value;}
       /// Returns a pointer to the value to allow for more efficient changes
@@ -73,7 +73,7 @@ namespace smc {
       ///
       /// \param sValue The particle value to use 
       /// \param dLogWeight The natural logarithm of the new particle weight
-      void Set(std::vector<Space> sValue,arma::vec dLogWeight){value = sValue; logweight = dLogWeight;}
+      void Set(const std::vector<Space> &sValue,const arma::vec & dLogWeight){value = sValue; logweight = dLogWeight;}
       /// \brief Sets the particle's value explicitly
       ///
       /// \param sValue The particle value to use
@@ -94,11 +94,11 @@ namespace smc {
       /// \brief Increase the log weight by a specified amount
       ///
       /// \param dIncrement The amount to add to the log weight.
-      void AddToLogWeight(arma::vec dIncrement) { logweight += dIncrement;}
+      void AddToLogWeight(const arma::vec & dIncrement) { logweight += dIncrement;}
       /// \brief Multiply the weight by a specified factor
       ///
       /// \param dMultiplier The factor to multiply the weight by.
-      void MultiplyWeightBy(arma::vec dMultiplier) { logweight += log(dMultiplier);}
+      void MultiplyWeightBy(const arma::vec & dMultiplier) { logweight += log(dMultiplier);}
   };
 
 
@@ -122,7 +122,7 @@ namespace smc {
   /// \param sInit The initial value of the particle
   /// \param dLogWeight The initial value of the natural logarithm of the particle weight
   template <class Space>
-    particle<Space>::particle(std::vector<Space> sInit, arma::vec dLogWeight)
+    particle<Space>::particle(const std::vector<Space> & sInit, const arma::vec & dLogWeight)
     {
       value = sInit;
       logweight =dLogWeight;

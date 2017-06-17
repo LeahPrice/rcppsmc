@@ -1,3 +1,10 @@
+2017-06-17  Leah South  <leah.south@hdr.qut.edu.au>
+
+	* inst/include/history.h: changing some functions to pass and return constant references.
+	* inst/include/particle.h: Idem
+	* inst/include/sampler.h: Idem
+	* inst/include/history.h: Idem
+
 2017-06-16  Leah South  <leah.south@hdr.qut.edu.au>
 
 	* Switching to the particle set on the population level rather than the individual particle level.
