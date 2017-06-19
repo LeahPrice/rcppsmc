@@ -74,14 +74,11 @@ using namespace std;
 namespace BSPFG {
 
 /// \param pRng A pointer to the random number generator which is to be used
-smc::population<vector<double> > fInitialise(smc::rng *pRng)
+smc::particle<vector<double> > fInitialise(smc::rng *pRng)
 {
-  std::vector<vector<double> > value(lNumber);
-  for (int k=0; k<lNumber; k++){
-    value[k].push_back(pRng->Normal(0.5 * y[0],1.0/sqrt(2.0)));
-  }
-  
-  return smc::population<vector<double> >(value,arma::ones(lNumber));
+  vector<double> value;
+  value.push_back(pRng->Normal(0.5 * y[0],1.0/sqrt(2.0)));  
+  return smc::particle<vector<double> >(value,1.0);
 }
 
 ///The proposal function.

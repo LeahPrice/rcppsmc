@@ -44,7 +44,7 @@ unsigned long lNumber;
 
 arma::vec logLikelihood(long lTime, const std::vector<cv_state> & X);
 
-smc::population<cv_state> fInitialise(smc::rng *pRng);
+smc::particle<cv_state> fInitialise(smc::rng *pRng);
 long fSelect(long lTime, const smc::population<cv_state> & p, smc::rng *pRng);
 void fMove(long lTime, smc::population<cv_state> & pFrom, smc::rng *pRng);
 

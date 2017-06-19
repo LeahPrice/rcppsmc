@@ -177,21 +177,22 @@ double logPosterior(long lTime, const rad_state & X){
   return (log_normpdf + log_prior);
 }
 
-///A function to initialise the population
+///A function to initialise a particle
 
 /// \param pRng A pointer to the random number generator which is to be used
-smc::population<rad_state> fInitialise(smc::rng *pRng)
+smc::particle<rad_state> fInitialise(smc::rng *pRng)
 {
-  std::vector<rad_state> value(lNumber);
-  
-  for (unsigned int i=0; i<lNumber; i++){
-    // drawing from the prior
-    value[i].alpha = pRng->Normal(3000.0,1000.0);
-    value[i].beta = pRng->Normal(185.0,100.0);
-    value[i].phi = log(pow(pRng->Gamma(3,pow(2.0*300.0*300.0,-1.0)),-1.0));
-  }
-  
-  return smc::population<rad_state>(value,logWeight(0,value));
+  rad_state value;
+  // drawing from the prior
+    value.alpha = pRng->Normal(3000.0,1000.0);
+    value.beta = pRng->Normal(185.0,100.0);
+    value.phi = log(pow(pRng->Gamma(3,pow(2.0*300.0*300.0,-1.0)),-1.0));
+	
+      double mean_reg = value.alpha + value.beta*(y.data_x(0) - mean_x);
+    double sigma = pow(expl(value.phi),0.5);
+    double log_normpdf = -log(sigma) - pow(y.data_y(0) - mean_reg,2.0)/(2.0*sigma*sigma) -0.5*log(2.0*M_PI);
+
+  return smc::particle<rad_state>(value,log_normpdf);
 }
 
 ///The proposal function.

@@ -47,7 +47,7 @@ namespace LinReg_LA {
 	arma::vec logPrior(const std::vector<rad_state> & X);
 	double logPrior_single(const rad_state & X);
 	
-	smc::population<rad_state> fInitialise(smc::rng *pRng);
+	smc::particle<rad_state> fInitialise(smc::rng *pRng);
 	long fSelect(long lTime, const smc::population<rad_state> & p, smc::rng *pRng);
 	void fMove(long lTime, smc::population<rad_state> & pFrom, smc::rng *pRng);
 	int fMCMC(long lTime, smc::population<rad_state> & pFrom, smc::rng *pRng);

@@ -240,7 +240,7 @@ void sampler<Space>::Initialise(void)
   // population<Space> myPopulations; 
   // myPopulations = Moves.DoInit(pRng);
   // pPopulation = myPopulations;
-  pPopulation = Moves.DoInit(pRng);
+  pPopulation = Moves.DoInit(pRng,N);
 
   //Scaling weights by 1/N (mostly for evidence computation)
 	

@@ -185,21 +185,22 @@ double logPrior_single(const rad_state & X){
   return -log(1000.0)- pow(X.alpha - 3000.0,2.0)/(2.0*1000.0*1000.0) -log(100.0)- pow(X.beta - 185.0,2.0)/(2.0*100.0*100.0) + X.phi-1.0/b_prior/expl(X.phi) -X.phi*(a_prior+1.0);
 }
 
-///A function to initialise the population
+///A function to initialise a particle
 
 /// \param pRng A pointer to the random number generator which is to be used
-smc::population<rad_state> fInitialise(smc::rng *pRng)
+smc::particle<rad_state> fInitialise(smc::rng *pRng)
 {
-  std::vector<rad_state> value(lNumber);
+	rad_state value;
+	// drawing from the prior
+    value.alpha = pRng->Normal(3000.0,1000.0);
+    value.beta = pRng->Normal(185.0,100.0);
+    value.phi = log(pow(pRng->Gamma(3,pow(2.0*300.0*300.0,-1.0)),-1.0));
+	
+    arma::vec mean_reg = value.alpha*arma::ones(lIterates) + value.beta*(y.data_x - mean_x*arma::ones(lIterates));
+    double sigma = pow(expl(value.phi),0.5);
+    double log_normpdf = arma::sum(-log(sigma)*arma::ones(lIterates) - pow(y.data_y - mean_reg,2.0)/(2.0*sigma*sigma) -0.5*log(2.0*M_PI)*arma::ones(lIterates));
   
-  for (unsigned int i=0; i<lNumber; i++){
-    // drawing from the prior
-    value[i].alpha = pRng->Normal(3000.0,1000.0);
-    value[i].beta = pRng->Normal(185.0,100.0);
-    value[i].phi = log(pow(pRng->Gamma(3,pow(2.0*300.0*300.0,-1.0)),-1.0));
-  }
-  
-  return smc::population<rad_state>(value,temps(0)*logLikelihood(value));
+  return smc::particle<rad_state>(value,temps(0)*log_normpdf);
 }
 
 ///The proposal function.

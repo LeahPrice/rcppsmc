@@ -94,16 +94,14 @@ arma::vec logLikelihood(long lTime, const std::vector<double> & x) {
   return loglike;
 }
 
-///A function to initialise the population
+///A function to initialise a particle
 
 /// \param pRng A pointer to the random number generator which is to be used
-smc::population<double> fInitialise(smc::rng *pRng) {
-  std::vector<double> x(lNumber);
-  for (int i=0; i<lNumber; i++){
-    x[i] = pRng->Normal(0,std_x0);
-  }
-  
-  return smc::population<double>(x,logLikelihood(0,x));
+smc::particle<double> fInitialise(smc::rng *pRng) {
+	  double value = pRng->Normal(0,std_x0);
+	double loglike = -0.5 * pow(y(int(0)) - value*value*scale_y,2) / var_y;
+
+  return smc::particle<double>(value,loglike);
 }
 
 ///The proposal function.

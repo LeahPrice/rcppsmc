@@ -40,8 +40,8 @@ namespace smc {
     private:
       ///The number of moves which are present in the set
       long number;
-      ///The function which initialises the particle set.
-      population<Space> (*pfInitialise)(rng*);
+      ///The function which initialises a single particle.
+      particle<Space> (*pfInitialise)(rng*);
       ///The function which selects a move for the population of particles at a given time.
       long (*pfMoveSelect)(long , const population<Space> &, rng*);
       ///The functions which perform actual moves.
@@ -53,16 +53,27 @@ namespace smc {
       ///Create a completely unspecified moveset
       moveset();
       ///Create a reduced moveset with a single move
-      moveset(population<Space> (*pfInit)(rng*),
+      moveset(particle<Space> (*pfInit)(rng*),
 	      void (*pfNewMoves)(long, population<Space> &,rng*),
 	      int (*pfNewMCMC)(long,population<Space> &,rng*));
       ///Create a fully specified moveset
-      moveset(population<Space> (*pfInit)(rng*),long (*pfMoveSelector)(long , const population<Space> &,rng*), 
+      moveset(particle<Space> (*pfInit)(rng*),long (*pfMoveSelector)(long , const population<Space> &,rng*), 
 	      long nMoves, void (**pfNewMoves)(long, population<Space> &,rng*),
 	      int (*pfNewMCMC)(long,population<Space> &,rng*));
       
       ///Initialise the population of particles
-      population<Space> DoInit(rng * pRng) {return (*pfInitialise)(pRng);};
+      ///Initialise a particle
+      population<Space> DoInit(rng * pRng, long N) {
+		  std::vector<Space> InitialValues(N);
+		  arma::vec InitialLogWeights(N);
+		  particle<Space> Draw;
+		  for (long i=0; i<N; i++){
+			  Draw = (*pfInitialise)(pRng);
+			  InitialValues[i] = Draw.GetValue();
+			  InitialLogWeights(i) = Draw.GetLogWeight();
+		  }
+		  return population<Space>(InitialValues,InitialLogWeights);
+	  };
       ///Perform an MCMC move on the particles
       int DoMCMC(long lTime, population<Space> & pFrom, rng* pRng);
       ///Select an appropriate move at time lTime and apply it to pFrom
@@ -72,8 +83,8 @@ namespace smc {
       ~moveset();
 
       /// \brief Set the initialisation function.
-      /// \param pfInit is a function which returns particles generated according to the initial distribution 
-      void SetInitialisor( population<Space> (*pfInit)(rng*) )
+      /// \param pfInit is a function which returns a particle generated according to the initial distribution 
+      void SetInitialisor( particle<Space> (*pfInit)(rng*) )
       {pfInitialise = pfInit;}
 
       /// \brief Set the MCMC function
@@ -108,11 +119,11 @@ namespace smc {
 
   /// The three argument moveset constructor creates a new set of moves and sets all of the relevant function
   /// pointers to the supplied values. Only a single move should exist if this constructor is used.
-  /// \param pfInit The function which should be used to initialise particles when the system is initialised
+  /// \param pfInit The function which should be used to initialise a particle when the system is initialised
   /// \param pfNewMoves An functions which moves particles at a specified time to a new location
   /// \param pfNewMCMC The function which should be called to apply an MCMC move (if any)
   template <class Space>
-  moveset<Space>::moveset(population<Space> (*pfInit)(rng*),
+  moveset<Space>::moveset(particle<Space> (*pfInit)(rng*),
 			  void (*pfNewMoves)(long, population<Space> &,rng*),
 			  int (*pfNewMCMC)(long,population<Space> &,rng*))
   {
@@ -131,7 +142,7 @@ namespace smc {
   /// \param pfNewMoves An array of functions which moves particles at a specified time to a new location
   /// \param pfNewMCMC The function which should be called to apply an MCMC move (if any)
   template <class Space>
-  moveset<Space>::moveset(population<Space> (*pfInit)(rng*),long (*pfMoveSelector)(long ,const population<Space> &,rng*), 
+  moveset<Space>::moveset(particle<Space> (*pfInit)(rng*),long (*pfMoveSelector)(long ,const population<Space> &,rng*), 
 			  long nMoves, void (**pfNewMoves)(long, population<Space> &,rng*),
 			  int (*pfNewMCMC)(long,population<Space> &,rng*))
   {

@@ -35,6 +35,38 @@
 #include <limits>
 #include <cmath>
 namespace smc {
+	template <class Space> class particle
+  {
+	  public:
+	  Space value;
+	  double logweight;
+	  
+	  public:
+      particle(){	
+		arma::vec logweight;
+    }
+      /// The assignment operator performs a shallow copy.
+      /// Constructor which initialises the particles value and weight.
+      particle(const Space &sInit,double dLogWeight){
+      value = sInit;
+      logweight =dLogWeight;};
+	  
+      /// The assignment operator performs a shallow copy.
+      particle<Space> & operator= (const particle<Space> & pFrom)
+  {	  
+    this->value = pFrom.value;
+    this->logweight = pFrom.logweight;
+    return *this;
+  };
+  
+	  /// Returns the particle's value 
+      Space const & GetValue(void) {return value;}
+      /// Returns the particle's log weight.
+      double GetLogWeight(void) const {return logweight;}
+	  
+  };
+	
+	
   /// A template class for the particles of an SMC algorithm
   template <class Space> class population
     {
