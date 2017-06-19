@@ -4,6 +4,7 @@
 //
 // Copyright (C) 2008 - 2009  Adam Johansen
 // Copyright (C) 2012         Dirk Eddelbuettel and Adam Johansen
+// Copyright (C) 2017         Dirk Eddelbuettel, Adam Johansen and Leah South
 //
 // This file is part of RcppSMC.
 //
@@ -50,19 +51,16 @@ using namespace pflineart;
 
 // pf() function callable from R via Rcpp:: essentially the same as main() from pf.cc 
 // minor interface change to pass data down as matrix, rather than a filename
-extern "C" SEXP pfLineartBS(SEXP dataS, SEXP partS, SEXP usefS, SEXP funS) { 	
+// [[Rcpp::export]]
+Rcpp::List pfLineartBS_cpp(arma::mat data, unsigned long inlNumber, bool useF, Rcpp::Function f) { 	
   
   long lIterates;
   
   try {
     
-    //std::string filename = Rcpp::as<std::string>(fileS);
-    lNumber = Rcpp::as<unsigned long>(partS);
-    bool useF = Rcpp::as<bool>(usefS);
-    Rcpp::Function f(funS);
+    lNumber = inlNumber;
     
     // Load observations -- or rather copy them in from R
-    arma::mat data = Rcpp::as<arma::mat>(dataS); //so we expect a matrix
     lIterates = data.n_rows;
     y.x_pos = data.col(0);
     y.y_pos = data.col(1);

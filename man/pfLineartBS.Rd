@@ -66,5 +66,5 @@
   if (interactive()) ## if not running R CMD check etc
      res <- pfLineartBS(onlinePlot=pfLineartBSOnlinePlot)
 }
-\author{Adam M. Johansen and Dirk Eddelbuettel}
+\author{Adam M. Johansen, Dirk Eddelbuettel and Leah South}
 \keyword{programming}

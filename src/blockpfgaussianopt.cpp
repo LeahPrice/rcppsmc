@@ -4,6 +4,7 @@
 //
 // Copyright (C) 2008 - 2009  Adam Johansen
 // Copyright (C) 2012         Dirk Eddelbuettel and Adam Johansen
+// Copyright (C) 2017         Dirk Eddelbuettel, Adam Johansen and Leah South
 //
 // This file is part of RcppSMC.
 //
@@ -31,13 +32,14 @@
 using namespace std;
 using namespace BSPFG;
 
-extern "C" SEXP blockpfGaussianOpt(SEXP dataS, SEXP partS, SEXP lagS)
+// [[Rcpp::export]]
+Rcpp::List blockpfGaussianOpt_cpp(Rcpp::NumericVector data, long inlNumber, long inlLag)
 {
   long lIterates;
-  lNumber = Rcpp::as<long>(partS);
-  lLag = Rcpp::as<long>(lagS);
+  lNumber = inlNumber;
+  lLag = inlLag;
   
-  y = Rcpp::NumericVector(dataS);
+  y = data;
   lIterates = y.size();
   
   //Initialise and run the sampler

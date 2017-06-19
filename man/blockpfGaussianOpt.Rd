@@ -57,5 +57,5 @@
   sim <- simGaussian(len=250)
   res <- blockpfGaussianOpt(sim$data,lag=5,plot=TRUE)
 }
-\author{Adam M. Johansen and Dirk Eddelbuettel}
+\author{Adam M. Johansen, Dirk Eddelbuettel and Leah South}
 \keyword{programming}

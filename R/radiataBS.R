@@ -8,10 +8,9 @@ radiataBS<- function(data, particles=1000) {
     stopifnot(nrow(data) > 0,
               ncol(data) == 2,
               colnames(data) == c("x", "y"))
-
-    res <- .Call("radiataBS", as.matrix(data),
-                 particles,
-                 PACKAGE="RcppSMC")
+	
+	res <- radiataBS_cpp(as.matrix(data),particles)			 
+				 
 
     invisible(res)
 }

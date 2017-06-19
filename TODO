@@ -25,7 +25,7 @@
    the unnormalised density respect to the tempering parameter is known, for example in
    likelihood annealing SMC)
    
- * Specific to power posterior recycling - add an example which uses power posterior
+ * Specific to likelihood annealing SMC - add an example which uses power posterior
    recycling (e.g. Nguyen et al. (2014)).
    
  * Consider the use of derivative information (e.g. via MALA)

@@ -4,7 +4,8 @@ blockpfGaussianOpt <- function(data=c(), particles=1000, lag=5, plot=FALSE) {
        #Include some error handling here
        return;        
     }
-    res <- .Call("blockpfGaussianOpt", data, particles, lag, PACKAGE="RcppSMC")
+	
+    res <- blockpfGaussianOpt_cpp(data, particles, lag)
 
     if (plot) {
         time   = 1:length(data);

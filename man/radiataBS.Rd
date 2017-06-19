@@ -37,5 +37,5 @@
 \examples{
   res <- radiataBS(particles=1000)
 }
-\author{Leah F. South}
+\author{Adam M. Johansen, Dirk Eddelbuettel and Leah F. South}
 \keyword{programming}

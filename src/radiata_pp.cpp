@@ -1,6 +1,24 @@
 // -*- mode: C++; c-indent-level: 4; c-basic-offset: 4; indent-tabs-mode: nil; -*-
 //
-// radiata.cpp: Rcpp wrapper for SMC library -- TESTING Radiata pine example
+// radiata_pp.cpp: A simple example for estimating the parameters of a
+// linear regression model using likelihood annealing SMC.
+//
+// Copyright (C) 2017         Dirk Eddelbuettel, Adam Johansen and Leah South
+//
+// This file is part of RcppSMC.
+//
+// RcppSMC is free software: you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 2 of the License, or
+// (at your option) any later version.
+//
+// RcppSMC is distributed in the hope that it will be useful, but
+// WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with RcppSMC.  If not, see <http://www.gnu.org/licenses/>.
 
 
 #include "smctc.h"
@@ -29,33 +47,29 @@ using namespace radiata_pp;
 
 
 // radiataPPBS() function callable from R via Rcpp:: 
-extern "C" SEXP radiataPPBS(SEXP dataS, SEXP tempS, SEXP partS) { 	
+// [[Rcpp::export]]
+Rcpp::List radiataPPBS_cpp(arma::mat data, arma::vec intemps, unsigned long inlNumber) { 	
   
   
   try {
-    
-    //std::string filename = Rcpp::as<std::string>(fileS);
-    lNumber = Rcpp::as<unsigned long>(partS); // number of particles
-    
+	temps = intemps;
+    lNumber = inlNumber;
     // Load observations -- or rather copy them in from R
-    arma::mat data = Rcpp::as<arma::mat>(dataS); //so we expect a matrix
     lIterates = data.n_rows;
     y.data_x = data.col(0);
     y.data_y = data.col(1);
     mean_x = arma::sum(y.data_x)/lIterates;
     
-    temps = Rcpp::as<arma::vec>(tempS); //so we expect a matrix
     long lTemps = temps.n_rows;
     
     
     //Initialise and run the sampler
-    //smc::sampler<rad_state> Sampler(lNumber);  
     smc::sampler<rad_state> Sampler(lNumber, SMC_HISTORY_RAM);
     smc::moveset<rad_state> Moveset(fInitialise, fMove, fMCMC);
     
     Sampler.SetResampleParams(SMC_RESAMPLE_SYSTEMATIC, 0.5);
     Sampler.SetMoveSet(Moveset);
-    Sampler.Initialise();
+	Sampler.Initialise();
     
     Rcpp::NumericVector alpham(lTemps), alphav(lTemps), betam(lTemps), betav(lTemps), phim(lTemps), phiv(lTemps), ESS(lTemps);
     
@@ -218,7 +232,7 @@ int fMCMC(long lTime, smc::particle<rad_state > & pFrom, smc::rng *pRng)
     
     for (unsigned int j=0; j<10; j++){
       cv_to = pFrom.GetValuePointerN(i);
-      // Some code which could be useful if adding an MCMC step later
+	  
       cv_to_new.alpha = pRng->Normal(cv_to->alpha,std_alpha);
       cv_to_new.beta = pRng->Normal(cv_to->beta,std_beta);
       cv_to_new.phi = pRng->Normal(cv_to->phi,std_phi);

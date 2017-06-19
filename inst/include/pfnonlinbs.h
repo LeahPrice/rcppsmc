@@ -8,6 +8,7 @@
 //    IEE PROCEEDINGS-F 140(2):107-113, 1993
 //
 // Copyright (C) 2012         Dirk Eddelbuettel and Adam Johansen
+// Copyright (C) 2017         Dirk Eddelbuettel, Adam Johansen and Leah South
 //
 // This file is part of RcppSMC.
 //
@@ -28,6 +29,8 @@
 #include <RcppArmadillo.h>
 
 namespace nonlinbs {
+	long lNumber;
+	
     arma::vec logLikelihood(long lTime, const std::vector<double> & X);
 
     smc::particle<double> fInitialise(smc::rng *pRng);

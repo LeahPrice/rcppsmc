@@ -9,6 +9,7 @@
 //
 // Copyright (C) 2008 - 2009  Adam Johansen
 // Copyright (C) 2012 - 2013  Dirk Eddelbuettel and Adam Johansen
+// Copyright (C) 2017		  Dirk Eddelbuettel, Adam Johansen and Leah South
 //
 // This file is part of RcppSMC.
 //
@@ -31,7 +32,6 @@
 
 #include <cstdlib>
 #include <cmath>
-long lNumbers;
 
 namespace nonlinbs {
 const double std_x0 = 2;
@@ -49,18 +49,18 @@ arma::vec y;
 using namespace std;
 using namespace nonlinbs;
 
-extern "C" SEXP pfNonlinBS(SEXP dataS, SEXP partS) {
-  lNumbers = Rcpp::as<long>(partS);
+// [[Rcpp::export]]
+Rcpp::List pfNonlinBS_cpp(arma::vec data, long inlNumber) {
+  lNumber = inlNumber;
   
-  y = Rcpp::as<arma::vec>(dataS); //so we expect a matrix
+  y = data;
   long lIterates = y.n_rows;
   
-  //Initialise and run the sampler
-  //smc::sampler<double> Sampler(lNumbers);  
-  smc::sampler<double> Sampler(lNumbers, SMC_HISTORY_NONE);  
+  //Initialise and run the sampler 
+  smc::sampler<double> Sampler(lNumber, SMC_HISTORY_NONE);  
   smc::moveset<double> Moveset(fInitialise, fMove, NULL);
   
-  Sampler.SetResampleParams(SMC_RESAMPLE_MULTINOMIAL, 1.01 * lNumbers);
+  Sampler.SetResampleParams(SMC_RESAMPLE_MULTINOMIAL, 1.01 * lNumber);
   Sampler.SetMoveSet(Moveset);
   Sampler.Initialise();
   
@@ -87,8 +87,8 @@ namespace nonlinbs {
 ///  \param lTime The current time (i.e. the index of the current distribution)
 ///  \param X     The state to consider 
 arma::vec logLikelihood(long lTime, const std::vector<double> & x) {
-  arma::vec loglike(lNumbers);
-  for (int i=0; i<lNumbers; i++){
+  arma::vec loglike(lNumber);
+  for (int i=0; i<lNumber; i++){
     loglike(i) = -0.5 * pow(y(int(lTime)) - x[i]*x[i]*scale_y,2) / var_y;
   }
   return loglike;
@@ -98,8 +98,8 @@ arma::vec logLikelihood(long lTime, const std::vector<double> & x) {
 
 /// \param pRng A pointer to the random number generator which is to be used
 smc::particle<double> fInitialise(smc::rng *pRng) {
-  std::vector<double> x(lNumbers);
-  for (int i=0; i<lNumbers; i++){
+  std::vector<double> x(lNumber);
+  for (int i=0; i<lNumber; i++){
     x[i] = pRng->Normal(0,std_x0);
   }
   
@@ -113,7 +113,7 @@ smc::particle<double> fInitialise(smc::rng *pRng) {
 ///\param pRng  A random number generator.
 void fMove(long lTime, smc::particle<double> & pFrom, smc::rng *pRng) {
   std::vector<double> *to = pFrom.GetValuePointer();
-  for (int i = 0; i<lNumbers; i++){
+  for (int i = 0; i<lNumber; i++){
     to->at(i) = 0.5 * to->at(i) + 25.0*to->at(i) / (1.0 + to->at(i) * to->at(i)) + 8.0 * cos(1.2  * ( lTime)) + pRng->Normal(0.0,std_x);
   }
   pFrom.AddToLogWeight(logLikelihood(lTime, *to));

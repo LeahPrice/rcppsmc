@@ -1,9 +1,43 @@
+2017-06-19  Leah South  <leah.south@hdr.qut.edu.au>
+
+	* inst/include/history.h: Updating the description at the top of the file.
+	* inst/include/moveset.h: Idem
+	* inst/include/particle.h: Idem
+	* inst/include/rngR.h: Idem
+	* inst/include/sampler.h: Idem
+	* inst/include/smc-exception.h: Idem
+	* inst/include/smctc.h: Idem
+	* inst/include/blockpfgaussianopt.h: Idem
+	* inst/include/pflineart.h: Idem
+	* inst/include/radiata.h: Idem
+	* inst/include/radiata_pp.h: Idem
+	* inst/include/pfnonlinbs.h: Idem & updating the namespace for this example to include the number of particles.
+	* man/blockpfGaussianOpt.Rd: Updating authors
+	* man/pfLineartBS.Rd: Idem
+	* man/pfNonlinBS.Rd: Idem
+	* man/radiataBS.Rd: Idem
+	* man/radiataPPBS.Rd: Idem
+	* src/blockpfgaussianopt.cpp: Updating the description at the top of the file and starting switch to Rcpp attributes
+	* src/pflineart.cpp: Idem
+	* src/pfnonlinbs.cpp: Idem
+	* src/radiata.cpp: Idem
+	* src/radiata_pp.cpp: Idem
+	* src/init.c: Removed (now using Rcpp attributes)
+	* src/RcppExports.c: First time being automatically produced (with use of Rcpp attributes)
+	* R/bspfGaussianOptimal.R: Starting switch to Rcpp attributes
+	* R/pfLineartBS.R: Idem
+	* R/pfNonlinBS.R: Idem
+	* R/radiataBS.R: Idem
+	* R/radiataPPBS.R: Idem
+	* R/RcppExports.R: First time being automatically produced (with use of Rcpp attributes)
+	* TODO: Fixing a typo
+	
+
 2017-06-17  Leah South  <leah.south@hdr.qut.edu.au>
 
 	* inst/include/history.h: changing some functions to pass and return constant references.
 	* inst/include/particle.h: Idem
 	* inst/include/sampler.h: Idem
-	* inst/include/history.h: Idem
 
 2017-06-16  Leah South  <leah.south@hdr.qut.edu.au>
 

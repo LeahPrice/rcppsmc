@@ -41,5 +41,5 @@
 \examples{
   res <- radiataPPBS(particles=1000)
 }
-\author{Leah F. South}
+\author{Adam M. Johansen, Dirk Eddelbuettel and Leah South}
 \keyword{programming}

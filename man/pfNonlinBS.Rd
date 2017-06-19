@@ -51,5 +51,5 @@
   sim <- simNonlin(len=50)
   res <- pfNonlinBS(sim$data,particles=500,plot=TRUE)
 }
-\author{Adam M. Johansen and Dirk Eddelbuettel}
+\author{Adam M. Johansen, Dirk Eddelbuettel and Leah South}
 \keyword{programming}

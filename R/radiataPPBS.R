@@ -11,9 +11,7 @@ radiataPPBS<- function(data, temperatures, particles=1000) {
               colnames(data) == c("x", "y"),
 			  nrow(temperatures) > 0)
 
-    res <- .Call("radiataPPBS", as.matrix(data), as.matrix(temperatures),
-                 particles,
-                 PACKAGE="RcppSMC")
+    res <- radiataPPBS_cpp(as.matrix(data), as.matrix(temperatures), particles)
 
     invisible(res)
 }
