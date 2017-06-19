@@ -19,6 +19,31 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// LinRegBS_cpp
+Rcpp::List LinRegBS_cpp(arma::mat data, unsigned long inlNumber);
+RcppExport SEXP RcppSMC_LinRegBS_cpp(SEXP dataSEXP, SEXP inlNumberSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type data(dataSEXP);
+    Rcpp::traits::input_parameter< unsigned long >::type inlNumber(inlNumberSEXP);
+    rcpp_result_gen = Rcpp::wrap(LinRegBS_cpp(data, inlNumber));
+    return rcpp_result_gen;
+END_RCPP
+}
+// LinRegLABS_cpp
+Rcpp::List LinRegLABS_cpp(arma::mat data, arma::vec intemps, unsigned long inlNumber);
+RcppExport SEXP RcppSMC_LinRegLABS_cpp(SEXP dataSEXP, SEXP intempsSEXP, SEXP inlNumberSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type data(dataSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type intemps(intempsSEXP);
+    Rcpp::traits::input_parameter< unsigned long >::type inlNumber(inlNumberSEXP);
+    rcpp_result_gen = Rcpp::wrap(LinRegLABS_cpp(data, intemps, inlNumber));
+    return rcpp_result_gen;
+END_RCPP
+}
 // pfLineartBS_cpp
 Rcpp::List pfLineartBS_cpp(arma::mat data, unsigned long inlNumber, bool useF, Rcpp::Function f);
 RcppExport SEXP RcppSMC_pfLineartBS_cpp(SEXP dataSEXP, SEXP inlNumberSEXP, SEXP useFSEXP, SEXP fSEXP) {
@@ -42,31 +67,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::vec >::type data(dataSEXP);
     Rcpp::traits::input_parameter< long >::type inlNumber(inlNumberSEXP);
     rcpp_result_gen = Rcpp::wrap(pfNonlinBS_cpp(data, inlNumber));
-    return rcpp_result_gen;
-END_RCPP
-}
-// radiataBS_cpp
-Rcpp::List radiataBS_cpp(arma::mat data, unsigned long inlNumber);
-RcppExport SEXP RcppSMC_radiataBS_cpp(SEXP dataSEXP, SEXP inlNumberSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type data(dataSEXP);
-    Rcpp::traits::input_parameter< unsigned long >::type inlNumber(inlNumberSEXP);
-    rcpp_result_gen = Rcpp::wrap(radiataBS_cpp(data, inlNumber));
-    return rcpp_result_gen;
-END_RCPP
-}
-// radiataPPBS_cpp
-Rcpp::List radiataPPBS_cpp(arma::mat data, arma::vec intemps, unsigned long inlNumber);
-RcppExport SEXP RcppSMC_radiataPPBS_cpp(SEXP dataSEXP, SEXP intempsSEXP, SEXP inlNumberSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type data(dataSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type intemps(intempsSEXP);
-    Rcpp::traits::input_parameter< unsigned long >::type inlNumber(inlNumberSEXP);
-    rcpp_result_gen = Rcpp::wrap(radiataPPBS_cpp(data, intemps, inlNumber));
     return rcpp_result_gen;
 END_RCPP
 }

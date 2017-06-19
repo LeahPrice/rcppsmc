@@ -5,19 +5,19 @@ blockpfGaussianOpt_cpp <- function(data, inlNumber, inlLag) {
     .Call('RcppSMC_blockpfGaussianOpt_cpp', PACKAGE = 'RcppSMC', data, inlNumber, inlLag)
 }
 
+LinRegBS_cpp <- function(data, inlNumber) {
+    .Call('RcppSMC_LinRegBS_cpp', PACKAGE = 'RcppSMC', data, inlNumber)
+}
+
+LinRegLABS_cpp <- function(data, intemps, inlNumber) {
+    .Call('RcppSMC_LinRegLABS_cpp', PACKAGE = 'RcppSMC', data, intemps, inlNumber)
+}
+
 pfLineartBS_cpp <- function(data, inlNumber, useF, f) {
     .Call('RcppSMC_pfLineartBS_cpp', PACKAGE = 'RcppSMC', data, inlNumber, useF, f)
 }
 
 pfNonlinBS_cpp <- function(data, inlNumber) {
     .Call('RcppSMC_pfNonlinBS_cpp', PACKAGE = 'RcppSMC', data, inlNumber)
-}
-
-radiataBS_cpp <- function(data, inlNumber) {
-    .Call('RcppSMC_radiataBS_cpp', PACKAGE = 'RcppSMC', data, inlNumber)
-}
-
-radiataPPBS_cpp <- function(data, intemps, inlNumber) {
-    .Call('RcppSMC_radiataPPBS_cpp', PACKAGE = 'RcppSMC', data, intemps, inlNumber)
 }
 

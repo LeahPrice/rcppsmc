@@ -22,12 +22,12 @@
 //
 
 //! \file
-//! \brief Class used to store and manipulate a single particle.
+//! \brief Class used to store and manipulate a population of particles.
 //!
-//! This file contains the smc::particle class which is used internally and passed to move functions.
+//! This file contains the smc::population class which is used internally and passed to move functions.
 
-#ifndef __SMC_PARTICLE_HH
-#define __SMC_PARTICLE_HH 1.0
+#ifndef __SMC_POPULATION_HH
+#define __SMC_POPULATION_HH 1.0
 
 #include <RcppArmadillo.h>
 
@@ -36,78 +36,78 @@
 #include <cmath>
 namespace smc {
   /// A template class for the particles of an SMC algorithm
-  template <class Space> class particle
+  template <class Space> class population
     {
     private:
-      /// Value of this particle
+      /// Value of the particles
       std::vector<Space>    value;
-      /// Natural logarithm of this particle's weight.
+      /// Natural logarithm of this particles' weights.
       arma::vec   logweight;
 
     public:
-      particle();
-      /// Constructor which initialises the particles value and weight.
-      particle(const std::vector<Space> &sInit,const arma::vec & dLogWeight);
+      population();
+      /// Constructor which initialises the particle values and weights.
+      population(const std::vector<Space> &sInit,const arma::vec & dLogWeight);
       /// The copy constructor performs a shallow copy.
-      particle(const particle<Space> & pFrom);
+      population(const population<Space> & pFrom);
       /// The assignment operator performs a shallow copy.
-      particle<Space> & operator= (const particle<Space> & pFrom);
+      population<Space> & operator= (const population<Space> & pFrom);
 
-      ~particle();
+      ~population();
 
-      /// Returns the particle's value 
+      /// Returns the population values 
       std::vector<Space> const & GetValue(void) const {return value;}
-      /// Returns the particle's value 
+      /// Returns the value of the nth particle in the population
       Space const & GetValueN(int n) {return value[n];}
-      /// Returns a pointer to the value to allow for more efficient changes
+      /// Returns a pointer to the values to allow for more efficient changes
       std::vector<Space>* GetValuePointer(void) {return &value;}
       /// Returns a pointer to the value to allow for more efficient changes
       Space* GetValuePointerN(int n) {return &value[n];}
-      /// Returns the particle's log weight.
+      /// Returns the particles' log weights.
       arma::vec GetLogWeight(void) const {return logweight;}
-      /// Returns the particle's log weight.
+      /// Returns the nth particle's log weight.
       double GetLogWeightN(int n) const {return logweight(n);}
-      /// Returns the particle's unnormalised weight.
+      /// Returns the particles' unnormalised weights.
       arma::vec GetWeight(void) const {return exp(logweight);}
-      /// Returns the particle's unnormalised weight.
+      /// Returns the nth particle's unnormalised weight.
       double GetWeightN(int n) const {return exp(logweight(n));}
       
-      /// \brief Sets the particle's value and weight explicitly
+      /// \brief Sets the particle values and weight explicitly
       ///
-      /// \param sValue The particle value to use 
-      /// \param dLogWeight The natural logarithm of the new particle weight
+      /// \param sValue The particle values to use 
+      /// \param dLogWeight The natural logarithm of the new particle weights
       void Set(const std::vector<Space> &sValue,const arma::vec & dLogWeight){value = sValue; logweight = dLogWeight;}
       /// \brief Sets the particle's value explicitly
       ///
-      /// \param sValue The particle value to use
+      /// \param sValue The particle values to use
       void SetValue(const std::vector<Space> & sValue){value = sValue;}
-      /// \brief Sets the particle's value explicitly
+      /// \brief Sets the particles' values explicitly
       ///
-      /// \param sValue The particle value to use
+      /// \param sValue The particle values to use
       void SetValueN(const Space & sValue, int n){value[n] = sValue;}
-      /// \brief Sets the particle's log weight explicitly
+      /// \brief Sets the particle log weights explicitly
       ///
-      /// \param dLogWeight The natural logarithm of the new particle weight
+      /// \param dLogWeight The natural logarithm of the new particle weights
       void SetLogWeight(const arma::vec & dLogWeight) {logweight = dLogWeight;}
-      /// \brief Sets the particles weight explicitly
+      /// \brief Sets the particle weights explicitly
       ///
-      /// \param dWeight The new particle weight
+      /// \param dWeight The new particle weights
       void SetWeight(const arma::vec & dWeight) {logweight = log(dWeight);}
 
-      /// \brief Increase the log weight by a specified amount
+      /// \brief Increase the log weights by a specified amount
       ///
-      /// \param dIncrement The amount to add to the log weight.
+      /// \param dIncrement The amount to add to the log weights.
       void AddToLogWeight(const arma::vec & dIncrement) { logweight += dIncrement;}
-      /// \brief Multiply the weight by a specified factor
+      /// \brief Multiply the weights by a specified factor
       ///
-      /// \param dMultiplier The factor to multiply the weight by.
+      /// \param dMultiplier The factor to multiply the weights by.
       void MultiplyWeightBy(const arma::vec & dMultiplier) { logweight += log(dMultiplier);}
   };
 
 
-/// Create a particle with undefined value and weight NAN
+/// Create a particle with undefined values and weights NAN
   template <class Space>
-    particle<Space>::particle()
+    population<Space>::population()
     {	
 		arma::vec logweight;
     }
@@ -115,32 +115,32 @@ namespace smc {
 
   ///Copy constructor
   template <class Space>
-  particle<Space>::particle(const particle<Space> & pFrom)
+  population<Space>::population(const population<Space> & pFrom)
   {
     value = pFrom.value;
     logweight = pFrom.logweight;
   }
   
-  /// Create a particle with value sInit and log weight dLogWeight 
-  /// \param sInit The initial value of the particle
-  /// \param dLogWeight The initial value of the natural logarithm of the particle weight
+  /// Create particles with values sInit and log weights dLogWeight 
+  /// \param sInit The initial values of the particles
+  /// \param dLogWeight The initial values of the natural logarithm of the particle weights
   template <class Space>
-    particle<Space>::particle(const std::vector<Space> & sInit, const arma::vec & dLogWeight)
+    population<Space>::population(const std::vector<Space> & sInit, const arma::vec & dLogWeight)
     {
       value = sInit;
       logweight =dLogWeight;
     }
 
-  /// Dispose of a particle which is no longer required
+  /// Dispose of particles which are no longer required
   template <class Space>
-  particle<Space>::~particle()
+  population<Space>::~population()
   {
   }
 
   /// Copy the values of pFrom to the values of this to set this particle identical to pFrom in a deep
   /// copy sense.
   template <class Space>
-  particle<Space> & particle<Space>::operator= (const particle<Space> & pFrom)
+  population<Space> & population<Space>::operator= (const population<Space> & pFrom)
   {	  
     this->value = pFrom.value;
     this->logweight = pFrom.logweight;

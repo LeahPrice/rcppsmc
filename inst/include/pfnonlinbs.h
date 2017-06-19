@@ -33,9 +33,9 @@ namespace nonlinbs {
 	
     arma::vec logLikelihood(long lTime, const std::vector<double> & X);
 
-    smc::particle<double> fInitialise(smc::rng *pRng);
-    long fSelect(long lTime, const smc::particle<double> & p, smc::rng *pRng);
-    void fMove(long lTime, smc::particle<double> & pFrom, smc::rng *pRng);
+    smc::population<double> fInitialise(smc::rng *pRng);
+    long fSelect(long lTime, const smc::population<double> & p, smc::rng *pRng);
+    void fMove(long lTime, smc::population<double> & pFrom, smc::rng *pRng);
 
     double integrand_mean_x(const double&, void*);
     double integrand_var_x(const double&, void*);

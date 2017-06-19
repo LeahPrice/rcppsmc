@@ -1,6 +1,6 @@
 // -*- mode: C++; c-indent-level: 4; c-basic-offset: 4; indent-tabs-mode: nil; -*-
 //
-// radiata.h: Rcpp wrapper for SMC library -- A simple example for estimating
+// LinReg.h: Rcpp wrapper for SMC library -- A simple example for estimating
 // the parameters of a linear regression model using data annealing SMC.
 //
 // Copyright (C) 2017         Dirk Eddelbuettel, Adam Johansen and Leah South
@@ -37,17 +37,17 @@ public:
 };
 
 
-namespace radiata {
+namespace LinReg {
     rad_obs y;
 	double mean_x;
 	unsigned long lNumber;
 	
 	arma::vec logWeight(long lTime, const std::vector<rad_state> & X);
 	double logPosterior(long lTime, const rad_state & X);
-	smc::particle<rad_state> fInitialise(smc::rng *pRng);
-	long fSelect(long lTime, const smc::particle<rad_state> & p, smc::rng *pRng);
-	void fMove(long lTime, smc::particle<rad_state> & pFrom, smc::rng *pRng);
-	int fMCMC(long lTime, smc::particle<rad_state> & pFrom, smc::rng *pRng);
+	smc::population<rad_state> fInitialise(smc::rng *pRng);
+	long fSelect(long lTime, const smc::population<rad_state> & p, smc::rng *pRng);
+	void fMove(long lTime, smc::population<rad_state> & pFrom, smc::rng *pRng);
+	int fMCMC(long lTime, smc::population<rad_state> & pFrom, smc::rng *pRng);
 
 	double integrand_mean_alpha(const rad_state&, void*);
 	double integrand_mean_beta(const rad_state&, void*);

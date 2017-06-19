@@ -26,9 +26,9 @@
 using namespace std;
 
 namespace BSPFG {
-	smc::particle<vector<double> > fInitialise(smc::rng *pRng);
-	//long fSelect(long lTime, const smc::particle<vector<double> > & p, smc::rng *pRng);
-	void fMove(long lTime, smc::particle<vector<double> > & pFrom, smc::rng *pRng);
+	smc::population<vector<double> > fInitialise(smc::rng *pRng);
+	//long fSelect(long lTime, const smc::population<vector<double> > & p, smc::rng *pRng);
+	void fMove(long lTime, smc::population<vector<double> > & pFrom, smc::rng *pRng);
 
     Rcpp::NumericVector y; 
 	long lLag;

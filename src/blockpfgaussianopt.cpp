@@ -57,14 +57,14 @@ Rcpp::List blockpfGaussianOpt_cpp(Rcpp::NumericVector data, long inlNumber, long
   arma::vec resWeights(lNumber);
   double logNC = Sampler.GetLogNCPath();
   
-  std::vector<vector<double> > pValue = Sampler.GetParticleValue();
+  std::vector<vector<double> > pValue = Sampler.GetPopulationValue();
   for(int i = 0; i < lNumber; ++i) 
   {
     for(int j = 0; j < lIterates; ++j) {
       resValues(i,j) = pValue.at(i).at(j);
     }
   }
-  resWeights = Sampler.GetParticleWeight();
+  resWeights = Sampler.GetPopulationWeight();
   
   return Rcpp::List::create(Rcpp::_["weight"] = resWeights, Rcpp::_["values"] = resValues, Rcpp::_["logNC"] = logNC);
 }
@@ -74,22 +74,22 @@ using namespace std;
 namespace BSPFG {
 
 /// \param pRng A pointer to the random number generator which is to be used
-smc::particle<vector<double> > fInitialise(smc::rng *pRng)
+smc::population<vector<double> > fInitialise(smc::rng *pRng)
 {
   std::vector<vector<double> > value(lNumber);
   for (int k=0; k<lNumber; k++){
     value[k].push_back(pRng->Normal(0.5 * y[0],1.0/sqrt(2.0)));
   }
   
-  return smc::particle<vector<double> >(value,arma::ones(lNumber));
+  return smc::population<vector<double> >(value,arma::ones(lNumber));
 }
 
 ///The proposal function.
 
 ///\param lTime The sampler iteration.
-///\param pFrom The particle to move.
+///\param pFrom The population to move.
 ///\param pRng  A random number generator.
-void fMove(long lTime, smc::particle<vector<double> > & pFrom, smc::rng *pRng)
+void fMove(long lTime, smc::population<vector<double> > & pFrom, smc::rng *pRng)
 {
   std::vector<vector<double> > * cv_to = pFrom.GetValuePointer();
   arma::vec logtarget(lNumber);

@@ -1,15 +1,15 @@
 
-radiataBS<- function(data, particles=1000) {
+LinRegBS<- function(data, particles=1000) {
 
     # if no data supplied, use default
-    if (missing(data)) data <- getradiataBSData()
+    if (missing(data)) data <- getRadiataBSData()
 
     # more eloquent tests can be added
     stopifnot(nrow(data) > 0,
               ncol(data) == 2,
               colnames(data) == c("x", "y"))
 	
-	res <- radiataBS_cpp(as.matrix(data),particles)			 
+	res <- LinRegBS_cpp(as.matrix(data),particles)			 
 				 
 
     invisible(res)
@@ -17,7 +17,7 @@ radiataBS<- function(data, particles=1000) {
 
 # simple convenience function, should probably make the data a
 # data component of the package...
-getradiataBSData <- function() {
+getRadiataBSData <- function() {
     file <- system.file("sampleData", "radiata-data.csv", package="RcppSMC")
     dat <- read.table(file, skip=1, header=FALSE, col.names=c("x","y"))
     invisible(dat)

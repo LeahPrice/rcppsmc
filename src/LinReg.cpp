@@ -1,6 +1,6 @@
 // -*- mode: C++; c-indent-level: 4; c-basic-offset: 4; indent-tabs-mode: nil; -*-
 //
-// radiata.cpp: A simple example for estimating the parameters of a
+// LinReg.cpp: A simple example for estimating the parameters of a
 // linear regression model using data annealing SMC.
 //
 // Copyright (C) 2017         Dirk Eddelbuettel, Adam Johansen and Leah South
@@ -22,7 +22,7 @@
 
 
 #include "smctc.h"
-#include "radiata.h"
+#include "LinReg.h"
 #include "rngR.h"
 #include <RcppArmadillo.h>
 
@@ -35,7 +35,7 @@
 #include <cmath>
 //#include <gsl/gsl_randist.h>
 
-namespace radiata {
+namespace LinReg {
 const double std_alpha = 50.0;
 const double std_beta = 11.0;
 const double std_phi = 0.2;
@@ -45,12 +45,12 @@ const double b_prior = pow(2.0*300.0*300.0,-1.0);
 }
 
 using namespace std;
-using namespace radiata;
+using namespace LinReg;
 
 
-// radiataBS() function callable from R via Rcpp::
+// LinRegBS() function callable from R via Rcpp::
 // [[Rcpp::export]]
-Rcpp::List radiataBS_cpp(arma::mat data, unsigned long inlNumber) { 	
+Rcpp::List LinRegBS_cpp(arma::mat data, unsigned long inlNumber) { 	
   
   long lIterates;
   
@@ -113,7 +113,7 @@ Rcpp::List radiataBS_cpp(arma::mat data, unsigned long inlNumber) {
   return R_NilValue;          	// to provide a return 
 }
 
-namespace radiata {
+namespace LinReg {
 double integrand_mean_alpha(const rad_state& s, void *){ return s.alpha;}
 double integrand_mean_beta(const rad_state& s, void *){ return s.beta;}
 double integrand_mean_phi(const rad_state& s, void *){ return s.phi;}
@@ -177,10 +177,10 @@ double logPosterior(long lTime, const rad_state & X){
   return (log_normpdf + log_prior);
 }
 
-///A function to initialise particles
+///A function to initialise the population
 
 /// \param pRng A pointer to the random number generator which is to be used
-smc::particle<rad_state> fInitialise(smc::rng *pRng)
+smc::population<rad_state> fInitialise(smc::rng *pRng)
 {
   std::vector<rad_state> value(lNumber);
   
@@ -191,15 +191,15 @@ smc::particle<rad_state> fInitialise(smc::rng *pRng)
     value[i].phi = log(pow(pRng->Gamma(3,pow(2.0*300.0*300.0,-1.0)),-1.0));
   }
   
-  return smc::particle<rad_state>(value,logWeight(0,value));
+  return smc::population<rad_state>(value,logWeight(0,value));
 }
 
 ///The proposal function.
 
 ///\param lTime The sampler iteration.
-///\param pFrom The particle to move.
+///\param pFrom The population to move.
 ///\param pRng  A random number generator.
-void fMove(long lTime, smc::particle<rad_state > & pFrom, smc::rng *pRng)
+void fMove(long lTime, smc::population<rad_state > & pFrom, smc::rng *pRng)
 {
   std::vector<rad_state> * cv_to = pFrom.GetValuePointer();  
   
@@ -209,9 +209,9 @@ void fMove(long lTime, smc::particle<rad_state > & pFrom, smc::rng *pRng)
 ///The proposal function.
 
 ///\param lTime The sampler iteration.
-///\param pFrom The particle to move.
+///\param pFrom The population to move.
 ///\param pRng  A random number generator.
-int fMCMC(long lTime, smc::particle<rad_state > & pFrom, smc::rng *pRng)
+int fMCMC(long lTime, smc::population<rad_state > & pFrom, smc::rng *pRng)
 {
   //Rcpp::Rcout << "lTime is " << lTime << std::endl;
   double MH_ratio;

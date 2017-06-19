@@ -94,24 +94,24 @@ arma::vec logLikelihood(long lTime, const std::vector<double> & x) {
   return loglike;
 }
 
-///A function to initialise particles
+///A function to initialise the population
 
 /// \param pRng A pointer to the random number generator which is to be used
-smc::particle<double> fInitialise(smc::rng *pRng) {
+smc::population<double> fInitialise(smc::rng *pRng) {
   std::vector<double> x(lNumber);
   for (int i=0; i<lNumber; i++){
     x[i] = pRng->Normal(0,std_x0);
   }
   
-  return smc::particle<double>(x,logLikelihood(0,x));
+  return smc::population<double>(x,logLikelihood(0,x));
 }
 
 ///The proposal function.
 
 ///\param lTime The sampler iteration.
-///\param pFrom The particle to move.
+///\param pFrom The population to move.
 ///\param pRng  A random number generator.
-void fMove(long lTime, smc::particle<double> & pFrom, smc::rng *pRng) {
+void fMove(long lTime, smc::population<double> & pFrom, smc::rng *pRng) {
   std::vector<double> *to = pFrom.GetValuePointer();
   for (int i = 0; i<lNumber; i++){
     to->at(i) = 0.5 * to->at(i) + 25.0*to->at(i) / (1.0 + to->at(i) * to->at(i)) + 8.0 * cos(1.2  * ( lTime)) + pRng->Normal(0.0,std_x);

@@ -146,7 +146,7 @@ arma::vec logLikelihood(long lTime, const std::vector<cv_state> & X)
   return loglike;
 }
 
-smc::particle<cv_state> fInitialise(smc::rng *pRng)
+smc::population<cv_state> fInitialise(smc::rng *pRng)
 {
   std::vector<cv_state> value(lNumber);
   
@@ -157,10 +157,10 @@ smc::particle<cv_state> fInitialise(smc::rng *pRng)
     value[i].y_vel  = pRng->Normal(0,sqrt(var_u0));
   }
   
-  return smc::particle<cv_state>(value,logLikelihood(0,value));
+  return smc::population<cv_state>(value,logLikelihood(0,value));
 }
 
-void fMove(long lTime, smc::particle<cv_state> & pFrom, smc::rng *pRng)
+void fMove(long lTime, smc::population<cv_state> & pFrom, smc::rng *pRng)
 {
   std::vector<cv_state> * cv_to = pFrom.GetValuePointer();
   
