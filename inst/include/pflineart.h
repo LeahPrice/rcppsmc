@@ -42,11 +42,11 @@ namespace pflineart {
 cv_obs y;
 unsigned long lNumber;
 
-arma::vec logLikelihood(long lTime, const std::vector<cv_state> & X);
+double logLikelihood(long lTime, const cv_state & value);
 
-smc::particle<cv_state> fInitialise(smc::rng *pRng);
+void fInitialise(smc::rng *pRng, cv_state & value, double & logweight);
 long fSelect(long lTime, const smc::population<cv_state> & p, smc::rng *pRng);
-void fMove(long lTime, smc::population<cv_state> & pFrom, smc::rng *pRng);
+void fMove(long lTime, cv_state & value, double & logweight, smc::rng *pRng);
 
 double integrand_mean_x(const cv_state&, void*);
 double integrand_mean_y(const cv_state&, void*);

@@ -31,11 +31,11 @@
 namespace nonlinbs {
 	long lNumber;
 	
-    arma::vec logLikelihood(long lTime, const std::vector<double> & X);
+    double logLikelihood(long lTime, const double & value);
 
-    smc::particle<double> fInitialise(smc::rng *pRng);
+    void fInitialise(smc::rng *pRng, double & value, double & logweight);
     long fSelect(long lTime, const smc::population<double> & p, smc::rng *pRng);
-    void fMove(long lTime, smc::population<double> & pFrom, smc::rng *pRng);
+    void fMove(long lTime, double & value, double & logweight, smc::rng *pRng);
 
     double integrand_mean_x(const double&, void*);
     double integrand_var_x(const double&, void*);

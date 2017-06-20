@@ -60,13 +60,11 @@ Rcpp::List pfLineartBS_cpp(arma::mat data, unsigned long inlNumber, bool useF, R
     
     lNumber = inlNumber;
     
-    // Load observations -- or rather copy them in from R
     lIterates = data.n_rows;
     y.x_pos = data.col(0);
     y.y_pos = data.col(1);
     
-    ///Initialise and run the sampler
-    //smc::sampler<cv_state> Sampler(lNumber);  
+    ///Initialise and run the sampler 
     smc::sampler<cv_state> Sampler(lNumber, SMC_HISTORY_NONE);  
     smc::moveset<cv_state> Moveset(fInitialise, fMove, NULL);
     
@@ -136,40 +134,27 @@ double integrand_var_y(const cv_state& s, void* vmy)
 
 using namespace std;
 
-arma::vec logLikelihood(long lTime, const std::vector<cv_state> & X)
-{   
-  arma::vec loglike(lNumber);
-  
-  for (unsigned int i = 0; i<lNumber; i++){
-    loglike(i) = - 0.5 * (nu_y + 1.0) * (log(1 + pow((X[i].x_pos - y.x_pos[lTime])/scale_y,2) / nu_y) + log(1 + pow((X[i].y_pos - y.y_pos[lTime])/scale_y,2) / nu_y));
-  }
-  return loglike;
+double logLikelihood(long lTime, const cv_state & value)
+{
+  return - 0.5 * (nu_y + 1.0) * (log(1 + pow((value.x_pos - y.x_pos[lTime])/scale_y,2) / nu_y) + log(1 + pow((value.y_pos - y.y_pos[lTime])/scale_y,2) / nu_y));
 }
 
-smc::particle<cv_state> fInitialise(smc::rng *pRng)
-{
-  cv_state value;
-  
+void fInitialise(smc::rng *pRng, cv_state & value, double & logweight)
+{ 
   value.x_pos = pRng->Normal(0,sqrt(var_s0));
     value.y_pos  = pRng->Normal(0,sqrt(var_s0));
     value.x_vel  = pRng->Normal(0,sqrt(var_u0));
     value.y_vel  = pRng->Normal(0,sqrt(var_u0));
-  double loglike = - 0.5 * (nu_y + 1.0) * (log(1 + pow((value.x_pos - y.x_pos[0])/scale_y,2) / nu_y) + log(1 + pow((value.y_pos - y.y_pos[0])/scale_y,2) / nu_y));
-  return smc::particle<cv_state>(value,loglike);
+  logweight = - 0.5 * (nu_y + 1.0) * (log(1 + pow((value.x_pos - y.x_pos[0])/scale_y,2) / nu_y) + log(1 + pow((value.y_pos - y.y_pos[0])/scale_y,2) / nu_y));
 }
 
-void fMove(long lTime, smc::population<cv_state> & pFrom, smc::rng *pRng)
+void fMove(long lTime, cv_state & value, double & logweight, smc::rng *pRng)
 {
-  std::vector<cv_state> * cv_to = pFrom.GetValuePointer();
+    value.x_pos += value.x_vel * Delta + pRng->Normal(0,sqrt(var_s));
+    value.x_vel += pRng->Normal(0,sqrt(var_u));
+    value.y_pos += value.y_vel * Delta + pRng->Normal(0,sqrt(var_s));
+    value.y_vel += pRng->Normal(0,sqrt(var_u));
   
-  
-  for (unsigned int i = 0; i<lNumber; i++){
-    cv_to->at(i).x_pos += cv_to->at(i).x_vel * Delta + pRng->Normal(0,sqrt(var_s));
-    cv_to->at(i).x_vel += pRng->Normal(0,sqrt(var_u));
-    cv_to->at(i).y_pos += cv_to->at(i).y_vel * Delta + pRng->Normal(0,sqrt(var_s));
-    cv_to->at(i).y_vel += pRng->Normal(0,sqrt(var_u));
-  }
-  
-  pFrom.AddToLogWeight(logLikelihood(lTime, *cv_to));
+  logweight += logLikelihood(lTime, value);
 }
 }

@@ -42,15 +42,12 @@ namespace LinReg_LA {
 	long lIterates;
 	arma::vec temps;
 	
-	arma::vec logLikelihood(const std::vector<rad_state> & X);
-	double logLikelihood_single(const rad_state & X);
-	arma::vec logPrior(const std::vector<rad_state> & X);
-	double logPrior_single(const rad_state & X);
+	double logLikelihood(const rad_state & value);
+	double logPrior(const rad_state & value);
 	
-	smc::particle<rad_state> fInitialise(smc::rng *pRng);
-	long fSelect(long lTime, const smc::population<rad_state> & p, smc::rng *pRng);
-	void fMove(long lTime, smc::population<rad_state> & pFrom, smc::rng *pRng);
-	int fMCMC(long lTime, smc::population<rad_state> & pFrom, smc::rng *pRng);
+	void fInitialise(smc::rng *pRng, rad_state & value, double & logweight);
+	void fMove(long lTime, rad_state & value, double & logweight, smc::rng *pRng);
+	int fMCMC(long lTime, rad_state & value, smc::rng *pRng);
 	
 	double integrand_mean_alpha(const rad_state&, void*);
 	double integrand_mean_beta(const rad_state&, void*);

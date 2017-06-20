@@ -236,14 +236,12 @@ void sampler<Space>::Initialise(void)
   dlogNCIt = 0;
   dlogNCPath = 0;
   
-  
-  // population<Space> myPopulations; 
-  // myPopulations = Moves.DoInit(pRng);
-  // pPopulation = myPopulations;
-  pPopulation = Moves.DoInit(pRng,N);
+  std::vector<Space> InitVal(N);
+  arma::vec InitWeights(N);
+  pPopulation = population<Space>(InitVal,InitWeights);
+  Moves.DoInit(pRng,pPopulation,N);
 
   //Scaling weights by 1/N (mostly for evidence computation)
-	
 	pPopulation.SetLogWeight(pPopulation.GetLogWeight() - log(static_cast<double>(N))*arma::ones(N));
   
    if(htHistoryMode != SMC_HISTORY_NONE) {
@@ -269,7 +267,7 @@ void sampler<Space>::Initialise(void)
   nResampled = 0;
   }
   //A possible MCMC step could be included here.
-    if(Moves.DoMCMC(0,pPopulation, pRng))
+    if(Moves.DoMCMC(0,pPopulation, pRng,N))
       nAccepted++;
   
   return;
@@ -372,7 +370,7 @@ double sampler<Space>::IterateEss(void)
   else
     nResampled = 0;
   //A possible MCMC step could be included here.
-    if(Moves.DoMCMC(T+1,pPopulation, pRng))
+    if(Moves.DoMCMC(T+1,pPopulation, pRng,N))
       nAccepted++;
   // Increment the evolution time.
   T++;
@@ -390,8 +388,7 @@ void sampler<Space>::IterateUntil(long lTerminate)
 template <class Space>
 void sampler<Space>::MovePopulations(void)
 {
-    Moves.DoMove(T+1,pPopulation, pRng);
-    //  pPopulation[i].Set(pNew.value, pNew.logweight);
+    Moves.DoMove(T+1,pPopulation, pRng,N);
 }
 
 template <class Space>
@@ -405,8 +402,6 @@ void sampler<Space>::Resample(ResampleType lMode)
   case SMC_RESAMPLE_MULTINOMIAL:
     //Sample from a suitable multinomial vector
     dRSWeights = pPopulation.GetWeight();
-	//uRSCount = arma::zeros<arma::Col<unsigned int> >((int)N);
-    //pRng->Multinomial(N,N,dRSWeights,uRSCount.memptr());
     uRSCount = pRng->Multinomial(N,N,dRSWeights);
     break;
     
@@ -415,14 +410,12 @@ void sampler<Space>::Resample(ResampleType lMode)
     dRSWeights = exp(log((double)N)*arma::ones(N) + pPopulation.GetLogWeight() - CalcLogNC()*arma::ones(N));
 	
 	uRSIndices = arma::zeros<arma::Col<unsigned int> >((int)N);
-	//uRSCount = arma::zeros<arma::Col<unsigned int> >((int)N);
 	
 	for(int i = 0; i < N; ++i)
-		uRSIndices(i) = unsigned(floor(dRSWeights(i))); //Reuse temporary storage.
+		uRSIndices(i) = unsigned(floor(dRSWeights(i)));
 	dRSWeights = dRSWeights - uRSIndices;
 	uMultinomialCount = N - arma::sum(uRSIndices);
 	
-	//pRng->Multinomial(uMultinomialCount,N,dRSWeights,uRSCount.memptr());
 	uRSCount = pRng->Multinomial(uMultinomialCount,N,dRSWeights);
 	uRSCount += uRSIndices;
 	

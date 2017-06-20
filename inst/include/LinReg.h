@@ -42,12 +42,12 @@ namespace LinReg {
 	double mean_x;
 	unsigned long lNumber;
 	
-	arma::vec logWeight(long lTime, const std::vector<rad_state> & X);
-	double logPosterior(long lTime, const rad_state & X);
-	smc::particle<rad_state> fInitialise(smc::rng *pRng);
+	double logWeight(long lTime, const rad_state & value);
+	double logPosterior(long lTime, const rad_state & value);
+	void fInitialise(smc::rng *pRng, rad_state & value, double & logweight);
 	long fSelect(long lTime, const smc::population<rad_state> & p, smc::rng *pRng);
-	void fMove(long lTime, smc::population<rad_state> & pFrom, smc::rng *pRng);
-	int fMCMC(long lTime, smc::population<rad_state> & pFrom, smc::rng *pRng);
+	void fMove(long lTime, rad_state & value, double & logweight, smc::rng *pRng);
+	int fMCMC(long lTime, rad_state & value, smc::rng *pRng);
 
 	double integrand_mean_alpha(const rad_state&, void*);
 	double integrand_mean_beta(const rad_state&, void*);

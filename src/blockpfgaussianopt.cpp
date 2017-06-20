@@ -74,11 +74,10 @@ using namespace std;
 namespace BSPFG {
 
 /// \param pRng A pointer to the random number generator which is to be used
-smc::particle<vector<double> > fInitialise(smc::rng *pRng)
+void fInitialise(smc::rng *pRng, vector<double> & value, double & logweight)
 {
-  vector<double> value;
-  value.push_back(pRng->Normal(0.5 * y[0],1.0/sqrt(2.0)));  
-  return smc::particle<vector<double> >(value,1.0);
+  value.push_back(pRng->Normal(0.5 * y[0],1.0/sqrt(2.0)));
+  logweight = 1.0;
 }
 
 ///The proposal function.
@@ -86,17 +85,11 @@ smc::particle<vector<double> > fInitialise(smc::rng *pRng)
 ///\param lTime The sampler iteration.
 ///\param pFrom The population to move.
 ///\param pRng  A random number generator.
-void fMove(long lTime, smc::population<vector<double> > & pFrom, smc::rng *pRng)
+void fMove(long lTime, vector<double> & value, double & logweight, smc::rng *pRng)
 {
-  std::vector<vector<double> > * cv_to = pFrom.GetValuePointer();
-  arma::vec logtarget(lNumber);
   if(lTime == 1) {
-    for (int k=0; k<lNumber; k++){
-      cv_to->at(k).push_back((cv_to->at(k).at(lTime-1) + y[int(lTime)])/2.0 + pRng->Normal(0.0,1.0/sqrt(2.0)));
-      logtarget(k) = -0.25*(y[int(lTime)] - cv_to->at(k).at(lTime-1))*(y[int(lTime)]-cv_to->at(k).at(lTime-1));
-    }
-    pFrom.AddToLogWeight(logtarget);
-    
+      value.push_back((value.at(lTime-1) + y[int(lTime)])/2.0 + pRng->Normal(0.0,1.0/sqrt(2.0)));
+      logweight += -0.25*(y[int(lTime)] - value.at(lTime-1))*(y[int(lTime)]-value.at(lTime-1));
     return;
   }
   
@@ -108,9 +101,8 @@ void fMove(long lTime, smc::population<vector<double> > & pFrom, smc::rng *pRng)
   std::vector<double> sigmah(lag+1);
   std::vector<double> mub(lag+1);
   
-  for (int k=0; k<lNumber; k++){
     // Forward filtering
-    mu[0] = cv_to->at(k).at(lTime-lag);
+    mu[0] = value.at(lTime-lag);
     sigma[0] = 0;
     for(int i = 1; i <= lag; ++i)
     {
@@ -121,17 +113,15 @@ void fMove(long lTime, smc::population<vector<double> > & pFrom, smc::rng *pRng)
     }
     // Backward smoothing
     mub[lag] = mu[lag];
-    cv_to->at(k).push_back(pRng->Normal(mub[lag],sqrt(sigma[lag])));
+    value.push_back(pRng->Normal(mub[lag],sqrt(sigma[lag])));
     for(int i = lag-1; i; --i)
     {
-      mub[i] = (sigma[i]*cv_to->at(k).at(lTime-lag+i+1) + mu[i]) / (sigma[i]+1);
-      cv_to->at(k).at(lTime-lag+i) = pRng->Normal(mub[i],sqrt(sigma[lag]/(sigma[lag] + 1)));
+      mub[i] = (sigma[i]*value.at(lTime-lag+i+1) + mu[i]) / (sigma[i]+1);
+      value.at(lTime-lag+i) = pRng->Normal(mub[i],sqrt(sigma[lag]/(sigma[lag] + 1)));
     }
-    logtarget(k) = -0.5 * pow(y[int(lTime)] - mu[lag-1],2.0) / (sigmah[lag]+1) ;
-  }
-  
+	
   // Importance weighting
-  pFrom.AddToLogWeight(logtarget);
+	logweight += -0.5 * pow(y[int(lTime)] - mu[lag-1],2.0) / (sigmah[lag]+1) ;
   
 }
 }

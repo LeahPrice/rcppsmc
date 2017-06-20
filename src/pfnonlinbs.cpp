@@ -85,23 +85,17 @@ namespace nonlinbs {
 ///The function corresponding to the log likelihood at specified time and position (up to normalisation)
 
 ///  \param lTime The current time (i.e. the index of the current distribution)
-///  \param X     The state to consider 
-arma::vec logLikelihood(long lTime, const std::vector<double> & x) {
-  arma::vec loglike(lNumber);
-  for (int i=0; i<lNumber; i++){
-    loglike(i) = -0.5 * pow(y(int(lTime)) - x[i]*x[i]*scale_y,2) / var_y;
-  }
-  return loglike;
+///  \param value     The state to consider 
+double logLikelihood(long lTime, const double & value) {
+  return -0.5 * pow(y(int(lTime)) - value*value*scale_y,2) / var_y;;
 }
 
 ///A function to initialise a particle
 
 /// \param pRng A pointer to the random number generator which is to be used
-smc::particle<double> fInitialise(smc::rng *pRng) {
-	  double value = pRng->Normal(0,std_x0);
-	double loglike = -0.5 * pow(y(int(0)) - value*value*scale_y,2) / var_y;
-
-  return smc::particle<double>(value,loglike);
+void fInitialise(smc::rng *pRng, double & value, double & logweight) {
+	value = pRng->Normal(0,std_x0);
+	logweight = -0.5 * pow(y(int(0)) - value*value*scale_y,2) / var_y;
 }
 
 ///The proposal function.
@@ -109,12 +103,9 @@ smc::particle<double> fInitialise(smc::rng *pRng) {
 ///\param lTime The sampler iteration.
 ///\param pFrom The population to move.
 ///\param pRng  A random number generator.
-void fMove(long lTime, smc::population<double> & pFrom, smc::rng *pRng) {
-  std::vector<double> *to = pFrom.GetValuePointer();
-  for (int i = 0; i<lNumber; i++){
-    to->at(i) = 0.5 * to->at(i) + 25.0*to->at(i) / (1.0 + to->at(i) * to->at(i)) + 8.0 * cos(1.2  * ( lTime)) + pRng->Normal(0.0,std_x);
-  }
-  pFrom.AddToLogWeight(logLikelihood(lTime, *to));
+void fMove(long lTime, double & value, double & logweight, smc::rng *pRng) {
+  value = 0.5 * value + 25.0*value / (1.0 + value * value) + 8.0 * cos(1.2  * ( lTime)) + pRng->Normal(0.0,std_x);
+  logweight += logLikelihood(lTime, value);
 }
 
 

@@ -54,7 +54,7 @@ Rcpp::List LinRegLABS_cpp(arma::mat data, arma::vec intemps, unsigned long inlNu
   try {
 	temps = intemps;
     lNumber = inlNumber;
-    // Load observations -- or rather copy them in from R
+	
     lIterates = data.n_rows;
     y.data_x = data.col(0);
     y.data_y = data.col(1);
@@ -136,117 +136,78 @@ double integrand_var_phi(const rad_state& s, void* vmx){
 }
 
 
-///The function corresponding to the log likelihood at specified time and position (up to normalisation)
-
-///  \param lTime The current time (i.e. the index of the current distribution)
-///  \param X     The state to consider 
-arma::vec logLikelihood(const std::vector<rad_state> & X){
-  arma::vec log_normpdf(lNumber);
-  double sigma;
-  arma::vec mean_reg(lIterates);
+///The function corresponding to the log likelihood at specified position
+///  \param value     The state to consider 
+double logLikelihood(const rad_state & value){
   
-  for (unsigned int i=0; i<lNumber; i++){
-    sigma = pow(expl(X[i].phi),0.5);
-    mean_reg = X[i].alpha*arma::ones(lIterates) + X[i].beta*(y.data_x - mean_x*arma::ones(lIterates));
-    log_normpdf(i) = arma::sum(-log(sigma)*arma::ones(lIterates) - pow(y.data_y - mean_reg,2.0)/(2.0*sigma*sigma) -0.5*log(2.0*M_PI)*arma::ones(lIterates));	
-  }
+  double sigma = pow(expl(value.phi),0.5);
+  arma::vec mean_reg = value.alpha*arma::ones(lIterates) + value.beta*(y.data_x - mean_x*arma::ones(lIterates));
+  return arma::sum(-log(sigma)*arma::ones(lIterates) - pow(y.data_y - mean_reg,2.0)/(2.0*sigma*sigma) -0.5*log(2.0*M_PI)*arma::ones(lIterates));	
   
-  return log_normpdf;
 }
-
-///The function corresponding to the log posterior at specified time and position (up to normalisation)
-
-///  \param lTime The current time (i.e. the index of the current distribution)
-///  \param X     The state to consider 
-double logLikelihood_single(const rad_state & X){
-  
-  double sigma = pow(expl(X.phi),0.5);
-  arma::vec mean_reg = X.alpha*arma::ones(lIterates) + X.beta*(y.data_x - mean_x*arma::ones(lIterates));
-  double log_normpdf = arma::sum(-log(sigma)*arma::ones(lIterates) - pow(y.data_y - mean_reg,2.0)/(2.0*sigma*sigma) -0.5*log(2.0*M_PI)*arma::ones(lIterates));	
-  
-  return log_normpdf;
-}
-
-///The function corresponding to the log posterior at specified time and position (up to normalisation)
-
-///  \param X     The state to consider 
-arma::vec logPrior(const std::vector<rad_state> & X){
-  arma::vec log_prior(lNumber);
-  for (unsigned int i=0; i<lNumber; i++){
-    log_prior(i) = -log(1000.0)- pow(X[i].alpha - 3000.0,2.0)/(2.0*1000.0*1000.0) -log(100.0)- pow(X[i].beta - 185.0,2.0)/(2.0*100.0*100.0) + X[i].phi-1.0/b_prior/expl(X[i].phi) -X[i].phi*(a_prior+1.0);
-  }
-  return log_prior;
-}
-
-///The function corresponding to the log posterior at specified time and position (up to normalisation)
-
-///  \param X     The state to consider 
-double logPrior_single(const rad_state & X){
-  return -log(1000.0)- pow(X.alpha - 3000.0,2.0)/(2.0*1000.0*1000.0) -log(100.0)- pow(X.beta - 185.0,2.0)/(2.0*100.0*100.0) + X.phi-1.0/b_prior/expl(X.phi) -X.phi*(a_prior+1.0);
+///The function corresponding to the log prior at specified position
+///  \param value     The state to consider 
+double logPrior(const rad_state & value){
+  return -log(1000.0)- pow(value.alpha - 3000.0,2.0)/(2.0*1000.0*1000.0) -log(100.0)- pow(value.beta - 185.0,2.0)/(2.0*100.0*100.0) + value.phi-1.0/b_prior/expl(value.phi) -value.phi*(a_prior+1.0);
 }
 
 ///A function to initialise a particle
 
 /// \param pRng A pointer to the random number generator which is to be used
-smc::particle<rad_state> fInitialise(smc::rng *pRng)
+void fInitialise(smc::rng *pRng, rad_state & value, double & logweight)
 {
-	rad_state value;
 	// drawing from the prior
     value.alpha = pRng->Normal(3000.0,1000.0);
     value.beta = pRng->Normal(185.0,100.0);
     value.phi = log(pow(pRng->Gamma(3,pow(2.0*300.0*300.0,-1.0)),-1.0));
-	
-    arma::vec mean_reg = value.alpha*arma::ones(lIterates) + value.beta*(y.data_x - mean_x*arma::ones(lIterates));
-    double sigma = pow(expl(value.phi),0.5);
-    double log_normpdf = arma::sum(-log(sigma)*arma::ones(lIterates) - pow(y.data_y - mean_reg,2.0)/(2.0*sigma*sigma) -0.5*log(2.0*M_PI)*arma::ones(lIterates));
-  
-  return smc::particle<rad_state>(value,temps(0)*log_normpdf);
+    logweight = temps(0)*logLikelihood(value);
 }
 
 ///The proposal function.
 
 ///\param lTime The sampler iteration.
-///\param pFrom The population to move.
+///\param value The value of the particle being moved
+///\param logweight The log weight of the particle being moved
 ///\param pRng  A random number generator.
-void fMove(long lTime, smc::population<rad_state > & pFrom, smc::rng *pRng)
+void fMove(long lTime, rad_state & value, double & logweight, smc::rng *pRng)
 {
-  std::vector<rad_state> * cv_to = pFrom.GetValuePointer();  
-  
-  pFrom.AddToLogWeight((temps(lTime) - temps(lTime-1))*logLikelihood(*cv_to));
+	logweight += (temps(lTime) - temps(lTime-1))*logLikelihood(value);
 }
 
 ///The proposal function.
 
 ///\param lTime The sampler iteration.
-///\param pFrom The population to move.
+///\param value The value of the particle being moved
 ///\param pRng  A random number generator.
-int fMCMC(long lTime, smc::population<rad_state > & pFrom, smc::rng *pRng)
+int fMCMC(long lTime, rad_state & value, smc::rng *pRng)
 {
   double MH_ratio;
   double dRand;
   int count = 0;
-  
-  rad_state * cv_to;
-  rad_state cv_to_new;
-  
-  for (unsigned int i=0; i<lNumber; i++){
+  rad_state value_prop;
+  double loglike_curr = logLikelihood(value);
+  double logprior_curr = logPrior(value);
+  double loglike_prop;
+  double logprior_prop;
     
     for (unsigned int j=0; j<10; j++){
-      cv_to = pFrom.GetValuePointerN(i);
+      value_prop.alpha = pRng->Normal(value.alpha,std_alpha);
+      value_prop.beta = pRng->Normal(value.beta,std_beta);
+      value_prop.phi = pRng->Normal(value.phi,std_phi);
 	  
-      cv_to_new.alpha = pRng->Normal(cv_to->alpha,std_alpha);
-      cv_to_new.beta = pRng->Normal(cv_to->beta,std_beta);
-      cv_to_new.phi = pRng->Normal(cv_to->phi,std_phi);
+	  loglike_prop = logLikelihood(value_prop);
+	  logprior_prop = logPrior(value_prop);
       
-      MH_ratio = exp(temps(lTime)*(logLikelihood_single(cv_to_new) - logLikelihood_single(*cv_to)) + logPrior_single(cv_to_new) - logPrior_single(*cv_to));
+      MH_ratio = exp(temps(lTime)*(loglike_prop - loglike_curr) + logprior_prop - logprior_curr);
       dRand = pRng->Uniform(0,1);
       
       if (MH_ratio>dRand){
-        pFrom.SetValueN(cv_to_new,i);
+        value = value_prop;
+		loglike_curr = loglike_prop;
+		logprior_curr = logprior_prop;
         count++;
       }
     }
-  }
   return count;
 }
 }

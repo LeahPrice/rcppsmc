@@ -34,39 +34,7 @@
 #include <float.h>
 #include <limits>
 #include <cmath>
-namespace smc {
-	template <class Space> class particle
-  {
-	  public:
-	  Space value;
-	  double logweight;
-	  
-	  public:
-      particle(){	
-		arma::vec logweight;
-    }
-      /// The assignment operator performs a shallow copy.
-      /// Constructor which initialises the particles value and weight.
-      particle(const Space &sInit,double dLogWeight){
-      value = sInit;
-      logweight =dLogWeight;};
-	  
-      /// The assignment operator performs a shallow copy.
-      particle<Space> & operator= (const particle<Space> & pFrom)
-  {	  
-    this->value = pFrom.value;
-    this->logweight = pFrom.logweight;
-    return *this;
-  };
-  
-	  /// Returns the particle's value 
-      Space const & GetValue(void) {return value;}
-      /// Returns the particle's log weight.
-      double GetLogWeight(void) const {return logweight;}
-	  
-  };
-	
-	
+namespace smc {	
   /// A template class for the particles of an SMC algorithm
   template <class Space> class population
     {
@@ -91,6 +59,8 @@ namespace smc {
       std::vector<Space> const & GetValue(void) const {return value;}
       /// Returns the value of the nth particle in the population
       Space const & GetValueN(int n) {return value[n];}
+      /// Returns the value of the nth particle in the population
+      Space & GetValueRefN(int n) {return value[n];}
       /// Returns a pointer to the values to allow for more efficient changes
       std::vector<Space>* GetValuePointer(void) {return &value;}
       /// Returns a pointer to the value to allow for more efficient changes
@@ -99,6 +69,8 @@ namespace smc {
       arma::vec GetLogWeight(void) const {return logweight;}
       /// Returns the nth particle's log weight.
       double GetLogWeightN(int n) const {return logweight(n);}
+      /// Returns the nth particle's log weight.
+      double & GetLogWeightRefN(int n) {return logweight(n);}
       /// Returns the particles' unnormalised weights.
       arma::vec GetWeight(void) const {return exp(logweight);}
       /// Returns the nth particle's unnormalised weight.

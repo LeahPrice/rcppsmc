@@ -1,3 +1,66 @@
+2017-06-20  Leah South  <leah.south@hdr.qut.edu.au>
+
+    * inst/include/moveset.h: Changing so that the user-defined initialisation
+	  function takes a reference to a particle value as input and does not return
+	  anything. User-defined move and MCMC functions now take references to particle
+	  values and log weights as inputs.
+	* inst/include/population.h: removing the particle level object
+	* inst/include/sampler.h: Switching to the new initialisation, move and MCMC functions
+	
+	* src/LinReg.cpp: Updating the initialisation and move functions to correspond to above changes.
+	* src/LinReg_LA.cpp: Idem
+	* src/blockpfgaussianopt.cpp: Idem
+	* src/pflineart.cpp: Idem
+	* src/pfnonlinbs.cpp: Idem
+	* inst/include/LinReg.h: Idem
+	* inst/include/LinReg_LA.h: Idem
+	* inst/include/blockpfgaussianopt.h: Idem
+	* inst/include/pflineart.h: Idem
+	* inst/include/pfnonlinbs.h: Idem
+
+2017-06-19  Leah South  <leah.south@hdr.qut.edu.au>
+
+    * inst/include/moveset.h: Moving the for loop for initialisation back into the library
+	* inst/include/population.h: Creating a particle level object to be used only in initialisation
+	* inst/include/sampler.h: Calling the new initialisation function
+	
+	* src/LinReg.cpp: Updating the initialisation function to return a particle level object.
+	* src/LinReg_LA.cpp: Idem
+	* src/blockpfgaussianopt.cpp: Idem
+	* src/pflineart.cpp: Idem
+	* src/pfnonlinbs.cpp: Idem
+	* inst/include/LinReg.h: Idem
+	* inst/include/LinReg_LA.h: Idem
+	* inst/include/blockpfgaussianopt.h: Idem
+	* inst/include/pflineart.h: Idem
+	* inst/include/pfnonlinbs.h: Idem
+
+2017-06-19  Leah South  <leah.south@hdr.qut.edu.au>
+
+    * inst/include/population.h: replaces particle.h. Renaming the template class for the particles to "population"
+	* inst/include/history.h: Idem
+	* inst/include/moveset.h: Idem
+	* inst/include/sampler.h: Idem
+	* inst/include/blockpfgaussianopt.h: Idem
+	* inst/include/pflineart.h: Idem
+	* inst/include/pfnonlinbs.h: Idem
+	* src/blockpfgaussianopt.cpp: Idem
+	* src/pflineart.cpp: Idem
+	* src/pfnonlinbs.cpp: Idem
+	
+	* NAMESPACE: Changing names so that radiata -> LinReg to specify the type
+	  of problem not the dataset. Changing "radiataPP" to "LinRegLA" where LA
+	  stands for likelihood annealing instead of power posteriors.
+	* R/LinRegBS.R: replaces radiataBS
+	* R/LinRegPPBS.R: replaces radiataPPBS
+	* inst/include/LinReg.h: replaces radiata
+	* inst/include/LinReg_LA.h: replaces radiata_pp
+	* inst/sampleData/radiata-temps.csv: replaces radiata-pptemps
+	* man/LinRegBS.Rd: replaces radiataBS
+	* man/LinRegLABS.Rd: replaces radiataPPBS
+	* src/LinReg.cpp: replaces radiata
+	* src/LinReg_LA.cpp: replaces radiata_pp
+	
 2017-06-19  Leah South  <leah.south@hdr.qut.edu.au>
 
 	* inst/include/history.h: Updating the description at the top of the file.
@@ -41,8 +104,33 @@
 
 2017-06-16  Leah South  <leah.south@hdr.qut.edu.au>
 
-	* Switching to the particle set on the population level rather than the individual particle level.
-
+	* DESCRIPTION: Linking to RcppArmadillo
+	* src/Makevars: Adding a line for Armadillo use
+	
+	* NAMESPACE: Adding a likelihood annealing implementation of the radiata pine regression example
+	* inst/include/radiata_pp.h: Idem
+	* inst/include/radiata-pptemps.csv: Idem
+	* src/radiata_pp.cpp: Idem
+	* R/radiataPPBS.R: Idem
+	
+	* inst/include/history.h: Switching to a population level object and using Armadillo vectors for weights
+	* inst/include/moveset.h: Idem
+	* inst/include/particle.h: Idem
+	* inst/include/rngR.h: Idem
+	* inst/include/sampler.h: Idem
+	* inst/include/smc-exception.h: Idem
+	* src/history.cppsrc/smc-exception.cpp: Idem
+	
+	* inst/include/blockpfgaussianopt.h: Making more use of the example namespaces & switching to population level objects
+	* inst/include/pflineart.h: Idem
+	* inst/include/radiata.h: Idem
+	* inst/include/pfnonlinbs.h: Idem
+	* src/blockpfgaussianopt.cpp: Idem
+	* src/pflineart.cpp: Idem
+	* src/pfnonlinbs.cpp: Idem
+	* src/radiata.cpp: Idem
+	* src/init.c: Idem
+	
 2017-06-06  Leah South  <leah.south@hdr.qut.edu.au>
 
 	* inst/include/sampler.h: added ability to estimate the ratio of normalising constants
