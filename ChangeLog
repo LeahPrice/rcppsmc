@@ -1,3 +1,10 @@
+2017-06-22  Leah South  <leah.south@hdr.qut.edu.au>
+
+	* inst/include/history.h: Switching back to pointers...
+    * inst/include/sampler.h: Changing so that a pointer to the population set is entered in
+	  History.Push and History.Pop.
+	  
+
 2017-06-20  Leah South  <leah.south@hdr.qut.edu.au>
 
     * inst/include/moveset.h: Changing so that the user-defined initialisation

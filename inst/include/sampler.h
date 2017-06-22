@@ -247,7 +247,7 @@ void sampler<Space>::Initialise(void)
    if(htHistoryMode != SMC_HISTORY_NONE) {
     while(History.Pop()!=NULL);
     nResampled = 0;
-    History.Push(N, pPopulation, 0, historyflags(nResampled));
+    History.Push(N, &pPopulation, 0, historyflags(nResampled));
   }    
   
   //Estimate the normalising constant
@@ -312,7 +312,7 @@ double sampler<Space>::IntegratePathSampling(double (*pIntegrand)(long,const pop
   if(htHistoryMode == SMC_HISTORY_NONE)
     throw SMC_EXCEPTION(SMCX_MISSING_HISTORY, "The path sampling integral cannot be computed as the history of the system was not stored.");
   
-  History.Push(N, pPopulation, nAccepted, historyflags(nResampled));
+  History.Push(N, &pPopulation, nAccepted, historyflags(nResampled));
   double dRes = History.IntegratePathSampling(pIntegrand, pWidth, pAuxiliary);
   History.Pop();
   return dRes;
@@ -337,7 +337,6 @@ void sampler<Space>::IterateBack(void)
   if(htHistoryMode == SMC_HISTORY_NONE)
     throw SMC_EXCEPTION(SMCX_MISSING_HISTORY, "An attempt to undo an iteration was made; unforunately, the system history has not been stored.");
   
-  //History.Pop(&N, pPopulation, &nAccepted, NULL);
   History.Pop(&N, &pPopulation, &nAccepted, NULL);
   T--;
   return;
@@ -347,7 +346,9 @@ template <class Space>
 double sampler<Space>::IterateEss(void)
 {
   //Initially, the current particle set should be appended to the historical process.
-    
+    if(htHistoryMode != SMC_HISTORY_NONE)
+      History.Push(N, &pPopulation, nAccepted, historyflags(nResampled));
+
   nAccepted = 0;
   
   //Move the particle set.

@@ -46,7 +46,7 @@ namespace smc {
     ///This function returns true if the flag set indicates that the ensemble was resampled during the described iteration.
     int WasResampled(void) {return Resampled;}
   };
-
+  
   
   
   
@@ -57,7 +57,7 @@ namespace smc {
   private:
     long number; //!< The number of particles (presently redundant as this is not a function of iteration)
     int nAccepted; //!< Number of MCMC moves accepted during this iteration.
-    Population value; //!< The particles themselves (values and weights)
+    Population* value; //!< The particles themselves (values and weights)
     historyflags flags; //!< Flags associated with this iteration.
     historyelement<Population> *pLast; //!< The parent of this node.
     historyelement<Population> *pNext; //!< The child of this node.
@@ -66,9 +66,9 @@ namespace smc {
     /// The null constructor creates an empty history element.
     historyelement();
     /// A constructor with four arguments initialises the particle set.
-    historyelement(long lNumber, const Population & pNew, int nAccepts, historyflags hf);
+    historyelement(long lNumber, Population* pNew, int nAccepts, historyflags hf);
     /// A constructor with six arguments initialises the whole structure.
-    historyelement(long lNumber, const Population & pNew, historyelement<Population>* pParent, historyelement<Population>* pChild, int nAccepts, historyflags  hf);
+    historyelement(long lNumber, Population* pNew, historyelement<Population>* pParent, historyelement<Population>* pChild, int nAccepts, historyflags  hf);
 
     /// The destructor tidies up.
     ~historyelement();
@@ -84,19 +84,19 @@ namespace smc {
     /// Returns the number of particles present.
     long GetNumber(void) const {return number;} 
     /// Returns a pointer to the current particle set.
-    Population const & GetValues(void) const { return value; }
-    /// Returns a pointer to the current particle set.
-    Population * GetPointers(void) { return &value; }
+    Population * GetValues(void) const { return value; }
+	/// Returns a pointer to the current particle set.
+    Population & GetRefs(void) { return *value; }
     /// Add a new history element with the specified values after the current one and maintain the list structure.
-    void InsertAfter(long lNumber, const Population & pNew);
+    void InsertAfter(long lNumber, Population * pNew);
     /// Integrate the supplied function according to the empirical measure of the particle ensemble.
-    long double Integrate(long lTime, double (*pIntegrand)(long,const Population &,void*), void* pAuxiliary);
+    long double Integrate(long lTime, double (*pIntegrand)(long,const Population&,void*), void* pAuxiliary);
     /// Sets the elements parent.
     void SetLast(historyelement<Population>* pParent) {pLast = pParent; }
     /// Sets the elements child.
     void SetNext(historyelement<Population>* pChild) {pNext = pChild; }
     /// Sets the particle set to the specified values.    
-    void SetValue(long lNumber, const Population & pNew);
+    void SetValue(long lNumber, Population * pNew);
 
     /// Returns the number of MCMC moves accepted during this iteration.
     int AcceptCount(void) {return nAccepted; }
@@ -146,16 +146,12 @@ namespace smc {
   /// \param hf      The historyflags associated with the particle generation
 
   template <class Population>
-  historyelement<Population>::historyelement(long lNumber, const Population & pNew, int nAccepts, historyflags hf) :
+  historyelement<Population>::historyelement(long lNumber, Population* pNew, int nAccepts, historyflags hf) :
     flags(hf)
   {
     number = lNumber;
-    // value = new Population[number];
-    // for(int i = 0; i < number; i++)
-    //   value[i] = pNew[i];
-  
-	Population value;
-	value = pNew;
+    value = new Population;
+    value = pNew;
 
     nAccepted = nAccepts;
     pLast = NULL;
@@ -169,15 +165,14 @@ namespace smc {
   /// \param nAccepts The number of MCMC moves that were accepted during this particle generation
   /// \param hf      The historyflags associated with the particle generation
   template <class Population>
-  historyelement<Population>::historyelement(long lNumber, const Population & pNew,
+  historyelement<Population>::historyelement(long lNumber, Population* pNew,
 					   historyelement<Population>* pParent, historyelement<Population>* pChild,
 					   int nAccepts, historyflags hf) :
     flags(hf)
   {
     number = lNumber;
-  
-	Population value;
-	value = pNew;
+	value = new Population;
+    value = pNew;
 
     nAccepted = nAccepts;
     pLast = pParent;
@@ -187,15 +182,15 @@ namespace smc {
   template <class Population>
   historyelement<Population>::~historyelement(void)
   {
-    // if(value)
-    //   delete [] value;
+    if(value)
+      delete [] value;
   }
 
   template <class Population>
   double historyelement<Population>::GetESS(void) const
   {
-	double sum = arma::sum(exp(value.GetLogWeight()));
-	double sumsq = arma::sum(exp(2.0*value.GetLogWeight()));
+	double sum = arma::sum(exp(value->GetLogWeight()));
+	double sumsq = arma::sum(exp(2.0*value->GetLogWeight()));
   
   return expl(-log(sumsq) + 2*log(sum));
   }
@@ -205,15 +200,15 @@ namespace smc {
   /// \param pAuxiliary A pointer to additional information which is passed to the integrand function
 
   template <class Population>
-  long double historyelement<Population>::Integrate(long lTime, double (*pIntegrand)(long,const Population &,void*), void* pAuxiliary)
+  long double historyelement<Population>::Integrate(long lTime, double (*pIntegrand)(long,const Population&,void*), void* pAuxiliary)
   {
-	long double rValue = 0;
+    long double rValue = 0;
 	long double wSum = 0;
 	for(int i =0; i < number; i++)
 	{
-		rValue += expl(value.GetLogWeightN(i)) * (long double)pIntegrand(lTime, value.GetValueN(i), pAuxiliary); // NEEDS FIXING TO HAVE RIGHT INPUT
+		rValue += expl(value->GetLogWeightN(i)) * (long double)pIntegrand(lTime, value->GetValueN(i), pAuxiliary); // NEEDS FIXING TO HAVE RIGHT INPUT
 		// rValue += expl(value[i].GetLogWeight()) * (long double)pIntegrand(lTime, value[i], pAuxiliary);
-		wSum  += expl(value.GetLogWeightN(i));
+		wSum  += expl(value->GetLogWeightN(i));
 	}
   
 	rValue /= wSum;
@@ -224,7 +219,7 @@ namespace smc {
   /// \param pNew The value of the particle generation to be inserted
 
   template <class Population>
-  void historyelement<Population>::InsertAfter(long lNumber, const Population & pNew)
+  void historyelement<Population>::InsertAfter(long lNumber, Population * pNew)
   {
     pNext = new historyelement<Population>(lNumber, pNew, this, pNext);    
   }
@@ -259,7 +254,7 @@ namespace smc {
       ///Returns the number of generations recorded within the history.
       long GetLength (void) const { return lLength; }
       ///Integrate the supplied function over the path of the particle ensemble.
-      double IntegratePathSampling(double (*pIntegrand)(long,const Population &,void*), double (*pWidth)(long,void*), void* pAuxiliary);
+      double IntegratePathSampling(double (*pIntegrand)(long,const Population&,void*), double (*pWidth)(long,void*), void* pAuxiliary);
       double IntegratePathSamplingFinalStep(double (*pIntegrand)(long,const Population&,void*), void* pAuxiliary) const;
 
       ///Output a vector indicating the number of accepted MCMC moves at each time instance
@@ -272,7 +267,7 @@ namespace smc {
       ///Remove the terminal particle generation from the list and stick it in the supplied data structures
       void Pop(long* plNumber, Population* ppNew, int* pnAccept, historyflags * phf);
       ///Append the supplied particle generation to the end of the list.
-      void Push(long lNumber, const Population & pNew, int nAccept, historyflags hf);
+      void Push(long lNumber, Population* pNew, int nAccept, historyflags hf);
 
 
       ///Display the list of particles in a human readable form.
@@ -347,12 +342,12 @@ namespace smc {
   /// pAuxiliary is passed to both of the user specified functions to allow the user to pass additional data to either or
   /// both of these functions in a convenient manner. It is safe to use NULL if no such data is used by either function.
   ///
-  /// \param pIntegrand  The function to integrated. The first argument is evolution time, the second a set of particles at which the function is to be evaluated and the final argument is always pAuxiliary.
+  /// \param pIntegrand  The function to integrated. The first argument is evolution time, the second a particle at which the function is to be evaluated and the final argument is always pAuxiliary.
   /// \param pWidth      The function which returns the width of the path sampling grid at the specified evolution time. The final argument is always pAuxiliary
   /// \param pAuxiliary  A pointer to auxiliary data to pass to both of the above functions
 
   template <class Population>
-  double history<Population>::IntegratePathSampling(double (*pIntegrand)(long,const Population &,void*), double (*pWidth)(long,void*), void* pAuxiliary)
+  double history<Population>::IntegratePathSampling(double (*pIntegrand)(long,const Population&,void*), double (*pWidth)(long,void*), void* pAuxiliary)
   {
     long lTime = 0;
     long double rValue = 0.0;
@@ -385,7 +380,7 @@ namespace smc {
     if(lLength == 0)
       return NULL;
 
-    Population * rValue = pLeaf->GetPointers();
+    Population * rValue = pLeaf->GetValues();
 
     lLength--;
 
@@ -409,10 +404,10 @@ namespace smc {
   {
     if(plNumber)
       (*plNumber) = pLeaf->GetNumber();
-    if(ppNew) {
-      //for(long l = 0; l < *plNumber; l++)
-      (*ppNew)    = pLeaf->GetValues();
-    }
+	if(ppNew){
+      //ppNew    = pLeaf->GetValues();
+      (*ppNew)    = pLeaf->GetRefs();
+	}
     if(pnAccept)
       (*pnAccept) = pLeaf->AcceptCount();
     if(phf)
@@ -424,7 +419,7 @@ namespace smc {
     }
     else {
       pLeaf = pLeaf->GetLast();
-      //      delete pLeaf->GetNext();
+      //delete pLeaf->GetNext();
       pLeaf->SetNext(NULL);
 
     }
@@ -444,7 +439,7 @@ namespace smc {
   /// \param hf      The historyflags associated with this generation of the system.
 
   template <class Population>
-  void history<Population>::Push(long lNumber, const Population & pNew, int nAccepts, historyflags hf)
+  void history<Population>::Push(long lNumber, Population * pNew, int nAccepts, historyflags hf)
   {
     if(lLength == 0) {
       pRoot = new historyelement<Population>(lNumber, pNew, nAccepts, hf);
