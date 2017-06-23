@@ -90,7 +90,7 @@ protected:
   ///A mode flag which indicates whether historical information is stored
   HistoryType htHistoryMode;
   ///The historical process associated with the particle system.
-  history<population<Space> > History;
+  std::list<historyelement<population<Space> > > History;
   ///An estimate of the overall ratio of normalising constants
   double dlogNCPath;
   ///An estimate of the latest iteration's ratio of normalising constants
@@ -106,7 +106,7 @@ public:
   ///Calculates and Returns the Effective Sample Size.
   double GetESS(void) const;
   ///Returns a pointer to the History of the particle system
-  const history<population<Space> > * GetHistory(void) const { return &History; }																												   
+  const std::list<historyelement<population<Space> > > & GetHistory(void) const { return History; }																												   
   ///Returns the current estimate of the log normalising constant ratio over the entire path
   double GetLogNCPath(void) const { return dlogNCPath; }
   ///Returns the current estimate of the log normalising constant ratio over the last step
@@ -117,6 +117,8 @@ public:
   double GetNCStep(void) const { return exp(dlogNCIt); }
   ///Returns the number of particles within the system.
   long GetNumber(void) const {return N;}
+  ///Returns the number of particles within the system.
+  long GetHistoryLength(void) const {return History.size();}
   ///Return the values of particles
   const std::vector<Space> &  GetPopulationValue(void) { return pPopulation.GetValue(); }
   ///Return the logarithmic unnormalized weights of particles
@@ -132,7 +134,7 @@ public:
   ///Integrate the supplied function with respect to the current particle set.
   double Integrate(double(*pIntegrand)(const Space &,void*), void* pAuxiliary);
   ///Integrate the supplied function over the path path using the supplied width function.
-  double IntegratePathSampling(double (*pIntegrand)(long,const population<Space>&,void*), double (*pWidth)(long,void*), void* pAuxiliary);
+  //double IntegratePathSampling(double (*pIntegrand)(long,const population<Space>&,void*), double (*pWidth)(long,void*), void* pAuxiliary);
   ///Perform one iteration of the simulation algorithm.
   void Iterate(void);
   ///Cancel one iteration of the simulation algorithm.
@@ -244,18 +246,13 @@ void sampler<Space>::Initialise(void)
   //Scaling weights by 1/N (mostly for evidence computation)
 	pPopulation.SetLogWeight(pPopulation.GetLogWeight() - log(static_cast<double>(N))*arma::ones(N));
   
-   if(htHistoryMode != SMC_HISTORY_NONE) {
-    while(History.Pop()!=NULL);
-    nResampled = 0;
-    History.Push(N, &pPopulation, 0, historyflags(nResampled));
-  }    
-  
   //Estimate the normalising constant
   dlogNCIt = CalcLogNC();
   dlogNCPath += dlogNCIt;
   
   //Normalise the weights to sensible values....
   pPopulation.SetLogWeight(pPopulation.GetLogWeight() - dlogNCIt*arma::ones(N));
+    
   
   //Check if the ESS is below some reasonable threshold and resample if necessary.
   double ESS = GetESS();
@@ -270,6 +267,16 @@ void sampler<Space>::Initialise(void)
     if(Moves.DoMCMC(0,pPopulation, pRng,N))
       nAccepted++;
   
+  
+  
+   if(htHistoryMode != SMC_HISTORY_NONE) {
+    History.clear();
+    nResampled = 0;
+	historyelement<population<Space> > inn;
+	inn.Set(N, pPopulation, 0, historyflags(nResampled));
+	
+	History.push_back(inn);
+  }  
   return;
 }
 
@@ -306,17 +313,17 @@ double sampler<Space>::Integrate(double(*pIntegrand)(const Space&,void*), void *
 /// \param pIntegrand  The quantity which we wish to integrate at each time
 /// \param pWidth      A pointer to a function which specifies the width of each 
 
-template <class Space>
-double sampler<Space>::IntegratePathSampling(double (*pIntegrand)(long,const population<Space> &,void*), double (*pWidth)(long,void*), void* pAuxiliary)
-{
-  if(htHistoryMode == SMC_HISTORY_NONE)
-    throw SMC_EXCEPTION(SMCX_MISSING_HISTORY, "The path sampling integral cannot be computed as the history of the system was not stored.");
+// template <class Space>
+// double sampler<Space>::IntegratePathSampling(double (*pIntegrand)(long,const population<Space> &,void*), double (*pWidth)(long,void*), void* pAuxiliary)
+// {
+  // if(htHistoryMode == SMC_HISTORY_NONE)
+    // throw SMC_EXCEPTION(SMCX_MISSING_HISTORY, "The path sampling integral cannot be computed as the history of the system was not stored.");
   
-  History.Push(N, &pPopulation, nAccepted, historyflags(nResampled));
-  double dRes = History.IntegratePathSampling(pIntegrand, pWidth, pAuxiliary);
-  History.Pop();
-  return dRes;
-}
+ // History.Push(N, &pPopulation, nAccepted, historyflags(nResampled));
+  //double dRes = History.IntegratePathSampling(pIntegrand, pWidth, pAuxiliary);
+  //History.Pop();
+  //return dRes;
+//}
 
 /// The iterate function:
 ///         -# appends the current particle set to the history if desired
@@ -336,8 +343,11 @@ void sampler<Space>::IterateBack(void)
 {
   if(htHistoryMode == SMC_HISTORY_NONE)
     throw SMC_EXCEPTION(SMCX_MISSING_HISTORY, "An attempt to undo an iteration was made; unforunately, the system history has not been stored.");
-  
-  History.Pop(&N, &pPopulation, &nAccepted, NULL);
+  History.pop_back();
+  pPopulation = History.back().GetRefs();
+  N = History.back().GetNumber();
+  nAccepted = History.back().AcceptCount();
+  //Add something to update flags...
   T--;
   return;
 }
@@ -345,9 +355,7 @@ void sampler<Space>::IterateBack(void)
 template <class Space>
 double sampler<Space>::IterateEss(void)
 {
-  //Initially, the current particle set should be appended to the historical process.
-    if(htHistoryMode != SMC_HISTORY_NONE)
-      History.Push(N, &pPopulation, nAccepted, historyflags(nResampled));
+  
 
   nAccepted = 0;
   
@@ -361,6 +369,7 @@ double sampler<Space>::IterateEss(void)
   //Normalise the weights
   pPopulation.SetLogWeight(pPopulation.GetLogWeight()  - dlogNCIt*arma::ones(N));
   
+   
   //Check if the ESS is below some reasonable threshold and resample if necessary.
   //A mechanism for setting this threshold is required.
   double ESS = GetESS();
@@ -375,6 +384,13 @@ double sampler<Space>::IterateEss(void)
       nAccepted++;
   // Increment the evolution time.
   T++;
+  
+  //Finally, the current particle set should be appended to the historical process.
+    if(htHistoryMode != SMC_HISTORY_NONE){
+		historyelement<population<Space> > inn;
+		inn.Set(N, pPopulation, nAccepted, historyflags(nResampled));
+		History.push_back(inn);
+	}
   
   return ESS;
 }

@@ -1,3 +1,8 @@
+2017-06-23  Leah South  <leah.south@hdr.qut.edu.au>
+
+    * inst/include/sampler.h: Switching to using STL list container for history
+	* inst/include/history.h: Idem (some functionality needs to be added back in)
+	
 2017-06-22  Leah South  <leah.south@hdr.qut.edu.au>
 
 	* inst/include/history.h: Switching back to pointers...
