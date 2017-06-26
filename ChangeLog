@@ -1,5 +1,10 @@
 2017-06-26  Leah South  <leah.south@hdr.qut.edu.au>
 
+	* inst/include/sampler.h: Removing unnecessary push to history in the path sampling estimator.
+    * inst/include/history.h: Adjusting iterators to correspond to the above change.
+
+2017-06-26  Leah South  <leah.south@hdr.qut.edu.au>
+
     * inst/include/history.h: re-introducing a history class and adding back in path sampling
 	  integration and stream operators.
 	* inst/include/population.h: Switching to const where appropriate

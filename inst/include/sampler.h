@@ -318,11 +318,11 @@ double sampler<Space>::IntegratePathSampling(double (*pIntegrand)(long,const pop
   if(htHistoryMode == SMC_HISTORY_NONE)
     throw SMC_EXCEPTION(SMCX_MISSING_HISTORY, "The path sampling integral cannot be computed as the history of the system was not stored.");
   
-	historyelement<population<Space> > histel;
-	histel.Set(N, pPopulation, nAccepted, historyflags(nResampled));
-	History.push_back(histel);
+	// historyelement<population<Space> > histel;
+	// histel.Set(N, pPopulation, nAccepted, historyflags(nResampled));
+	// History.push_back(histel);
 	double dRes = History.IntegratePathSampling(pIntegrand, pWidth, pAuxiliary);
-	History.pop_back();
+	// History.pop_back();
 	
   return dRes;
 }

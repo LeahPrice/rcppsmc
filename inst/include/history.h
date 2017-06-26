@@ -260,7 +260,8 @@ namespace smc {
   {
 	long lTime = 1;
 	long double rValue = 0.0;
-    for(typename std::list<historyelement<Population> >::const_iterator it = ++hist.begin(); it!=--hist.end(); it++){
+    //for(typename std::list<historyelement<Population> >::const_iterator it = ++hist.begin(); it!=--hist.end(); it++){
+    for(typename std::list<historyelement<Population> >::const_iterator it = ++hist.begin(); it!=hist.end(); it++){
 		rValue += it->Integrate(lTime, pIntegrand, pAuxiliary) * (long double)pWidth(lTime,pAuxiliary);
 		lTime++;
     }	
