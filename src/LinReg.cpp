@@ -64,7 +64,7 @@ Rcpp::List LinRegBS_cpp(arma::mat data, unsigned long inlNumber) {
     mean_x = arma::sum(y.data_x)/lIterates;
     
     //Initialise and run the sampler
-    smc::sampler<rad_state> Sampler(lNumber, SMC_HISTORY_NONE);  
+    smc::sampler<rad_state> Sampler(lNumber, SMC_HISTORY_RAM);  
     smc::moveset<rad_state> Moveset(fInitialise, fMove, fMCMC);
     
     Sampler.SetResampleParams(SMC_RESAMPLE_SYSTEMATIC, 0.5);
@@ -81,7 +81,7 @@ Rcpp::List LinRegBS_cpp(arma::mat data, unsigned long inlNumber) {
     phiv(0) = Sampler.Integrate(integrand_var_phi, (void*)&phim(0));
     ESS(0) = Sampler.GetESS();
     
-    
+	
     for(int n=1; n < lIterates; ++n) {
       Sampler.Iterate();
       
@@ -93,7 +93,12 @@ Rcpp::List LinRegBS_cpp(arma::mat data, unsigned long inlNumber) {
       phiv(n) = Sampler.Integrate(integrand_var_phi, (void*)&phim(n));
       ESS(n) = Sampler.GetESS();
     }
-    
+	
+	// smc::history<smc::population<rad_state> > FinalHistory = Sampler.GetHistory();
+	// FinalHistory.OstreamMCMCRecordToStream(Rcpp::Rcout);
+	// FinalHistory.OstreamResamplingRecordToStream(Rcpp::Rcout);
+	// Rcpp::Rcout << Sampler << std::endl;
+	
 	double logNC = Sampler.GetLogNCPath();
 	
     //return Rcpp::DataFrame::create		   
@@ -231,4 +236,20 @@ int fMCMC(long lTime, rad_state & value, smc::rng *pRng)
     }
   return count;
 }
+}
+
+namespace std {
+  /// Produce a human readable display of an the particle values using the standard stream operators
+
+  /// \param os The output stream to which the display should be made.
+  /// \param p  The particle which is to be displayed.
+  //template <class rad_state>
+  std::ostream & operator << (std::ostream & os, rad_state & value)
+  {
+	double alpha = value.alpha;
+	double beta = value.beta;
+	double phi = value.phi;
+    os << "(" << alpha << ", " << beta << ", " << phi << ")";
+    return os;
+  }
 }

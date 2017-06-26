@@ -33,7 +33,6 @@
 #include <cstdlib>
 #include <iostream>
 #include <RcppArmadillo.h>
-#include <typeinfo>
 
 #include "rngR.h"
 #include "history.h"
@@ -90,7 +89,7 @@ protected:
   ///A mode flag which indicates whether historical information is stored
   HistoryType htHistoryMode;
   ///The historical process associated with the particle system.
-  std::list<historyelement<population<Space> > > History;
+  history<population<Space> > History;
   ///An estimate of the overall ratio of normalising constants
   double dlogNCPath;
   ///An estimate of the latest iteration's ratio of normalising constants
@@ -106,7 +105,7 @@ public:
   ///Calculates and Returns the Effective Sample Size.
   double GetESS(void) const;
   ///Returns a pointer to the History of the particle system
-  const std::list<historyelement<population<Space> > > & GetHistory(void) const { return History; }																												   
+  const history<population<Space> > & GetHistory(void) const { return History; }																											   
   ///Returns the current estimate of the log normalising constant ratio over the entire path
   double GetLogNCPath(void) const { return dlogNCPath; }
   ///Returns the current estimate of the log normalising constant ratio over the last step
@@ -120,21 +119,21 @@ public:
   ///Returns the number of particles within the system.
   long GetHistoryLength(void) const {return History.size();}
   ///Return the values of particles
-  const std::vector<Space> &  GetPopulationValue(void) { return pPopulation.GetValue(); }
+  const std::vector<Space> &  GetPopulationValue(void) const { return pPopulation.GetValue(); }
   ///Return the logarithmic unnormalized weights of particles
-  arma::vec GetPopulationLogWeight(void) const { return pPopulation.GetLogWeight(); }
+  const arma::vec & GetPopulationLogWeight(void) const { return pPopulation.GetLogWeight(); }
   ///Return the unnormalized weights of particls
   arma::vec GetPopulationWeight(void) const { return pPopulation.GetWeight(); }  
   ///Return the unnormalized weights of particls
-  double GetPopulationWeightN(int n) { return pPopulation.GetWeightN(n); }  
+  double GetPopulationWeightN(int n) const { return pPopulation.GetWeightN(n); }  
   ///Returns the current evolution time of the system.
   long GetTime(void) const {return T;}
   ///Initialise the sampler and its constituent particles.
   void Initialise(void);
   ///Integrate the supplied function with respect to the current particle set.
-  double Integrate(double(*pIntegrand)(const Space &,void*), void* pAuxiliary);
+  double Integrate(double(*pIntegrand)(const Space &,void*), void* pAuxiliary) const;
   ///Integrate the supplied function over the path path using the supplied width function.
-  //double IntegratePathSampling(double (*pIntegrand)(long,const population<Space>&,void*), double (*pWidth)(long,void*), void* pAuxiliary);
+  double IntegratePathSampling(double (*pIntegrand)(long,const population<Space>&,long,void*), double (*pWidth)(long,void*), void* pAuxiliary);
   ///Perform one iteration of the simulation algorithm.
   void Iterate(void);
   ///Cancel one iteration of the simulation algorithm.
@@ -151,6 +150,11 @@ public:
   void SetMoveSet(moveset<Space>& pNewMoveset) {Moves = pNewMoveset;}
   ///Set Resampling Parameters
   void SetResampleParams(ResampleType rtMode, double dThreshold);
+  ///Dump a specified particle to the specified output stream in a human readable form
+  const std::ostream & StreamParticle(std::ostream & os, long n) const;
+  ///Dump the entire particle set to the specified output stream in a human readable form
+  const std::ostream & StreamParticles(std::ostream & os) const;
+      
   
 private:
   ///Duplication of smc::sampler is not currently permitted.
@@ -237,6 +241,7 @@ void sampler<Space>::Initialise(void)
   T = 0;
   dlogNCIt = 0;
   dlogNCPath = 0;
+  nAccepted = 0;
   
   std::vector<Space> InitVal(N);
   arma::vec InitWeights(N);
@@ -244,7 +249,7 @@ void sampler<Space>::Initialise(void)
   Moves.DoInit(pRng,pPopulation,N);
 
   //Scaling weights by 1/N (mostly for evidence computation)
-	pPopulation.SetLogWeight(pPopulation.GetLogWeight() - log(static_cast<double>(N))*arma::ones(N));
+  pPopulation.SetLogWeight(pPopulation.GetLogWeight() - log(static_cast<double>(N))*arma::ones(N));
   
   //Estimate the normalising constant
   dlogNCIt = CalcLogNC();
@@ -264,18 +269,14 @@ void sampler<Space>::Initialise(void)
   nResampled = 0;
   }
   //A possible MCMC step could be included here.
-    if(Moves.DoMCMC(0,pPopulation, pRng,N))
-      nAccepted++;
-  
-  
+  nAccepted += Moves.DoMCMC(0,pPopulation, pRng,N); 
   
    if(htHistoryMode != SMC_HISTORY_NONE) {
     History.clear();
-    nResampled = 0;
-	historyelement<population<Space> > inn;
-	inn.Set(N, pPopulation, 0, historyflags(nResampled));
+	historyelement<population<Space> > histel;
+	histel.Set(N, pPopulation, nAccepted, historyflags(nResampled));
 	
-	History.push_back(inn);
+	History.push_back(histel);
   }  
   return;
 }
@@ -288,17 +289,15 @@ void sampler<Space>::Initialise(void)
 /// \param pAuxiliary A pointer to any auxiliary data which should be passed to the function
 
 template <class Space>
-double sampler<Space>::Integrate(double(*pIntegrand)(const Space&,void*), void * pAuxiliary)
+double sampler<Space>::Integrate(double(*pIntegrand)(const Space&,void*), void * pAuxiliary) const
 {
   long double rValue = 0;
-  long double wSum = 0;
   for(int i =0; i < N; i++)
   {
     rValue += expl(pPopulation.GetLogWeightN(i)) * pIntegrand(pPopulation.GetValueN(i), pAuxiliary);
-    wSum  += expl(pPopulation.GetLogWeightN(i));
   }
   
-  rValue /= wSum;
+  rValue /= expl(CalcLogNC());
   return (double)rValue;
 }
 
@@ -313,17 +312,20 @@ double sampler<Space>::Integrate(double(*pIntegrand)(const Space&,void*), void *
 /// \param pIntegrand  The quantity which we wish to integrate at each time
 /// \param pWidth      A pointer to a function which specifies the width of each 
 
-// template <class Space>
-// double sampler<Space>::IntegratePathSampling(double (*pIntegrand)(long,const population<Space> &,void*), double (*pWidth)(long,void*), void* pAuxiliary)
-// {
-  // if(htHistoryMode == SMC_HISTORY_NONE)
-    // throw SMC_EXCEPTION(SMCX_MISSING_HISTORY, "The path sampling integral cannot be computed as the history of the system was not stored.");
+template <class Space>
+double sampler<Space>::IntegratePathSampling(double (*pIntegrand)(long,const population<Space> &,long,void*), double (*pWidth)(long,void*), void* pAuxiliary)
+{
+  if(htHistoryMode == SMC_HISTORY_NONE)
+    throw SMC_EXCEPTION(SMCX_MISSING_HISTORY, "The path sampling integral cannot be computed as the history of the system was not stored.");
   
- // History.Push(N, &pPopulation, nAccepted, historyflags(nResampled));
-  //double dRes = History.IntegratePathSampling(pIntegrand, pWidth, pAuxiliary);
-  //History.Pop();
-  //return dRes;
-//}
+	historyelement<population<Space> > histel;
+	histel.Set(N, pPopulation, nAccepted, historyflags(nResampled));
+	History.push_back(histel);
+	double dRes = History.IntegratePathSampling(pIntegrand, pWidth, pAuxiliary);
+	History.pop_back();
+	
+  return dRes;
+}
 
 /// The iterate function:
 ///         -# appends the current particle set to the history if desired
@@ -343,11 +345,13 @@ void sampler<Space>::IterateBack(void)
 {
   if(htHistoryMode == SMC_HISTORY_NONE)
     throw SMC_EXCEPTION(SMCX_MISSING_HISTORY, "An attempt to undo an iteration was made; unforunately, the system history has not been stored.");
+
   History.pop_back();
-  pPopulation = History.back().GetRefs();
-  N = History.back().GetNumber();
-  nAccepted = History.back().AcceptCount();
-  //Add something to update flags...
+  historyelement<population<Space> > recent = History.back();
+  pPopulation = recent.GetRefs();
+  N =recent.GetNumber();
+  nAccepted = recent.AcceptCount();
+  nResampled = recent.WasResampled();
   T--;
   return;
 }
@@ -355,8 +359,6 @@ void sampler<Space>::IterateBack(void)
 template <class Space>
 double sampler<Space>::IterateEss(void)
 {
-  
-
   nAccepted = 0;
   
   //Move the particle set.
@@ -369,7 +371,6 @@ double sampler<Space>::IterateEss(void)
   //Normalise the weights
   pPopulation.SetLogWeight(pPopulation.GetLogWeight()  - dlogNCIt*arma::ones(N));
   
-   
   //Check if the ESS is below some reasonable threshold and resample if necessary.
   //A mechanism for setting this threshold is required.
   double ESS = GetESS();
@@ -380,16 +381,15 @@ double sampler<Space>::IterateEss(void)
   else
     nResampled = 0;
   //A possible MCMC step could be included here.
-    if(Moves.DoMCMC(T+1,pPopulation, pRng,N))
-      nAccepted++;
+  nAccepted += Moves.DoMCMC(T+1,pPopulation, pRng,N);
   // Increment the evolution time.
   T++;
   
   //Finally, the current particle set should be appended to the historical process.
     if(htHistoryMode != SMC_HISTORY_NONE){
-		historyelement<population<Space> > inn;
-		inn.Set(N, pPopulation, nAccepted, historyflags(nResampled));
-		History.push_back(inn);
+		historyelement<population<Space> > histel;
+		histel.Set(N, pPopulation, nAccepted, historyflags(nResampled));
+		History.push_back(histel);
 	}
   
   return ESS;
@@ -531,5 +531,52 @@ void sampler<Space>::SetResampleParams(ResampleType rtMode, double dThreshold)
     dResampleThreshold = dThreshold;
 }
 
+  template <class Space>
+  const std::ostream & sampler<Space>::StreamParticle(std::ostream & os, long n) const
+  {
+	Space val = pPopulation.GetValueN(n);
+	double weight = pPopulation.GetWeightN(n);
+    os << val << "," << weight;
+    return os;
+  }
+
+ template <class Space>
+  const std::ostream & sampler<Space>::StreamParticles(std::ostream & os) const
+  {
+	  Space value;
+	  double weight;
+    for(int i = 0; i < N - 1; i++){
+		value = pPopulation.GetValueN(i);
+		weight = pPopulation.GetWeightN(i);
+		os << value << "," << weight << std::endl;
+	}
+	
+    return os;
+  }
+
 }
+
+
+namespace std {
+  /// Produce a human-readable display of the state of an smc::sampler class using the stream operator.
+  
+  /// \param os The output stream to which the display should be made.
+  /// \param s  The sampler which is to be displayed.
+  template <class Space>
+  std::ostream & operator<< (std::ostream & os, smc::sampler<Space> & s)
+  {
+    os << "Sampler Configuration:" << std::endl;
+    os << "======================" << std::endl;
+    os << "Evolution Time:   " << s.GetTime() << std::endl;
+    os << "Particle Set Size: " << s.GetNumber() << std::endl;
+    os << "Effective Sample Size: " << s.GetESS() << std::endl;
+    os << std::endl;
+    os << "Particle Set: " << std::endl;
+    s.StreamParticles(os);
+    os << std::endl;
+    return os;
+  }
+}
+
+
 #endif

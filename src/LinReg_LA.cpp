@@ -72,7 +72,7 @@ Rcpp::List LinRegLABS_cpp(arma::mat data, arma::vec intemps, unsigned long inlNu
 	Sampler.Initialise();
     
     Rcpp::NumericVector alpham(lTemps), alphav(lTemps), betam(lTemps), betav(lTemps), phim(lTemps), phiv(lTemps), ESS(lTemps);
-    
+	
     alpham(0) = Sampler.Integrate(integrand_mean_alpha, NULL);
     alphav(0) = Sampler.Integrate(integrand_var_alpha, (void*)&alpham(0));
     betam(0) = Sampler.Integrate(integrand_mean_beta, NULL);
@@ -81,7 +81,7 @@ Rcpp::List LinRegLABS_cpp(arma::mat data, arma::vec intemps, unsigned long inlNu
     phiv(0) = Sampler.Integrate(integrand_var_phi, (void*)&phim(0));
     ESS(0) = Sampler.GetESS();
     
-    
+	
     for(int n=1; n < lTemps; ++n) {
       Sampler.Iterate();
       
@@ -93,8 +93,9 @@ Rcpp::List LinRegLABS_cpp(arma::mat data, arma::vec intemps, unsigned long inlNu
       phiv(n) = Sampler.Integrate(integrand_var_phi, (void*)&phim(n));
       ESS(n) = Sampler.GetESS();
     }
-	
+			
 	double logNC = Sampler.GetLogNCPath();
+	double logNC_ps = Sampler.IntegratePathSampling(integrand_ps,width_ps, NULL);
 								   
     return Rcpp::List::create(Rcpp::Named("alpham") = alpham,
                                    Rcpp::Named("alphav") = alphav,
@@ -103,7 +104,8 @@ Rcpp::List LinRegLABS_cpp(arma::mat data, arma::vec intemps, unsigned long inlNu
                                    Rcpp::Named("phim") = phim,
                                    Rcpp::Named("phiv") = phiv,
                                    Rcpp::Named("ESS") = ESS,
-								   Rcpp::Named("logNC") = logNC);
+								   Rcpp::Named("logNC") = logNC,
+								   Rcpp::Named("logNC_ps") = logNC_ps);
   }
   catch(smc::exception  e) {
     Rcpp::Rcout << e;       	// not cerr, as R doesn't like to mix with i/o 
@@ -113,6 +115,17 @@ Rcpp::List LinRegLABS_cpp(arma::mat data, arma::vec intemps, unsigned long inlNu
 }
 
 namespace LinReg_LA {
+	
+double integrand_ps(long lTime,const  smc::population<rad_state> & pop, long i,  void *) { return logLikelihood(pop.GetValueN(i));}	
+
+double width_ps(long lTime, void *){
+if (lTime==1){
+	return temps(lTime);
+} else {
+	return (temps(lTime) - temps(lTime-1));
+}
+}	
+
 double integrand_mean_alpha(const rad_state& s, void *){ return s.alpha;}
 double integrand_mean_beta(const rad_state& s, void *){ return s.beta;}
 double integrand_mean_phi(const rad_state& s, void *){ return s.phi;}

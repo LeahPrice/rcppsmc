@@ -68,7 +68,7 @@ Rcpp::List pfLineartBS_cpp(arma::mat data, unsigned long inlNumber, bool useF, R
     smc::sampler<cv_state> Sampler(lNumber, SMC_HISTORY_NONE);  
     smc::moveset<cv_state> Moveset(fInitialise, fMove, NULL);
     
-    
+	
     //Sampler.SetResampleParams(SMC_RESAMPLE_RESIDUAL, 0.5);
     Sampler.SetResampleParams(SMC_RESAMPLE_RESIDUAL, 0.999);
     Sampler.SetMoveSet(Moveset);
@@ -81,7 +81,7 @@ Rcpp::List pfLineartBS_cpp(arma::mat data, unsigned long inlNumber, bool useF, R
     Ym(0) = Sampler.Integrate(integrand_mean_y, NULL);
     Yv(0) = Sampler.Integrate(integrand_var_y, (void*)&Ym(0));
     ESS(0) = Sampler.GetESS();
-    
+	
     for(int n=1; n < lIterates; ++n) {
       Sampler.Iterate();
       
@@ -90,10 +90,13 @@ Rcpp::List pfLineartBS_cpp(arma::mat data, unsigned long inlNumber, bool useF, R
       Ym(n) = Sampler.Integrate(integrand_mean_y, NULL);
       Yv(n) = Sampler.Integrate(integrand_var_y, (void*)&Ym(n));
       ESS(n) = Sampler.GetESS();
-      
+	   
       if (useF) f(Xm, Ym);
     }
     
+	//Rcpp::Rcout << Sampler << std::endl;
+	//Sampler.StreamParticle(Rcpp::Rcout,0);
+	
 	double logNC = Sampler.GetLogNCPath();
     
     return Rcpp::List::create(Rcpp::Named("Xm") = Xm,
@@ -157,4 +160,23 @@ void fMove(long lTime, cv_state & value, double & logweight, smc::rng *pRng)
   
   logweight += logLikelihood(lTime, value);
 }
+}
+
+
+
+namespace std {
+  /// Produce a human readable display of an the particle values using the standard stream operators
+
+  /// \param os The output stream to which the display should be made.
+  /// \param p  The particle which is to be displayed.
+  //template <class rad_state>
+  std::ostream & operator << (std::ostream & os, cv_state & value)
+  {
+	double x_pos = value.x_pos;
+	double y_pos = value.y_pos;
+	double x_vel = value.x_vel;
+	double y_vel = value.y_vel;
+    os << "Position: (" << x_pos << ", " << y_pos << ") Velocity: (" <<  x_vel << ", " << y_vel << ")";
+    return os;
+  }
 }

@@ -56,17 +56,13 @@ namespace smc {
       ~population();
 
       /// Returns the population values 
-      std::vector<Space> const & GetValue(void) const {return value;}
+      const std::vector<Space> & GetValue(void) const {return value;}
       /// Returns the value of the nth particle in the population
-      Space const & GetValueN(int n) {return value[n];}
+      const Space & GetValueN(int n) const {return value[n];}
       /// Returns the value of the nth particle in the population
       Space & GetValueRefN(int n) {return value[n];}
-      /// Returns a pointer to the values to allow for more efficient changes
-      std::vector<Space>* GetValuePointer(void) {return &value;}
-      /// Returns a pointer to the value to allow for more efficient changes
-      Space* GetValuePointerN(int n) {return &value[n];}
       /// Returns the particles' log weights.
-      arma::vec GetLogWeight(void) const {return logweight;}
+      const arma::vec & GetLogWeight(void) const {return logweight;}
       /// Returns the nth particle's log weight.
       double GetLogWeightN(int n) const {return logweight(n);}
       /// Returns the nth particle's log weight.

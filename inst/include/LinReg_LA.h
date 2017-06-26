@@ -56,4 +56,7 @@ namespace LinReg_LA {
 	double integrand_var_beta(const rad_state&, void*);
 	double integrand_var_phi(const rad_state&, void*);
 	
+	double integrand_ps(long,const smc::population<rad_state> &, long,  void *);
+	double width_ps(long,  void *);
+	
 }

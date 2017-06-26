@@ -1,3 +1,18 @@
+2017-06-26  Leah South  <leah.south@hdr.qut.edu.au>
+
+    * inst/include/history.h: re-introducing a history class and adding back in path sampling
+	  integration and stream operators.
+	* inst/include/population.h: Switching to const where appropriate
+	* inst/include/sampler.h: Switching to using the history class rather than std::list<historyelement...>,
+	  switching to const where appropriate, adding stream operators and changing the nAccepted
+	  to give the total accepted particles within the MCMC step.
+	* inst/include/moveset.h: Changing DoMCMC to return 0 if no MCMC step (rather than false)
+	
+	* inst/include/LinReg_LA.h: Adding in the required functions for path sampling evidence estimation
+	* src/LinReg_LA.cpp: Adding in path sampling evidence estimates
+	* src/LinReg.cpp: Adding in stream operators for the parameters
+	* src/pflineart.cpp: Adding in stream operators for the parameters
+
 2017-06-23  Leah South  <leah.south@hdr.qut.edu.au>
 
     * inst/include/sampler.h: Switching to using STL list container for history

@@ -167,7 +167,7 @@ namespace smc {
       return count;
     }
     else {
-      return false;
+      return 0;
     }
   }
   
