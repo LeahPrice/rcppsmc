@@ -47,7 +47,6 @@ using namespace LinReg_LA;
 
 
 // LinRegPPBS() function callable from R via Rcpp:: 
-// [[Rcpp::plugins(cpp11)]]
 // [[Rcpp::export]]
 Rcpp::List LinRegLABS_cpp(arma::mat data, arma::vec intemps, unsigned long inlNumber) { 	
   

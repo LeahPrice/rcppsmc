@@ -20,6 +20,8 @@
    * Divide-and-Conquer SMC (Lindsten et al., 2016)
    * Particle MCMC (Andrieu et al., 2010)
    
+ * Add extra functionality to the history to store all particles and ancestral lines
+   
  * Consider other evidence estimators (e.g. importance sampling based estimators in the
    case of independent proposals and path sampling based estimators when the derivative of
    the unnormalised density respect to the tempering parameter is known, for example in

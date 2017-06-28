@@ -1,3 +1,13 @@
+2017-06-29  Leah South  <leah.south@hdr.qut.edu.au>
+
+	* TODO: Adding point about storing ancestral lines in the particle history.
+	* src/Makevars: Removing C++11 dependency.
+	* src/blockpfgaussianopt: Idem.
+	* src/LinReg.cpp: Idem.
+	* src/LinReg_LA.cpp: Idem.
+	* src/pflineart.cpp: Idem.
+	* src/pfnonlinbs.cpp: Idem.
+
 2017-06-28  Leah South  <leah.south@hdr.qut.edu.au>
 
     * inst/include/history.h: Removing the history class (functions to go into the sampler class instead).

@@ -49,7 +49,6 @@ using namespace LinReg;
 
 
 // LinRegBS() function callable from R via Rcpp::
-// [[Rcpp::plugins(cpp11)]]
 // [[Rcpp::export]]
 Rcpp::List LinRegBS_cpp(arma::mat data, unsigned long inlNumber) { 	
   

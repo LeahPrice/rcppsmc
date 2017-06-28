@@ -51,7 +51,6 @@ using namespace pflineart;
 
 // pf() function callable from R via Rcpp:: essentially the same as main() from pf.cc 
 // minor interface change to pass data down as matrix, rather than a filename
-// [[Rcpp::plugins(cpp11)]]
 // [[Rcpp::export]]
 Rcpp::List pfLineartBS_cpp(arma::mat data, unsigned long inlNumber, bool useF, Rcpp::Function f) { 	
   
