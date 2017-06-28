@@ -49,6 +49,7 @@ using namespace LinReg;
 
 
 // LinRegBS() function callable from R via Rcpp::
+// [[Rcpp::plugins(cpp11)]]
 // [[Rcpp::export]]
 Rcpp::List LinRegBS_cpp(arma::mat data, unsigned long inlNumber) { 	
   
@@ -94,10 +95,9 @@ Rcpp::List LinRegBS_cpp(arma::mat data, unsigned long inlNumber) {
       ESS(n) = Sampler.GetESS();
     }
 	
-	// smc::history<smc::population<rad_state> > FinalHistory = Sampler.GetHistory();
-	// FinalHistory.OstreamMCMCRecordToStream(Rcpp::Rcout);
-	// FinalHistory.OstreamResamplingRecordToStream(Rcpp::Rcout);
-	// Rcpp::Rcout << Sampler << std::endl;
+	//Sampler.OstreamMCMCRecordToStream(Rcpp::Rcout);
+	//Sampler.OstreamResamplingRecordToStream(Rcpp::Rcout);
+	//Rcpp::Rcout << Sampler << std::endl;
 	
 	double logNC = Sampler.GetLogNCPath();
 	
@@ -186,7 +186,7 @@ void fInitialise(smc::rng *pRng, rad_state & value, double & logweight)
     value.beta = pRng->Normal(185.0,100.0);
     value.phi = log(pow(pRng->Gamma(3,pow(2.0*300.0*300.0,-1.0)),-1.0));
 	
-      double mean_reg = value.alpha + value.beta*(y.data_x(0) - mean_x);
+    double mean_reg = value.alpha + value.beta*(y.data_x(0) - mean_x);
     double sigma = pow(expl(value.phi),0.5);
     logweight = -log(sigma) - pow(y.data_y(0) - mean_reg,2.0)/(2.0*sigma*sigma) -0.5*log(2.0*M_PI);
 }

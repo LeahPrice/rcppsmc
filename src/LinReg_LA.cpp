@@ -47,6 +47,7 @@ using namespace LinReg_LA;
 
 
 // LinRegPPBS() function callable from R via Rcpp:: 
+// [[Rcpp::plugins(cpp11)]]
 // [[Rcpp::export]]
 Rcpp::List LinRegLABS_cpp(arma::mat data, arma::vec intemps, unsigned long inlNumber) { 	
   
@@ -95,7 +96,9 @@ Rcpp::List LinRegLABS_cpp(arma::mat data, arma::vec intemps, unsigned long inlNu
     }
 			
 	double logNC = Sampler.GetLogNCPath();
-	double logNC_ps = Sampler.IntegratePathSampling(integrand_ps,width_ps, NULL);
+	double logNC_ps_rect = Sampler.IntegratePathSampling(integrand_ps,width_ps, NULL);
+	double logNC_ps_trap = Sampler.IntegratePathSampling_Trapezoidal(integrand_ps,width_ps, NULL);
+	double logNC_ps_trap2 = Sampler.IntegratePathSampling_Trapezoidal2(integrand_ps,width_ps, NULL);
 								   
     return Rcpp::List::create(Rcpp::Named("alpham") = alpham,
                                    Rcpp::Named("alphav") = alphav,
@@ -105,7 +108,9 @@ Rcpp::List LinRegLABS_cpp(arma::mat data, arma::vec intemps, unsigned long inlNu
                                    Rcpp::Named("phiv") = phiv,
                                    Rcpp::Named("ESS") = ESS,
 								   Rcpp::Named("logNC") = logNC,
-								   Rcpp::Named("logNC_ps") = logNC_ps);
+								   Rcpp::Named("logNC_ps_rect") = logNC_ps_rect,
+								   Rcpp::Named("logNC_ps_trap") = logNC_ps_trap,
+								   Rcpp::Named("logNC_ps_trap2") = logNC_ps_trap2);
   }
   catch(smc::exception  e) {
     Rcpp::Rcout << e;       	// not cerr, as R doesn't like to mix with i/o 
@@ -119,11 +124,7 @@ namespace LinReg_LA {
 double integrand_ps(long lTime,const  smc::population<rad_state> & pop, long i,  void *) { return logLikelihood(pop.GetValueN(i));}	
 
 double width_ps(long lTime, void *){
-if (lTime==1){
-	return temps(lTime);
-} else {
 	return (temps(lTime) - temps(lTime-1));
-}
 }	
 
 double integrand_mean_alpha(const rad_state& s, void *){ return s.alpha;}

@@ -89,7 +89,7 @@ protected:
   ///A mode flag which indicates whether historical information is stored
   HistoryType htHistoryMode;
   ///The historical process associated with the particle system.
-  history<population<Space> > History;
+  std::vector<historyelement< population<Space> > > History;
   ///An estimate of the overall ratio of normalising constants
   double dlogNCPath;
   ///An estimate of the latest iteration's ratio of normalising constants
@@ -104,8 +104,10 @@ public:
   ~sampler();
   ///Calculates and Returns the Effective Sample Size.
   double GetESS(void) const;
+  /// Returns the effective sample size of the specified particle generation.
+  double GetESS(long lGeneration) const;
   ///Returns a pointer to the History of the particle system
-  const history<population<Space> > & GetHistory(void) const { return History; }																											   
+  const std::vector<historyelement< population<Space> > > & GetHistory(void) const { return History; }																											   
   ///Returns the current estimate of the log normalising constant ratio over the entire path
   double GetLogNCPath(void) const { return dlogNCPath; }
   ///Returns the current estimate of the log normalising constant ratio over the last step
@@ -134,6 +136,10 @@ public:
   double Integrate(double(*pIntegrand)(const Space &,void*), void* pAuxiliary) const;
   ///Integrate the supplied function over the path path using the supplied width function.
   double IntegratePathSampling(double (*pIntegrand)(long,const population<Space>&,long,void*), double (*pWidth)(long,void*), void* pAuxiliary);
+  ///Integrate the supplied function over the path path using the supplied width function.
+  double IntegratePathSampling_Trapezoidal(double (*pIntegrand)(long,const population<Space>&,long,void*), double (*pWidth)(long,void*), void* pAuxiliary);
+  ///Integrate the supplied function over the path path using the supplied width function.
+  double IntegratePathSampling_Trapezoidal2(double (*pIntegrand)(long,const population<Space>&,long,void*), double (*pWidth)(long,void*), void* pAuxiliary);
   ///Perform one iteration of the simulation algorithm.
   void Iterate(void);
   ///Cancel one iteration of the simulation algorithm.
@@ -154,6 +160,10 @@ public:
   const std::ostream & StreamParticle(std::ostream & os, long n) const;
   ///Dump the entire particle set to the specified output stream in a human readable form
   const std::ostream & StreamParticles(std::ostream & os) const;
+  ///Output a vector indicating the number of accepted MCMC moves at each time instance
+  void OstreamMCMCRecordToStream(std::ostream &os) const;
+  ///Output a 0-1 value vector indicating the times at which resampling occured to an output stream
+  void OstreamResamplingRecordToStream(std::ostream &os) const;
       
   
 private:
@@ -221,6 +231,18 @@ double sampler<Space>::GetESS(void) const
   return expl(-log(sumsq) + 2*log(sum));
 }
 
+
+
+   /// Returns the effective sample size of the specified particle generation.
+  template <class Space>
+  double  sampler<Space>::GetESS(long lGeneration) const
+  {
+    typename std::vector<historyelement<population<Space> > >::const_iterator it = History.begin();
+	std::advance(it,lGeneration);
+    return it->GetESS(); 
+  }
+  
+
 template <class Space>
 double sampler<Space>::CalcLogNC(void) const
 {
@@ -231,10 +253,14 @@ double sampler<Space>::CalcLogNC(void) const
 }
 
 
-/// At present this function resets the system evolution time to 0 and calls the moveset initialisor to assign each
-/// particle in the ensemble.
+/// The initialise function:
+///          -# resets the system evolution time to 0 and calls the moveset initialisor to assign each particle in the ensemble.
+///         -# checks the effective sample size and resamples if necessary
+///         -# performs a mcmc step if required
+///         -# appends the particle set to the history if desired
 ///
 /// Note that the initialisation function must be specified before calling this function.
+
 template <class Space>
 void sampler<Space>::Initialise(void)
 {
@@ -275,8 +301,9 @@ void sampler<Space>::Initialise(void)
     History.clear();
 	historyelement<population<Space> > histel;
 	histel.Set(N, pPopulation, nAccepted, historyflags(nResampled));
-	
 	History.push_back(histel);
+	//History.emplace_back(historyelement<population<Space> >(N, pPopulation, nAccepted, historyflags(nResampled)));
+	
   }  
   return;
 }
@@ -301,6 +328,7 @@ double sampler<Space>::Integrate(double(*pIntegrand)(const Space&,void*), void *
   return (double)rValue;
 }
 
+
 /// This function is intended to be used to estimate integrals of the sort which must be evaluated to determine the
 /// normalising constant of a distribution obtain using a sequence of potential functions proportional to densities with respect
 /// to the initial distribution to define a sequence of distributions leading up to the terminal, interesting distribution.
@@ -308,9 +336,23 @@ double sampler<Space>::Integrate(double(*pIntegrand)(const Space&,void*), void *
 /// In this context, the particle set at each time is used to make an estimate of the path sampling integrand, and a
 /// trapezoidal integration is then performed to obtain an estimate of the path sampling integral which is the natural logarithm
 /// of the ratio of normalising densities.
-///
-/// \param pIntegrand  The quantity which we wish to integrate at each time
-/// \param pWidth      A pointer to a function which specifies the width of each 
+
+  /// The function performs a trapezoidal integration of the type which is useful when using path sampling to estimate the
+  /// normalising constant of a potential function in those cases where a sequence of distributions is produced by deforming
+  /// the initial distribution by a sequence of progressively more influential potential functions which are proportional
+  /// to the density of some other distribution with respect to the starting distribution.
+  ///
+  /// The integrand is integrated at every time point in the population history. The results of this integration are
+  /// taken to be point-evaluations of the path sampling integrand which are spaced on a grid of intervals given by the
+  /// width function. The path sampling integral is then calculated by performing a suitable trapezoidal integration and
+  /// the results of this integration is returned.
+  ///
+  /// pAuxiliary is passed to both of the user specified functions to allow the user to pass additional data to either or
+  /// both of these functions in a convenient manner. It is safe to use NULL if no such data is used by either function.
+  ///
+  /// \param pIntegrand  The function to integrated. The first argument is evolution time, the second the population at which the function is to be evaluated, the third is the particle index and the final argument is always pAuxiliary.
+  /// \param pWidth      The function which returns the width of the path sampling grid at the specified evolution time. The final argument is always pAuxiliary
+  /// \param pAuxiliary  A pointer to auxiliary data to pass to both of the above functions
 
 template <class Space>
 double sampler<Space>::IntegratePathSampling(double (*pIntegrand)(long,const population<Space> &,long,void*), double (*pWidth)(long,void*), void* pAuxiliary)
@@ -321,17 +363,84 @@ double sampler<Space>::IntegratePathSampling(double (*pIntegrand)(long,const pop
 	// historyelement<population<Space> > histel;
 	// histel.Set(N, pPopulation, nAccepted, historyflags(nResampled));
 	// History.push_back(histel);
-	double dRes = History.IntegratePathSampling(pIntegrand, pWidth, pAuxiliary);
+	
+	
+	long lTime = 1;
+	long double rValue = 0.0;
+    for(typename std::vector<historyelement<population<Space> > >::const_iterator it = ++History.begin(); it!=History.end(); it++){
+		rValue += it->Integrate(lTime, pIntegrand, pAuxiliary) * (long double)pWidth(lTime,pAuxiliary);
+		lTime++;
+    }	
+	
 	// History.pop_back();
 	
-  return dRes;
+	return ((double)rValue);
+}
+
+template <class Space>
+double sampler<Space>::IntegratePathSampling_Trapezoidal(double (*pIntegrand)(long,const population<Space> &,long,void*), double (*pWidth)(long,void*), void* pAuxiliary)
+{
+  if(htHistoryMode == SMC_HISTORY_NONE)
+    throw SMC_EXCEPTION(SMCX_MISSING_HISTORY, "The path sampling integral cannot be computed as the history of the system was not stored.");
+  
+	// historyelement<population<Space> > histel;
+	// histel.Set(N, pPopulation, nAccepted, historyflags(nResampled));
+	// History.push_back(histel);
+	
+	long double previous_expt = History.begin()->Integrate(0,pIntegrand,pAuxiliary);
+	long double current_expt;
+	long lTime = 1;
+	long double rValue = 0.0;
+    for(typename std::vector<historyelement<population<Space> > >::const_iterator it = ++History.begin(); it!=History.end(); it++){
+		current_expt = it->Integrate(lTime, pIntegrand, pAuxiliary);
+		rValue += (long double)pWidth(lTime,pAuxiliary)/2.0 * (previous_expt + current_expt) ;
+		lTime++;
+		previous_expt = current_expt;
+    }	
+	
+	
+	// History.pop_back();
+	
+	return ((double)rValue);
+}
+
+template <class Space>
+double sampler<Space>::IntegratePathSampling_Trapezoidal2(double (*pIntegrand)(long,const population<Space> &,long,void*), double (*pWidth)(long,void*), void* pAuxiliary)
+{
+  if(htHistoryMode == SMC_HISTORY_NONE)
+    throw SMC_EXCEPTION(SMCX_MISSING_HISTORY, "The path sampling integral cannot be computed as the history of the system was not stored.");
+  
+	// historyelement<population<Space> > histel;
+	// histel.Set(N, pPopulation, nAccepted, historyflags(nResampled));
+	// History.push_back(histel);
+	
+	long double previous_expt = History.begin()->Integrate(0,pIntegrand,pAuxiliary);
+	long double previous_var = History.begin()->Integrate_Var(0,pIntegrand,previous_expt,pAuxiliary);
+	long double current_expt;
+	long double current_var;
+	long lTime = 1;
+	long double rValue = 0.0;
+	long double width = 0.0;
+    for(typename std::vector<historyelement<population<Space> > >::const_iterator it = ++History.begin(); it!=History.end(); it++){
+		current_expt = it->Integrate(lTime, pIntegrand, pAuxiliary);
+		current_var = it->Integrate_Var(lTime, pIntegrand, current_expt, pAuxiliary);
+		width = (long double)pWidth(lTime,pAuxiliary);
+		rValue += width/2.0 * (previous_expt + current_expt) - pow(width,2)/12.0*(current_var - previous_var);
+		lTime++;
+		previous_expt = current_expt;
+		previous_var = current_var;
+    }	
+	
+	// History.pop_back();
+	
+	return ((double)rValue);
 }
 
 /// The iterate function:
-///         -# appends the current particle set to the history if desired
 ///          -# moves the current particle set
 ///         -# checks the effective sample size and resamples if necessary
 ///         -# performs a mcmc step if required
+///         -# appends the current particle set to the history if desired
 ///         -# increments the current evolution time
 template <class Space>
 void sampler<Space>::Iterate(void)
@@ -390,6 +499,7 @@ double sampler<Space>::IterateEss(void)
 		historyelement<population<Space> > histel;
 		histel.Set(N, pPopulation, nAccepted, historyflags(nResampled));
 		History.push_back(histel);
+		//History.emplace_back(historyelement<population<Space> >(N, pPopulation, nAccepted, historyflags(nResampled)));
 	}
   
   return ESS;
@@ -553,6 +663,40 @@ void sampler<Space>::SetResampleParams(ResampleType rtMode, double dThreshold)
 	
     return os;
   }
+  
+  /// This function records the MCMC acceptance history to the specified output stream as a list of
+  /// the number of moves accepted at each time instant.
+  ///
+  /// \param os The output stream to send the data to.
+  template <class Space>
+  void sampler<Space>:: OstreamMCMCRecordToStream(std::ostream &os) const
+  {
+	os << "Accepted MCMC proposals history:" << std::endl;
+    os << "======================" << std::endl;
+	for(typename std::vector<historyelement<population<Space> > >::const_iterator it = History.begin(); it!=History.end(); it++){
+		os << it->AcceptCount() << std::endl;
+    }
+  }
+  /// This function records the resampling history to the specified output stream as a 0-1 valued list which takes
+  /// the value 1 for those time instances when resampling occured and 0 otherwise.
+  ///
+  /// \param os The output stream to send the data to.
+  template <class Space>
+  void sampler<Space>:: OstreamResamplingRecordToStream(std::ostream &os) const
+  {
+	os << "Resampling history:" << std::endl;
+    os << "======================" << std::endl;
+	os << "Flag\t" << "ESS\t" << std::endl;
+	for(typename std::vector<historyelement<population<Space> > >::const_iterator it = History.begin(); it!=History.end(); it++){ 
+	  if(it->WasResampled())
+			os << "1\t";
+      else
+			os << "0\t";
+
+		os << it->GetESS() << std::endl;
+    }
+  }
+  
 
 }
 

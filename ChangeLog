@@ -1,3 +1,15 @@
+2017-06-28  Leah South  <leah.south@hdr.qut.edu.au>
+
+    * inst/include/history.h: Removing the history class (functions to go into the sampler class instead).
+	  Adding the function Integrate_Var which gets the Monte Carlo estimate of the variance for a
+	  given integrand (used in second order path sampling correcting)
+	* inst/include/sampler.h: Moving objects previously in the history class to sampler. Adding alternative
+	  path sampling estimators based on the trapezoidal rule (and a second order correction of the trapezoidal rule).
+	* inst/sampleData/radiata-temps.csv: Adding the temperature zero explicitly (required for the new path sampling estimators)
+	
+	* src/LinReg_LA.cpp: Adjusting to take into account that the temperature of zero is included and using C++11
+	* src/LinReg
+
 2017-06-26  Leah South  <leah.south@hdr.qut.edu.au>
 
 	* inst/include/sampler.h: Removing unnecessary push to history in the path sampling estimator.

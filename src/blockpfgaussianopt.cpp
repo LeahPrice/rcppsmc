@@ -32,6 +32,7 @@
 using namespace std;
 using namespace BSPFG;
 
+// [[Rcpp::plugins(cpp11)]]
 // [[Rcpp::export]]
 Rcpp::List blockpfGaussianOpt_cpp(Rcpp::NumericVector data, long inlNumber, long inlLag)
 {

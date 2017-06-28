@@ -49,6 +49,7 @@ arma::vec y;
 using namespace std;
 using namespace nonlinbs;
 
+// [[Rcpp::plugins(cpp11)]]
 // [[Rcpp::export]]
 Rcpp::List pfNonlinBS_cpp(arma::vec data, long inlNumber) {
   lNumber = inlNumber;
