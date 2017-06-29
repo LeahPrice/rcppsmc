@@ -21,3 +21,7 @@ pfNonlinBS_cpp <- function(data, inlNumber) {
     .Call('RcppSMC_pfNonlinBS_cpp', PACKAGE = 'RcppSMC', data, inlNumber)
 }
 
+PMMH_cpp <- function(data, inlNumber, lMCMCits) {
+    .Call('RcppSMC_PMMH_cpp', PACKAGE = 'RcppSMC', data, inlNumber, lMCMCits)
+}
+

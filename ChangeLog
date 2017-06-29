@@ -1,5 +1,15 @@
 2017-06-29  Leah South  <leah.south@hdr.qut.edu.au>
 
+    * inst/include/PMMH.h: Implementing a new example based on using PMMH for a non-linear
+	state space model as in Andrieu et al. (2010).
+	* src/simPMMH.R: Generating synthetic data (not necessary for runs)
+	* inst/sampleData/PMMH-data.csv: Generated data to be used as a default
+	* src/PMMH.cpp: The new example.
+	* man/PMMH.Rd: Idem.
+	* R/PMMH.R: Idem.
+
+2017-06-29  Leah South  <leah.south@hdr.qut.edu.au>
+
     * inst/include/sampler.h: Moving the path sampling methods into a single function. Putting the enums into namespaces.
 	
 	* src/LinReg_LA.cpp: Adjusting the resampling, history and path sampling types.
