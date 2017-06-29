@@ -98,9 +98,6 @@ Rcpp::List PMMH_cpp(arma::vec data, unsigned long inlNumber, unsigned long lMCMC
 		
 		
 		// Getting a particle filtering estimate of the log likelihood.
-		smc::moveset<double> Moveset(fInitialise, fMove, NULL);
-		Sampler.SetResampleParams(ResampleType::MULTINOMIAL, 0.5);
-		Sampler.SetMoveSet(Moveset);
 		Sampler.Initialise();
 		Sampler.IterateUntil(lIterates-1);
 		loglike_prop = Sampler.GetLogNCPath();

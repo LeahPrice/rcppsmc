@@ -15,4 +15,4 @@ for (i in 2:len){
 y = as.data.frame(x=y)
 names(y) <- toString(len)
 
-write.csv(y,file="PMMH-data.csv",row.names = FALSE, quote=FALSE) 
+#write.csv(y,file="PMMH-data.csv",row.names = FALSE, quote=FALSE) 
