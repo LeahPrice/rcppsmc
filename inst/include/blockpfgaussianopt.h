@@ -29,8 +29,7 @@ namespace BSPFG {
 	void fInitialise(smc::rng *pRng, vector<double> & value, double & logweight);
 	void fMove(long lTime, vector<double> & value, double & logweight, smc::rng *pRng);
 
-    Rcpp::NumericVector y; 
+	Rcpp::NumericVector y; 
 	long lLag;
 	long lNumber;	
 }
-

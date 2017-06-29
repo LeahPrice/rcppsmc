@@ -35,93 +35,93 @@ using namespace BSPFG;
 // [[Rcpp::export]]
 Rcpp::List blockpfGaussianOpt_cpp(Rcpp::NumericVector data, long inlNumber, long inlLag)
 {
-  long lIterates;
-  lNumber = inlNumber;
-  lLag = inlLag;
-  
-  y = data;
-  lIterates = y.size();
-  
-  //Initialise and run the sampler
-  smc::sampler<vector<double> > Sampler(lNumber, HistoryType::NONE);  
-  smc::moveset<vector<double> > Moveset(fInitialise, fMove, NULL);
-  
-  Sampler.SetResampleParams(ResampleType::SYSTEMATIC, 0.5);
-  Sampler.SetMoveSet(Moveset);
-  
-  Sampler.Initialise();
-  Sampler.IterateUntil(lIterates - 1);
-  
-  //Generate results
-  Rcpp::NumericMatrix resValues = Rcpp::NumericMatrix(lNumber,lIterates);
-  arma::vec resWeights(lNumber);
-  double logNC = Sampler.GetLogNCPath();
-  
-  std::vector<vector<double> > pValue = Sampler.GetPopulationValue();
-  for(int i = 0; i < lNumber; ++i) 
-  {
-    for(int j = 0; j < lIterates; ++j) {
-      resValues(i,j) = pValue.at(i).at(j);
-    }
-  }
-  resWeights = Sampler.GetPopulationWeight();
-  
-  return Rcpp::List::create(Rcpp::_["weight"] = resWeights, Rcpp::_["values"] = resValues, Rcpp::_["logNC"] = logNC);
+	long lIterates;
+	lNumber = inlNumber;
+	lLag = inlLag;
+
+	y = data;
+	lIterates = y.size();
+
+	//Initialise and run the sampler
+	smc::sampler<vector<double> > Sampler(lNumber, HistoryType::NONE);  
+	smc::moveset<vector<double> > Moveset(fInitialise, fMove, NULL);
+
+	Sampler.SetResampleParams(ResampleType::SYSTEMATIC, 0.5);
+	Sampler.SetMoveSet(Moveset);
+
+	Sampler.Initialise();
+	Sampler.IterateUntil(lIterates - 1);
+
+	//Generate results
+	Rcpp::NumericMatrix resValues = Rcpp::NumericMatrix(lNumber,lIterates);
+	arma::vec resWeights(lNumber);
+	double logNC = Sampler.GetLogNCPath();
+
+	std::vector<vector<double> > pValue = Sampler.GetPopulationValue();
+	for(int i = 0; i < lNumber; ++i) 
+	{
+		for(int j = 0; j < lIterates; ++j) {
+			resValues(i,j) = pValue.at(i).at(j);
+		}
+	}
+	resWeights = Sampler.GetPopulationWeight();
+
+	return Rcpp::List::create(Rcpp::_["weight"] = resWeights, Rcpp::_["values"] = resValues, Rcpp::_["logNC"] = logNC);
 }
 
 using namespace std;
 
 namespace BSPFG {
 
-/// \param pRng A pointer to the random number generator which is to be used
-void fInitialise(smc::rng *pRng, vector<double> & value, double & logweight)
-{
-  value.push_back(pRng->Normal(0.5 * y[0],1.0/sqrt(2.0)));
-  logweight = 1.0;
-}
+	/// \param pRng A pointer to the random number generator which is to be used
+	void fInitialise(smc::rng *pRng, vector<double> & value, double & logweight)
+	{
+		value.push_back(pRng->Normal(0.5 * y[0],1.0/sqrt(2.0)));
+		logweight = 1.0;
+	}
 
-///The proposal function.
+	///The proposal function.
 
-///\param lTime The sampler iteration.
-///\param pFrom The population to move.
-///\param pRng  A random number generator.
-void fMove(long lTime, vector<double> & value, double & logweight, smc::rng *pRng)
-{
-  if(lTime == 1) {
-      value.push_back((value.at(lTime-1) + y[int(lTime)])/2.0 + pRng->Normal(0.0,1.0/sqrt(2.0)));
-      logweight += -0.25*(y[int(lTime)] - value.at(lTime-1))*(y[int(lTime)]-value.at(lTime-1));
-    return;
-  }
-  
-  long lag = min(lTime,lLag);
-  
-  //These structures should really be made static 
-  std::vector<double> mu(lag+1);
-  std::vector<double> sigma(lag+1);
-  std::vector<double> sigmah(lag+1);
-  std::vector<double> mub(lag+1);
-  
-    // Forward filtering
-    mu[0] = value.at(lTime-lag);
-    sigma[0] = 0;
-    for(int i = 1; i <= lag; ++i)
-    {
-      sigmah[i] = sigma[i-1] + 1;
-      
-      mu[i] = (sigmah[i] * y[int(lTime-lag+i)] +  mu[i-1]) / (sigmah[i] + 1);
-      sigma[i] = sigmah[i] / (sigmah[i] + 1);
-    }
-    // Backward smoothing
-    mub[lag] = mu[lag];
-    value.push_back(pRng->Normal(mub[lag],sqrt(sigma[lag])));
-    for(int i = lag-1; i; --i)
-    {
-      mub[i] = (sigma[i]*value.at(lTime-lag+i+1) + mu[i]) / (sigma[i]+1);
-      value.at(lTime-lag+i) = pRng->Normal(mub[i],sqrt(sigma[lag]/(sigma[lag] + 1)));
-    }
-	
-  // Importance weighting
-	logweight += -0.5 * pow(y[int(lTime)] - mu[lag-1],2.0) / (sigmah[lag]+1) ;
-  
-}
+	///\param lTime The sampler iteration.
+	///\param pFrom The population to move.
+	///\param pRng  A random number generator.
+	void fMove(long lTime, vector<double> & value, double & logweight, smc::rng *pRng)
+	{
+		if(lTime == 1) {
+			value.push_back((value.at(lTime-1) + y[int(lTime)])/2.0 + pRng->Normal(0.0,1.0/sqrt(2.0)));
+			logweight += -0.25*(y[int(lTime)] - value.at(lTime-1))*(y[int(lTime)]-value.at(lTime-1));
+			return;
+		}
+
+		long lag = min(lTime,lLag);
+
+		//These structures should really be made static 
+		std::vector<double> mu(lag+1);
+		std::vector<double> sigma(lag+1);
+		std::vector<double> sigmah(lag+1);
+		std::vector<double> mub(lag+1);
+
+		// Forward filtering
+		mu[0] = value.at(lTime-lag);
+		sigma[0] = 0;
+		for(int i = 1; i <= lag; ++i)
+		{
+			sigmah[i] = sigma[i-1] + 1;
+			
+			mu[i] = (sigmah[i] * y[int(lTime-lag+i)] +  mu[i-1]) / (sigmah[i] + 1);
+			sigma[i] = sigmah[i] / (sigmah[i] + 1);
+		}
+		// Backward smoothing
+		mub[lag] = mu[lag];
+		value.push_back(pRng->Normal(mub[lag],sqrt(sigma[lag])));
+		for(int i = lag-1; i; --i)
+		{
+			mub[i] = (sigma[i]*value.at(lTime-lag+i+1) + mu[i]) / (sigma[i]+1);
+			value.at(lTime-lag+i) = pRng->Normal(mub[i],sqrt(sigma[lag]/(sigma[lag] + 1)));
+		}
+		
+		// Importance weighting
+		logweight += -0.5 * pow(y[int(lTime)] - mu[lag-1],2.0) / (sigmah[lag]+1) ;
+
+	}
 }

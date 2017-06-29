@@ -27,37 +27,30 @@
 class cv_state 
 {
 public:
-    double x_pos, y_pos;
-    double x_vel, y_vel;
+	double x_pos, y_pos;
+	double x_vel, y_vel;
 };
 
 class cv_obs
 {
 public:
-    arma::vec x_pos, y_pos;
+	arma::vec x_pos, y_pos;
 };
 
 
 namespace pflineart {
-cv_obs y;
-unsigned long lNumber;
+	cv_obs y;
+	unsigned long lNumber;
 
-double logLikelihood(long lTime, const cv_state & value);
+	double logLikelihood(long lTime, const cv_state & value);
 
-void fInitialise(smc::rng *pRng, cv_state & value, double & logweight);
-long fSelect(long lTime, const smc::population<cv_state> & p, smc::rng *pRng);
-void fMove(long lTime, cv_state & value, double & logweight, smc::rng *pRng);
+	void fInitialise(smc::rng *pRng, cv_state & value, double & logweight);
+	long fSelect(long lTime, const smc::population<cv_state> & p, smc::rng *pRng);
+	void fMove(long lTime, cv_state & value, double & logweight, smc::rng *pRng);
 
-double integrand_mean_x(const cv_state&, void*);
-double integrand_mean_y(const cv_state&, void*);
-double integrand_var_x(const cv_state&, void*);
-double integrand_var_y(const cv_state&, void*);
+	double integrand_mean_x(const cv_state&, void*);
+	double integrand_mean_y(const cv_state&, void*);
+	double integrand_var_x(const cv_state&, void*);
+	double integrand_var_y(const cv_state&, void*);
 
 }
-
-
-
-
-
-
-

@@ -34,14 +34,14 @@
 #include <cstring>
 
 namespace pflineart {
-const double var_s0 = 4;
-const double var_u0 = 1;
-const double var_s  = 0.02;
-const double var_u  = 0.001;
+	const double var_s0 = 4;
+	const double var_u0 = 1;
+	const double var_s  = 0.02;
+	const double var_u  = 0.001;
 
-const double scale_y = 0.1;
-const double nu_y = 10.0;
-const double Delta = 0.1;
+	const double scale_y = 0.1;
+	const double nu_y = 10.0;
+	const double Delta = 0.1;
 }
 
 using namespace std;
@@ -53,130 +53,130 @@ using namespace pflineart;
 // minor interface change to pass data down as matrix, rather than a filename
 // [[Rcpp::export]]
 Rcpp::List pfLineartBS_cpp(arma::mat data, unsigned long inlNumber, bool useF, Rcpp::Function f) { 	
-  
-  long lIterates;
-  
-  try {
-    
-    lNumber = inlNumber;
-    
-    lIterates = data.n_rows;
-    y.x_pos = data.col(0);
-    y.y_pos = data.col(1);
-    
-    ///Initialise and run the sampler 
-    smc::sampler<cv_state> Sampler(lNumber, HistoryType::NONE);  
-    smc::moveset<cv_state> Moveset(fInitialise, fMove, NULL);
-    
-	
-    //Sampler.SetResampleParams(ResampleType::RESIDUAL, 0.5);
-    Sampler.SetResampleParams(ResampleType::RESIDUAL, 0.999);
-    Sampler.SetMoveSet(Moveset);
-    Sampler.Initialise();
-    
-    Rcpp::NumericVector Xm(lIterates), Xv(lIterates), Ym(lIterates), Yv(lIterates), ESS(lIterates);
-    
-    Xm(0) = Sampler.Integrate(integrand_mean_x, NULL);
-    Xv(0) = Sampler.Integrate(integrand_var_x, (void*)&Xm(0));
-    Ym(0) = Sampler.Integrate(integrand_mean_y, NULL);
-    Yv(0) = Sampler.Integrate(integrand_var_y, (void*)&Ym(0));
-    ESS(0) = Sampler.GetESS();
-	
-    for(int n=1; n < lIterates; ++n) {
-      Sampler.Iterate();
-      
-      Xm(n) = Sampler.Integrate(integrand_mean_x, NULL);
-      Xv(n) = Sampler.Integrate(integrand_var_x, (void*)&Xm(n));
-      Ym(n) = Sampler.Integrate(integrand_mean_y, NULL);
-      Yv(n) = Sampler.Integrate(integrand_var_y, (void*)&Ym(n));
-      ESS(n) = Sampler.GetESS();
-	   
-      if (useF) f(Xm, Ym);
-    }
-    
-	//Rcpp::Rcout << Sampler << std::endl;
-	//Sampler.StreamParticle(Rcpp::Rcout,0);
-	
-	double logNC = Sampler.GetLogNCPath();
-    
-    return Rcpp::List::create(Rcpp::Named("Xm") = Xm,
-                                   Rcpp::Named("Xv") = Xv,
-                                   Rcpp::Named("Ym") = Ym,
-                                   Rcpp::Named("Yv") = Yv,
-                                   Rcpp::Named("ESS") = ESS,
-								   Rcpp::Named("logNC") = logNC);
-  }
-  catch(smc::exception  e) {
-    Rcpp::Rcout << e;       	// not cerr, as R doesn't like to mix with i/o 
-    //exit(e.lCode);		// we're just called from R so we should not exit
-  }
-  return R_NilValue;          	// to provide a return 
+
+	long lIterates;
+
+	try {
+		
+		lNumber = inlNumber;
+		
+		lIterates = data.n_rows;
+		y.x_pos = data.col(0);
+		y.y_pos = data.col(1);
+		
+		///Initialise and run the sampler 
+		smc::sampler<cv_state> Sampler(lNumber, HistoryType::NONE);  
+		smc::moveset<cv_state> Moveset(fInitialise, fMove, NULL);
+		
+		
+		//Sampler.SetResampleParams(ResampleType::RESIDUAL, 0.5);
+		Sampler.SetResampleParams(ResampleType::RESIDUAL, 0.999);
+		Sampler.SetMoveSet(Moveset);
+		Sampler.Initialise();
+		
+		Rcpp::NumericVector Xm(lIterates), Xv(lIterates), Ym(lIterates), Yv(lIterates), ESS(lIterates);
+		
+		Xm(0) = Sampler.Integrate(integrand_mean_x, NULL);
+		Xv(0) = Sampler.Integrate(integrand_var_x, (void*)&Xm(0));
+		Ym(0) = Sampler.Integrate(integrand_mean_y, NULL);
+		Yv(0) = Sampler.Integrate(integrand_var_y, (void*)&Ym(0));
+		ESS(0) = Sampler.GetESS();
+		
+		for(int n=1; n < lIterates; ++n) {
+			Sampler.Iterate();
+			
+			Xm(n) = Sampler.Integrate(integrand_mean_x, NULL);
+			Xv(n) = Sampler.Integrate(integrand_var_x, (void*)&Xm(n));
+			Ym(n) = Sampler.Integrate(integrand_mean_y, NULL);
+			Yv(n) = Sampler.Integrate(integrand_var_y, (void*)&Ym(n));
+			ESS(n) = Sampler.GetESS();
+			
+			if (useF) f(Xm, Ym);
+		}
+		
+		//Rcpp::Rcout << Sampler << std::endl;
+		//Sampler.StreamParticle(Rcpp::Rcout,0);
+		
+		double logNC = Sampler.GetLogNCPath();
+		
+		return Rcpp::List::create(Rcpp::Named("Xm") = Xm,
+		Rcpp::Named("Xv") = Xv,
+		Rcpp::Named("Ym") = Ym,
+		Rcpp::Named("Yv") = Yv,
+		Rcpp::Named("ESS") = ESS,
+		Rcpp::Named("logNC") = logNC);
+	}
+	catch(smc::exception  e) {
+		Rcpp::Rcout << e;       	// not cerr, as R doesn't like to mix with i/o 
+		//exit(e.lCode);		// we're just called from R so we should not exit
+	}
+	return R_NilValue;          	// to provide a return 
 }
 
 namespace pflineart {
-double integrand_mean_x(const cv_state& s, void *){ return s.x_pos;}
-double integrand_mean_y(const cv_state& s, void *){ return s.y_pos;}
+	double integrand_mean_x(const cv_state& s, void *){ return s.x_pos;}
+	double integrand_mean_y(const cv_state& s, void *){ return s.y_pos;}
 
-double integrand_var_x(const cv_state& s, void* vmx){
-  double* dmx = (double*)vmx;
-  double d = (s.x_pos - (*dmx));
-  return d*d;
-}
+	double integrand_var_x(const cv_state& s, void* vmx){
+		double* dmx = (double*)vmx;
+		double d = (s.x_pos - (*dmx));
+		return d*d;
+	}
 
-double integrand_var_y(const cv_state& s, void* vmy)
-{
-  double* dmy = (double*)vmy;
-  double d = (s.y_pos - (*dmy));
-  return d*d;
-}
+	double integrand_var_y(const cv_state& s, void* vmy)
+	{
+		double* dmy = (double*)vmy;
+		double d = (s.y_pos - (*dmy));
+		return d*d;
+	}
 
-// }
+	// }
 #include <iostream>
 #include <cmath>
-//#include <gsl/gsl_randist.h>
+	//#include <gsl/gsl_randist.h>
 
-using namespace std;
+	using namespace std;
 
-double logLikelihood(long lTime, const cv_state & value)
-{
-  return - 0.5 * (nu_y + 1.0) * (log(1 + pow((value.x_pos - y.x_pos[lTime])/scale_y,2) / nu_y) + log(1 + pow((value.y_pos - y.y_pos[lTime])/scale_y,2) / nu_y));
-}
+	double logLikelihood(long lTime, const cv_state & value)
+	{
+		return - 0.5 * (nu_y + 1.0) * (log(1 + pow((value.x_pos - y.x_pos[lTime])/scale_y,2) / nu_y) + log(1 + pow((value.y_pos - y.y_pos[lTime])/scale_y,2) / nu_y));
+	}
 
-void fInitialise(smc::rng *pRng, cv_state & value, double & logweight)
-{ 
-  value.x_pos = pRng->Normal(0,sqrt(var_s0));
-    value.y_pos  = pRng->Normal(0,sqrt(var_s0));
-    value.x_vel  = pRng->Normal(0,sqrt(var_u0));
-    value.y_vel  = pRng->Normal(0,sqrt(var_u0));
-  logweight = - 0.5 * (nu_y + 1.0) * (log(1 + pow((value.x_pos - y.x_pos[0])/scale_y,2) / nu_y) + log(1 + pow((value.y_pos - y.y_pos[0])/scale_y,2) / nu_y));
-}
+	void fInitialise(smc::rng *pRng, cv_state & value, double & logweight)
+	{ 
+		value.x_pos = pRng->Normal(0,sqrt(var_s0));
+		value.y_pos  = pRng->Normal(0,sqrt(var_s0));
+		value.x_vel  = pRng->Normal(0,sqrt(var_u0));
+		value.y_vel  = pRng->Normal(0,sqrt(var_u0));
+		logweight = - 0.5 * (nu_y + 1.0) * (log(1 + pow((value.x_pos - y.x_pos[0])/scale_y,2) / nu_y) + log(1 + pow((value.y_pos - y.y_pos[0])/scale_y,2) / nu_y));
+	}
 
-void fMove(long lTime, cv_state & value, double & logweight, smc::rng *pRng)
-{
-    value.x_pos += value.x_vel * Delta + pRng->Normal(0,sqrt(var_s));
-    value.x_vel += pRng->Normal(0,sqrt(var_u));
-    value.y_pos += value.y_vel * Delta + pRng->Normal(0,sqrt(var_s));
-    value.y_vel += pRng->Normal(0,sqrt(var_u));
-  
-  logweight += logLikelihood(lTime, value);
-}
+	void fMove(long lTime, cv_state & value, double & logweight, smc::rng *pRng)
+	{
+		value.x_pos += value.x_vel * Delta + pRng->Normal(0,sqrt(var_s));
+		value.x_vel += pRng->Normal(0,sqrt(var_u));
+		value.y_pos += value.y_vel * Delta + pRng->Normal(0,sqrt(var_s));
+		value.y_vel += pRng->Normal(0,sqrt(var_u));
+
+		logweight += logLikelihood(lTime, value);
+	}
 }
 
 
 
 namespace std {
-  /// Produce a human readable display of an the particle values using the standard stream operators
+	/// Produce a human readable display of an the particle values using the standard stream operators
 
-  /// \param os The output stream to which the display should be made.
-  /// \param p  The particle which is to be displayed.
-  //template <class rad_state>
-  std::ostream & operator << (std::ostream & os, cv_state & value)
-  {
-	double x_pos = value.x_pos;
-	double y_pos = value.y_pos;
-	double x_vel = value.x_vel;
-	double y_vel = value.y_vel;
-    os << "Position: (" << x_pos << ", " << y_pos << ") Velocity: (" <<  x_vel << ", " << y_vel << ")";
-    return os;
-  }
+	/// \param os The output stream to which the display should be made.
+	/// \param p  The particle which is to be displayed.
+	//template <class rad_state>
+	std::ostream & operator << (std::ostream & os, cv_state & value)
+	{
+		double x_pos = value.x_pos;
+		double y_pos = value.y_pos;
+		double x_vel = value.x_vel;
+		double y_vel = value.y_vel;
+		os << "Position: (" << x_pos << ", " << y_pos << ") Velocity: (" <<  x_vel << ", " << y_vel << ")";
+		return os;
+	}
 }

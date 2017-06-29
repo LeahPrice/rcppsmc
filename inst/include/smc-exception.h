@@ -40,28 +40,28 @@
 #define SMCX_MULTIPLE_INSTANTIATION 0x1000
 
 namespace smc {
-  ///SMC Exception class
+	///SMC Exception class
 
-  /// This class holds details of unrecoverable errors which occur within the SMCTC library.
-  /// An instance of it is thrown whenever such an error occurs.
-  class exception {
-  public:
-    char const * szFile; //!< The source file from which the code generating the exception was generated.
-    long lLine;   //!< The line of that source file which generates the exception.
-    long lCode;   //!< A numerical code indicating the nature of the exception generated.
-    char const * szMessage; //!< A human-readable explanation of the cause of the exception.   
+	/// This class holds details of unrecoverable errors which occur within the SMCTC library.
+	/// An instance of it is thrown whenever such an error occurs.
+	class exception {
+	public:
+		char const * szFile; //!< The source file from which the code generating the exception was generated.
+		long lLine;   //!< The line of that source file which generates the exception.
+		long lCode;   //!< A numerical code indicating the nature of the exception generated.
+		char const * szMessage; //!< A human-readable explanation of the cause of the exception.   
 
-    exception(char const *, long, long, char const *);
-  };
+		exception(char const *, long, long, char const *);
+	};
 }
 
 namespace std {
-  /// Produce a human-readable display of the state of an smc::exception class using the stream operator.
+	/// Produce a human-readable display of the state of an smc::exception class using the stream operator.
 
-  /// Produce a human-readable display of the state of an smc::exception class using the stream operator.
-  /// \param os The output stream to which the display should be made.
-  /// \param e  The exception which is to be displayed.
-  std::ostream & operator<< (std::ostream &, smc::exception &);
+	/// Produce a human-readable display of the state of an smc::exception class using the stream operator.
+	/// \param os The output stream to which the display should be made.
+	/// \param e  The exception which is to be displayed.
+	std::ostream & operator<< (std::ostream &, smc::exception &);
 }
 
 #endif

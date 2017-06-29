@@ -34,16 +34,16 @@
 #include <cmath>
 
 namespace nonlinbs {
-const double std_x0 = 2;
-const double var_x0 = std_x0 * std_x0;
-const double std_x  = sqrt(10.0);
-const double var_x  = std_x * std_x;
-const double var_y  = 1.0;
+	const double std_x0 = 2;
+	const double var_x0 = std_x0 * std_x0;
+	const double std_x  = sqrt(10.0);
+	const double var_x  = std_x * std_x;
+	const double var_y  = 1.0;
 
-const double scale_y = 1.0 / 20.0;
+	const double scale_y = 1.0 / 20.0;
 
-///The observations
-arma::vec y;
+	///The observations
+	arma::vec y;
 }
 
 using namespace std;
@@ -51,71 +51,71 @@ using namespace nonlinbs;
 
 // [[Rcpp::export]]
 Rcpp::List pfNonlinBS_cpp(arma::vec data, long inlNumber) {
-  lNumber = inlNumber;
-  
-  y = data;
-  long lIterates = y.n_rows;
-  
-  //Initialise and run the sampler 
-  smc::sampler<double> Sampler(lNumber, HistoryType::NONE);  
-  smc::moveset<double> Moveset(fInitialise, fMove, NULL);
-  
-  Sampler.SetResampleParams(ResampleType::MULTINOMIAL, 1.01 * lNumber);
-  Sampler.SetMoveSet(Moveset);
-  Sampler.Initialise();
-  
-  Rcpp::NumericVector resMean = Rcpp::NumericVector(lIterates);
-  Rcpp::NumericVector resSD   = Rcpp::NumericVector(lIterates);
-  for(int n=0 ; n < lIterates ; ++n) {
-    if(n > 0)
-      Sampler.Iterate();
-    
-    resMean(n) = Sampler.Integrate(integrand_mean_x,NULL);      
-    resSD(n)  = sqrt(Sampler.Integrate(integrand_var_x, (void*)&resSD(n)));      
-  }
+	lNumber = inlNumber;
 
-  double logNC = Sampler.GetLogNCPath();
-  
-  return Rcpp::List::create(Rcpp::_["mean"] = resMean,
-                            Rcpp::_["sd"] = resSD,
-                            Rcpp::_["logNC"] = logNC);
+	y = data;
+	long lIterates = y.n_rows;
+
+	//Initialise and run the sampler 
+	smc::sampler<double> Sampler(lNumber, HistoryType::NONE);  
+	smc::moveset<double> Moveset(fInitialise, fMove, NULL);
+
+	Sampler.SetResampleParams(ResampleType::MULTINOMIAL, 1.01 * lNumber);
+	Sampler.SetMoveSet(Moveset);
+	Sampler.Initialise();
+
+	Rcpp::NumericVector resMean = Rcpp::NumericVector(lIterates);
+	Rcpp::NumericVector resSD   = Rcpp::NumericVector(lIterates);
+	for(int n=0 ; n < lIterates ; ++n) {
+		if(n > 0)
+		Sampler.Iterate();
+		
+		resMean(n) = Sampler.Integrate(integrand_mean_x,NULL);      
+		resSD(n)  = sqrt(Sampler.Integrate(integrand_var_x, (void*)&resSD(n)));      
+	}
+
+	double logNC = Sampler.GetLogNCPath();
+
+	return Rcpp::List::create(Rcpp::_["mean"] = resMean,
+	Rcpp::_["sd"] = resSD,
+	Rcpp::_["logNC"] = logNC);
 }
 
 namespace nonlinbs {
-///The function corresponding to the log likelihood at specified time and position (up to normalisation)
+	///The function corresponding to the log likelihood at specified time and position (up to normalisation)
 
-///  \param lTime The current time (i.e. the index of the current distribution)
-///  \param value     The state to consider 
-double logLikelihood(long lTime, const double & value) {
-  return -0.5 * pow(y(int(lTime)) - value*value*scale_y,2) / var_y;;
-}
+	///  \param lTime The current time (i.e. the index of the current distribution)
+	///  \param value     The state to consider 
+	double logLikelihood(long lTime, const double & value) {
+		return -0.5 * pow(y(int(lTime)) - value*value*scale_y,2) / var_y;;
+	}
 
-///A function to initialise a particle
+	///A function to initialise a particle
 
-/// \param pRng A pointer to the random number generator which is to be used
-void fInitialise(smc::rng *pRng, double & value, double & logweight) {
-	value = pRng->Normal(0,std_x0);
-	logweight = -0.5 * pow(y(int(0)) - value*value*scale_y,2) / var_y;
-}
+	/// \param pRng A pointer to the random number generator which is to be used
+	void fInitialise(smc::rng *pRng, double & value, double & logweight) {
+		value = pRng->Normal(0,std_x0);
+		logweight = -0.5 * pow(y(int(0)) - value*value*scale_y,2) / var_y;
+	}
 
-///The proposal function.
+	///The proposal function.
 
-///\param lTime The sampler iteration.
-///\param pFrom The population to move.
-///\param pRng  A random number generator.
-void fMove(long lTime, double & value, double & logweight, smc::rng *pRng) {
-  value = 0.5 * value + 25.0*value / (1.0 + value * value) + 8.0 * cos(1.2  * ( lTime)) + pRng->Normal(0.0,std_x);
-  logweight += logLikelihood(lTime, value);
-}
+	///\param lTime The sampler iteration.
+	///\param pFrom The population to move.
+	///\param pRng  A random number generator.
+	void fMove(long lTime, double & value, double & logweight, smc::rng *pRng) {
+		value = 0.5 * value + 25.0*value / (1.0 + value * value) + 8.0 * cos(1.2  * ( lTime)) + pRng->Normal(0.0,std_x);
+		logweight += logLikelihood(lTime, value);
+	}
 
 
-double integrand_mean_x(const double& x, void *) {
-  return x;
-}
+	double integrand_mean_x(const double& x, void *) {
+		return x;
+	}
 
-double integrand_var_x(const double& x, void* vmx) {
-  double* dmx = (double*)vmx;
-  double d = (x - (*dmx));
-  return d*d;
-}
+	double integrand_var_x(const double& x, void* vmx) {
+		double* dmx = (double*)vmx;
+		double d = (x - (*dmx));
+		return d*d;
+	}
 }

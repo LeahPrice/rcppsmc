@@ -27,18 +27,18 @@
 class rad_state 
 {
 public:
-    double alpha, beta, phi;
+	double alpha, beta, phi;
 };
 
 class rad_obs
 {
 public:
-    arma::vec data_x, data_y;
+	arma::vec data_x, data_y;
 };
 
 
 namespace LinReg {
-    rad_obs y;
+	rad_obs y;
 	double mean_x;
 	unsigned long lNumber;
 	
@@ -56,4 +56,3 @@ namespace LinReg {
 	double integrand_var_beta(const rad_state&, void*);
 	double integrand_var_phi(const rad_state&, void*);
 }
-

@@ -33,132 +33,132 @@
 #include <RcppArmadillo.h>
 
 namespace smc {
-  /// The historyflags class holds a set of flags which describe various properties of the population at a given time.
-  class historyflags
-  {
-  private:
-    /// true if the population was resampled during the described iteration.
-    unsigned int Resampled : 1;
-  public:
-    ///Create a new set of history flags corresponding to the specified properties
-    historyflags(int wasResampled);
-
-    ///This function returns true if the flag set indicates that the ensemble was resampled during the described iteration.
-    int WasResampled(void) const {return Resampled;}
-  };
-  
-  
-  /// A template class for the elements of a linked list to be used for the history of the sampler.
-  template <class Population>class historyelement
-  {
-  private:
-    long number; //!< The number of particles (presently redundant as this is not a function of iteration)
-    int nAccepted; //!< Number of MCMC moves accepted during this iteration.
-    Population value; //!< The particles themselves (values and weights)
-    historyflags flags; //!< Flags associated with this iteration.
-    
-  public:
-    /// The null constructor creates an empty history element.
-    historyelement();
-    /// A constructor with four arguments initialises the particle set.
-    historyelement(long lNumber, Population New, int nAccepts, historyflags hf);
-
-    /// The destructor tidies up.
-    ~historyelement();
-
-    /// Returns the effective sample size of this particle generation.
-    double GetESS(void) const;
-    /// Returns the flags
-    historyflags GetFlags(void) const {return flags;}
-    /// Returns the number of particles present.
-    long GetNumber(void) const {return number;} 
-    /// Returns a pointer to the current particle set.
-    Population * GetPointers(void) const { return &value; }
-	/// Returns a pointer to the current particle set.
-    Population & GetRefs(void) { return value; }
-    /// Integrate the supplied function according to the empirical measure of the particle ensemble.
-    long double Integrate(long lTime, double (*pIntegrand)(long,const Population&,long,void*), void* pAuxiliary) const;
-    /// Integrate the supplied function according to the empirical measure of the particle ensemble.
-    long double Integrate_Var(long lTime, double (*pIntegrand)(long,const Population&,long,void*), double Expectation, void* pAuxiliary) const;
-    /// Sets the particle set to the specified values.  
-    void Set(long lNumber, const Population &New, int inAccepted, const historyflags &histflags){number = lNumber; value = New; nAccepted = inAccepted; flags = histflags;};
-    /// Returns the number of MCMC moves accepted during this iteration.
-    int AcceptCount(void) const {return nAccepted; }
-    /// Returns true if the particle set 
-    int WasResampled(void) const {return flags.WasResampled(); }
-
-  };
-
-  template <class Population>
-  historyelement<Population>::historyelement(): flags(0)
-  {
-    number = 0;
-    nAccepted = 0;
-  }
-
-
-  /// \param lNumber The number of particles present in the particle generation
-  /// \param New    The array of particles which are present in the particle generation
-  /// \param nAccepts The number of MCMC moves that were accepted during this particle generation
-  /// \param hf      The historyflags associated with the particle generation
-
-  template <class Population>
-  historyelement<Population>::historyelement(long lNumber, Population New, int nAccepts, historyflags hf) :
-    number(lNumber), nAccepted(nAccepts), value(New), flags(hf)
-  {
-  }
-
-  template <class Population>
-  historyelement<Population>::~historyelement(void)
-  {
-  }
-
-  template <class Population>
-  double historyelement<Population>::GetESS(void) const
-  {
-	double sum = arma::sum(exp(value.GetLogWeight()));
-	double sumsq = arma::sum(exp(2.0*value.GetLogWeight()));
-  return expl(-log(sumsq) + 2*log(sum));
-  }
-
-  /// \param lTime The timestep at which the integration is to be carried out
-  /// \param pIntegrand The function which is to be integrated
-  /// \param pAuxiliary A pointer to additional information which is passed to the integrand function
-
-  template <class Population>
-  long double historyelement<Population>::Integrate(long lTime, double (*pIntegrand)(long,const Population&,long,void*), void* pAuxiliary) const
-  {
-    long double rValue = 0;
-	long double wSum = 0;
-	for(long i =0; i < number; i++)
+	/// The historyflags class holds a set of flags which describe various properties of the population at a given time.
+	class historyflags
 	{
-		rValue += expl(value.GetLogWeightN(i)) * (long double)pIntegrand(lTime, value,i, pAuxiliary); //may want to change input type for this pIntegrand
-		wSum  += expl(value.GetLogWeightN(i));
-	}
-  
-	rValue /= wSum;
-	return rValue;
-  }
+	private:
+		/// true if the population was resampled during the described iteration.
+		unsigned int Resampled : 1;
+	public:
+		///Create a new set of history flags corresponding to the specified properties
+		historyflags(int wasResampled);
 
-  /// \param lTime The timestep at which the integration is to be carried out
-  /// \param pIntegrand The function which is to be integrated
-  /// \param pAuxiliary A pointer to additional information which is passed to the integrand function
+		///This function returns true if the flag set indicates that the ensemble was resampled during the described iteration.
+		int WasResampled(void) const {return Resampled;}
+	};
 
-  template <class Population>
-  long double historyelement<Population>::Integrate_Var(long lTime, double (*pIntegrand)(long,const Population&,long,void*), double Expectation, void* pAuxiliary) const
-  {
-    long double rValue = 0;
-	long double wSum = 0;
-	for(long i =0; i < number; i++)
+
+	/// A template class for the elements of a linked list to be used for the history of the sampler.
+	template <class Population>class historyelement
 	{
-		rValue += expl(value.GetLogWeightN(i)) * pow((long double)pIntegrand(lTime, value,i, pAuxiliary) - Expectation,2.0); //may want to change input type for this pIntegrand
-		wSum  += expl(value.GetLogWeightN(i));
+	private:
+		long number; //!< The number of particles (presently redundant as this is not a function of iteration)
+		int nAccepted; //!< Number of MCMC moves accepted during this iteration.
+		Population value; //!< The particles themselves (values and weights)
+		historyflags flags; //!< Flags associated with this iteration.
+		
+	public:
+		/// The null constructor creates an empty history element.
+		historyelement();
+		/// A constructor with four arguments initialises the particle set.
+		historyelement(long lNumber, Population New, int nAccepts, historyflags hf);
+
+		/// The destructor tidies up.
+		~historyelement();
+
+		/// Returns the effective sample size of this particle generation.
+		double GetESS(void) const;
+		/// Returns the flags
+		historyflags GetFlags(void) const {return flags;}
+		/// Returns the number of particles present.
+		long GetNumber(void) const {return number;} 
+		/// Returns a pointer to the current particle set.
+		Population * GetPointers(void) const { return &value; }
+		/// Returns a pointer to the current particle set.
+		Population & GetRefs(void) { return value; }
+		/// Integrate the supplied function according to the empirical measure of the particle ensemble.
+		long double Integrate(long lTime, double (*pIntegrand)(long,const Population&,long,void*), void* pAuxiliary) const;
+		/// Integrate the supplied function according to the empirical measure of the particle ensemble.
+		long double Integrate_Var(long lTime, double (*pIntegrand)(long,const Population&,long,void*), double Expectation, void* pAuxiliary) const;
+		/// Sets the particle set to the specified values.  
+		void Set(long lNumber, const Population &New, int inAccepted, const historyflags &histflags){number = lNumber; value = New; nAccepted = inAccepted; flags = histflags;};
+		/// Returns the number of MCMC moves accepted during this iteration.
+		int AcceptCount(void) const {return nAccepted; }
+		/// Returns true if the particle set 
+		int WasResampled(void) const {return flags.WasResampled(); }
+
+	};
+
+	template <class Population>
+	historyelement<Population>::historyelement(): flags(0)
+	{
+		number = 0;
+		nAccepted = 0;
 	}
-  
-	rValue /= wSum;
-	return rValue;
-  }
+
+
+	/// \param lNumber The number of particles present in the particle generation
+	/// \param New    The array of particles which are present in the particle generation
+	/// \param nAccepts The number of MCMC moves that were accepted during this particle generation
+	/// \param hf      The historyflags associated with the particle generation
+
+	template <class Population>
+	historyelement<Population>::historyelement(long lNumber, Population New, int nAccepts, historyflags hf) :
+	number(lNumber), nAccepted(nAccepts), value(New), flags(hf)
+	{
+	}
+
+	template <class Population>
+	historyelement<Population>::~historyelement(void)
+	{
+	}
+
+	template <class Population>
+	double historyelement<Population>::GetESS(void) const
+	{
+		double sum = arma::sum(exp(value.GetLogWeight()));
+		double sumsq = arma::sum(exp(2.0*value.GetLogWeight()));
+		return expl(-log(sumsq) + 2*log(sum));
+	}
+
+	/// \param lTime The timestep at which the integration is to be carried out
+	/// \param pIntegrand The function which is to be integrated
+	/// \param pAuxiliary A pointer to additional information which is passed to the integrand function
+
+	template <class Population>
+	long double historyelement<Population>::Integrate(long lTime, double (*pIntegrand)(long,const Population&,long,void*), void* pAuxiliary) const
+	{
+		long double rValue = 0;
+		long double wSum = 0;
+		for(long i =0; i < number; i++)
+		{
+			rValue += expl(value.GetLogWeightN(i)) * (long double)pIntegrand(lTime, value,i, pAuxiliary); //may want to change input type for this pIntegrand
+			wSum  += expl(value.GetLogWeightN(i));
+		}
+
+		rValue /= wSum;
+		return rValue;
+	}
+
+	/// \param lTime The timestep at which the integration is to be carried out
+	/// \param pIntegrand The function which is to be integrated
+	/// \param pAuxiliary A pointer to additional information which is passed to the integrand function
+
+	template <class Population>
+	long double historyelement<Population>::Integrate_Var(long lTime, double (*pIntegrand)(long,const Population&,long,void*), double Expectation, void* pAuxiliary) const
+	{
+		long double rValue = 0;
+		long double wSum = 0;
+		for(long i =0; i < number; i++)
+		{
+			rValue += expl(value.GetLogWeightN(i)) * pow((long double)pIntegrand(lTime, value,i, pAuxiliary) - Expectation,2.0); //may want to change input type for this pIntegrand
+			wSum  += expl(value.GetLogWeightN(i));
+		}
+
+		rValue /= wSum;
+		return rValue;
+	}
 
 }
-  
+
 #endif
