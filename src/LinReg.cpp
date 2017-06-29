@@ -64,10 +64,10 @@ Rcpp::List LinRegBS_cpp(arma::mat data, unsigned long inlNumber) {
     mean_x = arma::sum(y.data_x)/lIterates;
     
     //Initialise and run the sampler
-    smc::sampler<rad_state> Sampler(lNumber, SMC_HISTORY_RAM);  
+    smc::sampler<rad_state> Sampler(lNumber, HistoryType::RAM);  
     smc::moveset<rad_state> Moveset(fInitialise, fMove, fMCMC);
     
-    Sampler.SetResampleParams(SMC_RESAMPLE_SYSTEMATIC, 0.5);
+    Sampler.SetResampleParams(ResampleType::SYSTEMATIC, 0.5);
     Sampler.SetMoveSet(Moveset);
     Sampler.Initialise();
     

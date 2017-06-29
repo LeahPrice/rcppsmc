@@ -40,15 +40,29 @@
 #include "population.h"
 #include "smc-exception.h"
 
+///Specifiers for various path sampling methods:
+namespace PathSamplingType
+{
+	enum Enum { TRAPEZOID2 = 0, 
+                    TRAPEZOID1, 
+                    RECTANGLE};
+};
+
 ///Specifiers for various resampling algorithms:
-enum ResampleType { SMC_RESAMPLE_MULTINOMIAL = 0, 
-                    SMC_RESAMPLE_RESIDUAL, 
-                    SMC_RESAMPLE_STRATIFIED, 
-                    SMC_RESAMPLE_SYSTEMATIC };
+namespace ResampleType
+{
+	enum Enum {MULTINOMIAL = 0, 
+                    RESIDUAL, 
+                    STRATIFIED, 
+                    SYSTEMATIC };
+};
 
 ///Storage types for the history of the particle system. 
-enum HistoryType { SMC_HISTORY_NONE = 0, 
-                   SMC_HISTORY_RAM };	
+namespace HistoryType
+{
+	enum Enum {NONE = 0, 
+                   RAM};
+};
 				   
 namespace smc {
 
@@ -66,7 +80,7 @@ protected:
   long T;
   
   ///The resampling mode which is to be employed.
-  ResampleType rtResampleMode;
+  ResampleType::Enum rtResampleMode;
   ///The effective sample size at which resampling should be used.
   double dResampleThreshold;
   ///Structure used internally for resampling.
@@ -87,7 +101,7 @@ protected:
   int nResampled;
   
   ///A mode flag which indicates whether historical information is stored
-  HistoryType htHistoryMode;
+  HistoryType::Enum htHistoryMode;
   ///The historical process associated with the particle system.
   std::vector<historyelement< population<Space> > > History;
   ///An estimate of the overall ratio of normalising constants
@@ -97,9 +111,9 @@ protected:
   
 public:
   ///Create a particle system containing lSize uninitialised particles with the specified mode.
-  sampler(long lSize, HistoryType htHistoryMode);
+  sampler(long lSize, HistoryType::Enum htHistoryMode);
   ///Create a particle system constaining lSize uninitialised particles with the specified mode and random number generator.
-  // -- no GSL  sampler(long lSize, HistoryType htHistoryMode, const gsl_rng_type* rngType, unsigned long nSeed);
+  // -- no GSL  sampler(long lSize, HistoryType::Enum htHistoryMode, const gsl_rng_type* rngType, unsigned long nSeed);
   ///Dispose of a sampler.
   ~sampler();
   ///Calculates and Returns the Effective Sample Size.
@@ -134,12 +148,10 @@ public:
   void Initialise(void);
   ///Integrate the supplied function with respect to the current particle set.
   double Integrate(double(*pIntegrand)(const Space &,void*), void* pAuxiliary) const;
-  ///Integrate the supplied function over the path path using the supplied width function.
-  double IntegratePathSampling(double (*pIntegrand)(long,const population<Space>&,long,void*), double (*pWidth)(long,void*), void* pAuxiliary);
-  ///Integrate the supplied function over the path path using the supplied width function.
-  double IntegratePathSampling_Trapezoidal(double (*pIntegrand)(long,const population<Space>&,long,void*), double (*pWidth)(long,void*), void* pAuxiliary);
-  ///Integrate the supplied function over the path path using the supplied width function.
-  double IntegratePathSampling_Trapezoidal2(double (*pIntegrand)(long,const population<Space>&,long,void*), double (*pWidth)(long,void*), void* pAuxiliary);
+  ///Integrate the supplied function over the path path using the supplied width function and integration method.
+  double IntegratePathSampling(PathSamplingType::Enum, double (*pIntegrand)(long,const population<Space>&,long,void*), double (*pWidth)(long,void*), void* pAuxiliary);
+  ///Integrate the supplied function over the path path using the supplied width function and the default integration method (the corrected trapezoid rule).
+  double IntegratePathSampling(double (*pIntegrand)(long,const population<Space>&,long,void*), double (*pWidth)(long,void*), void* pAuxiliary) {return IntegratePathSampling(PathSamplingType::TRAPEZOID2, pIntegrand, pWidth, pAuxiliary);}
   ///Perform one iteration of the simulation algorithm.
   void Iterate(void);
   ///Cancel one iteration of the simulation algorithm.
@@ -151,11 +163,11 @@ public:
   ///Move the particle set by proposing an applying an appropriate move to each particle.
   void MovePopulations(void);
   ///Resample the particle set using the specified resmpling scheme.
-  void Resample(ResampleType lMode);
+  void Resample(ResampleType::Enum lMode);
   ///Sets the entire moveset to the one which is supplied
   void SetMoveSet(moveset<Space>& pNewMoveset) {Moves = pNewMoveset;}
   ///Set Resampling Parameters
-  void SetResampleParams(ResampleType rtMode, double dThreshold);
+  void SetResampleParams(ResampleType::Enum rtMode, double dThreshold);
   ///Dump a specified particle to the specified output stream in a human readable form
   const std::ostream & StreamParticle(std::ostream & os, long n) const;
   ///Dump the entire particle set to the specified output stream in a human readable form
@@ -183,10 +195,10 @@ protected:
 /// store the particle set and to initialise a random number generator.
 ///
 /// \param lSize The number of particles present in the ensemble (at time 0 if this is a variable quantity)
-/// \param htHM The history mode to use: set this to SMC_HISTORY_RAM to store the whole history of the system and SMC_HISTORY_NONE to avoid doing so.
+/// \param htHM The history mode to use: set this to HistoryType::RAM to store the whole history of the system and SMC_HISTORY_NONE to avoid doing so.
 /// \tparam Space The class used to represent a point in the sample space.
 template <class Space>
-sampler<Space>::sampler(long lSize, HistoryType htHM)
+sampler<Space>::sampler(long lSize, HistoryType::Enum htHM)
 {pRng = new rng();
   N = lSize;
   
@@ -202,7 +214,7 @@ sampler<Space>::sampler(long lSize, HistoryType htHM)
   
   //Some workable defaults.	
   htHistoryMode = htHM;
-  rtResampleMode = SMC_RESAMPLE_STRATIFIED;
+  rtResampleMode = ResampleType::STRATIFIED;
   dResampleThreshold = 0.5 * N;
 }
 
@@ -297,7 +309,7 @@ void sampler<Space>::Initialise(void)
   //A possible MCMC step could be included here.
   nAccepted += Moves.DoMCMC(0,pPopulation, pRng,N); 
   
-   if(htHistoryMode != SMC_HISTORY_NONE) {
+   if(htHistoryMode != HistoryType::NONE) {
     History.clear();
 	historyelement<population<Space> > histel;
 	histel.Set(N, pPopulation, nAccepted, historyflags(nResampled));
@@ -355,73 +367,54 @@ double sampler<Space>::Integrate(double(*pIntegrand)(const Space&,void*), void *
   /// \param pAuxiliary  A pointer to auxiliary data to pass to both of the above functions
 
 template <class Space>
-double sampler<Space>::IntegratePathSampling(double (*pIntegrand)(long,const population<Space> &,long,void*), double (*pWidth)(long,void*), void* pAuxiliary)
+double sampler<Space>::IntegratePathSampling(PathSamplingType::Enum PStype, double (*pIntegrand)(long,const population<Space> &,long,void*), double (*pWidth)(long,void*), void* pAuxiliary)
 {
-  if(htHistoryMode == SMC_HISTORY_NONE)
+  if(htHistoryMode == HistoryType::NONE)
     throw SMC_EXCEPTION(SMCX_MISSING_HISTORY, "The path sampling integral cannot be computed as the history of the system was not stored.");
   
 	// historyelement<population<Space> > histel;
 	// histel.Set(N, pPopulation, nAccepted, historyflags(nResampled));
 	// History.push_back(histel);
 	
-	
 	long lTime = 1;
 	long double rValue = 0.0;
-    for(typename std::vector<historyelement<population<Space> > >::const_iterator it = ++History.begin(); it!=History.end(); it++){
+typename std::vector<historyelement<population<Space> > >::const_iterator it;	
+	
+	  switch(PStype) {
+  case PathSamplingType::RECTANGLE:
+  {
+    for(it = ++History.begin(); it!=History.end(); it++){
 		rValue += it->Integrate(lTime, pIntegrand, pAuxiliary) * (long double)pWidth(lTime,pAuxiliary);
 		lTime++;
-    }	
+    }
+    break;
+  }
+    
 	
-	// History.pop_back();
-	
-	return ((double)rValue);
-}
-
-template <class Space>
-double sampler<Space>::IntegratePathSampling_Trapezoidal(double (*pIntegrand)(long,const population<Space> &,long,void*), double (*pWidth)(long,void*), void* pAuxiliary)
-{
-  if(htHistoryMode == SMC_HISTORY_NONE)
-    throw SMC_EXCEPTION(SMCX_MISSING_HISTORY, "The path sampling integral cannot be computed as the history of the system was not stored.");
+  case PathSamplingType::TRAPEZOID1:
+  {	
   
-	// historyelement<population<Space> > histel;
-	// histel.Set(N, pPopulation, nAccepted, historyflags(nResampled));
-	// History.push_back(histel);
-	
 	long double previous_expt = History.begin()->Integrate(0,pIntegrand,pAuxiliary);
 	long double current_expt;
-	long lTime = 1;
-	long double rValue = 0.0;
-    for(typename std::vector<historyelement<population<Space> > >::const_iterator it = ++History.begin(); it!=History.end(); it++){
+    for(it = ++History.begin(); it!=History.end(); it++){
 		current_expt = it->Integrate(lTime, pIntegrand, pAuxiliary);
 		rValue += (long double)pWidth(lTime,pAuxiliary)/2.0 * (previous_expt + current_expt) ;
 		lTime++;
 		previous_expt = current_expt;
-    }	
+    }
 	
-	
-	// History.pop_back();
-	
-	return ((double)rValue);
-}
-
-template <class Space>
-double sampler<Space>::IntegratePathSampling_Trapezoidal2(double (*pIntegrand)(long,const population<Space> &,long,void*), double (*pWidth)(long,void*), void* pAuxiliary)
-{
-  if(htHistoryMode == SMC_HISTORY_NONE)
-    throw SMC_EXCEPTION(SMCX_MISSING_HISTORY, "The path sampling integral cannot be computed as the history of the system was not stored.");
+	break;
+  }
   
-	// historyelement<population<Space> > histel;
-	// histel.Set(N, pPopulation, nAccepted, historyflags(nResampled));
-	// History.push_back(histel);
-	
+  case PathSamplingType::TRAPEZOID2:
+  default:
+  {
 	long double previous_expt = History.begin()->Integrate(0,pIntegrand,pAuxiliary);
 	long double previous_var = History.begin()->Integrate_Var(0,pIntegrand,previous_expt,pAuxiliary);
 	long double current_expt;
 	long double current_var;
-	long lTime = 1;
-	long double rValue = 0.0;
 	long double width = 0.0;
-    for(typename std::vector<historyelement<population<Space> > >::const_iterator it = ++History.begin(); it!=History.end(); it++){
+    for(it = ++History.begin(); it!=History.end(); it++){
 		current_expt = it->Integrate(lTime, pIntegrand, pAuxiliary);
 		current_var = it->Integrate_Var(lTime, pIntegrand, current_expt, pAuxiliary);
 		width = (long double)pWidth(lTime,pAuxiliary);
@@ -430,7 +423,12 @@ double sampler<Space>::IntegratePathSampling_Trapezoidal2(double (*pIntegrand)(l
 		previous_expt = current_expt;
 		previous_var = current_var;
     }	
-	
+    
+    break;
+  }
+  
+  }
+		
 	// History.pop_back();
 	
 	return ((double)rValue);
@@ -452,7 +450,7 @@ void sampler<Space>::Iterate(void)
 template <class Space>
 void sampler<Space>::IterateBack(void)
 {
-  if(htHistoryMode == SMC_HISTORY_NONE)
+  if(htHistoryMode == HistoryType::NONE)
     throw SMC_EXCEPTION(SMCX_MISSING_HISTORY, "An attempt to undo an iteration was made; unforunately, the system history has not been stored.");
 
   History.pop_back();
@@ -495,7 +493,7 @@ double sampler<Space>::IterateEss(void)
   T++;
   
   //Finally, the current particle set should be appended to the historical process.
-    if(htHistoryMode != SMC_HISTORY_NONE){
+    if(htHistoryMode != HistoryType::NONE){
 		historyelement<population<Space> > histel;
 		histel.Set(N, pPopulation, nAccepted, historyflags(nResampled));
 		History.push_back(histel);
@@ -519,21 +517,21 @@ void sampler<Space>::MovePopulations(void)
 }
 
 template <class Space>
-void sampler<Space>::Resample(ResampleType lMode)
+void sampler<Space>::Resample(ResampleType::Enum lMode)
 {
   //Resampling is done in place.
   unsigned uMultinomialCount;
   
   //First obtain a count of the number of children each particle has.
   switch(lMode) {
-  case SMC_RESAMPLE_MULTINOMIAL:
+  case ResampleType::MULTINOMIAL:
     //Sample from a suitable multinomial vector
     dRSWeights = pPopulation.GetWeight();
     uRSCount = pRng->Multinomial(N,N,dRSWeights);
     break;
     
 	
-  case SMC_RESAMPLE_RESIDUAL:
+  case ResampleType::RESIDUAL:
     dRSWeights = exp(log((double)N)*arma::ones(N) + pPopulation.GetLogWeight() - CalcLogNC()*arma::ones(N));
 	
 	uRSIndices = arma::zeros<arma::Col<unsigned int> >((int)N);
@@ -548,7 +546,7 @@ void sampler<Space>::Resample(ResampleType lMode)
 	
 	break;
 	
-  case SMC_RESAMPLE_STRATIFIED:
+  case ResampleType::STRATIFIED:
   default:
   {
     // Procedure for stratified sampling
@@ -571,7 +569,7 @@ void sampler<Space>::Resample(ResampleType lMode)
     break;
   }
   
-  case SMC_RESAMPLE_SYSTEMATIC:
+  case ResampleType::SYSTEMATIC:
   {
     // Procedure for stratified sampling but with a common RV for each stratum
     //Generate a random number between 0 and 1/N times the sum of the weights
@@ -623,16 +621,16 @@ void sampler<Space>::Resample(ResampleType lMode)
 /// \param dThreshold The threshold at which resampling is deemed necesary.
 ///
 /// The rtMode parameter should be set to one of the following:
-/// -# SMC_RESAMPLE_MULTINOMIAL to use multinomial resampling  
-/// -# SMC_RESAMPLE_RESIDUAL to use residual resampling
-/// -# SMC_RESAMPLE_STRATIFIED to use stratified resampling
-/// -# SMC_RESAMPLE_SYSTEMATIC to use systematic resampling
+/// -# ResampleType::MULTINOMIAL to use multinomial resampling  
+/// -# ResampleType::RESIDUAL to use residual resampling
+/// -# ResampleType::STRATIFIED to use stratified resampling
+/// -# ResampleType::SYSTEMATIC to use systematic resampling
 ///
 /// The dThreshold parameter can be set to a value in the range [0,1) corresponding to a fraction of the size of
 /// the particle set or it may be set to an integer corresponding to an actual effective sample size.
 
 template <class Space>
-void sampler<Space>::SetResampleParams(ResampleType rtMode, double dThreshold)
+void sampler<Space>::SetResampleParams(ResampleType::Enum rtMode, double dThreshold)
 {
   rtResampleMode = rtMode;
   if(dThreshold < 1)

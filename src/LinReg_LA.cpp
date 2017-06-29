@@ -64,10 +64,10 @@ Rcpp::List LinRegLABS_cpp(arma::mat data, arma::vec intemps, unsigned long inlNu
     
     
     //Initialise and run the sampler
-    smc::sampler<rad_state> Sampler(lNumber, SMC_HISTORY_RAM);
+    smc::sampler<rad_state> Sampler(lNumber, HistoryType::RAM);
     smc::moveset<rad_state> Moveset(fInitialise, fMove, fMCMC);
     
-    Sampler.SetResampleParams(SMC_RESAMPLE_SYSTEMATIC, 0.5);
+    Sampler.SetResampleParams(ResampleType::SYSTEMATIC, 0.5);
     Sampler.SetMoveSet(Moveset);
 	Sampler.Initialise();
     
@@ -95,9 +95,10 @@ Rcpp::List LinRegLABS_cpp(arma::mat data, arma::vec intemps, unsigned long inlNu
     }
 			
 	double logNC = Sampler.GetLogNCPath();
-	double logNC_ps_rect = Sampler.IntegratePathSampling(integrand_ps,width_ps, NULL);
-	double logNC_ps_trap = Sampler.IntegratePathSampling_Trapezoidal(integrand_ps,width_ps, NULL);
-	double logNC_ps_trap2 = Sampler.IntegratePathSampling_Trapezoidal2(integrand_ps,width_ps, NULL);
+	double logNC_ps_rect = Sampler.IntegratePathSampling(PathSamplingType::RECTANGLE,integrand_ps,width_ps, NULL);
+	double logNC_ps_trap = Sampler.IntegratePathSampling(PathSamplingType::TRAPEZOID1,integrand_ps,width_ps, NULL);
+	double logNC_ps_trap2 = Sampler.IntegratePathSampling(PathSamplingType::TRAPEZOID2,integrand_ps,width_ps, NULL);
+	double logNC_ps_trap2_copy = Sampler.IntegratePathSampling(integrand_ps,width_ps, NULL);
 								   
     return Rcpp::List::create(Rcpp::Named("alpham") = alpham,
                                    Rcpp::Named("alphav") = alphav,
@@ -109,7 +110,8 @@ Rcpp::List LinRegLABS_cpp(arma::mat data, arma::vec intemps, unsigned long inlNu
 								   Rcpp::Named("logNC") = logNC,
 								   Rcpp::Named("logNC_ps_rect") = logNC_ps_rect,
 								   Rcpp::Named("logNC_ps_trap") = logNC_ps_trap,
-								   Rcpp::Named("logNC_ps_trap2") = logNC_ps_trap2);
+								   Rcpp::Named("logNC_ps_trap2") = logNC_ps_trap2,
+								   Rcpp::Named("logNC_ps_trap2_copy") = logNC_ps_trap2_copy);
   }
   catch(smc::exception  e) {
     Rcpp::Rcout << e;       	// not cerr, as R doesn't like to mix with i/o 

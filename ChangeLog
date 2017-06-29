@@ -1,8 +1,18 @@
 2017-06-29  Leah South  <leah.south@hdr.qut.edu.au>
 
+    * inst/include/sampler.h: Moving the path sampling methods into a single function. Putting the enums into namespaces.
+	
+	* src/LinReg_LA.cpp: Adjusting the resampling, history and path sampling types.
+	* src/blockpfgaussianopt.cpp: Adjusting the resampling and history types.
+	* src/LinReg.cpp: Idem.
+	* src/pflineart.cpp: Idem.
+	* src/pfnonlinbs.cpp: Idem.
+
+2017-06-29  Leah South  <leah.south@hdr.qut.edu.au>
+
 	* TODO: Adding point about storing ancestral lines in the particle history.
 	* src/Makevars: Removing C++11 dependency.
-	* src/blockpfgaussianopt: Idem.
+	* src/blockpfgaussianopt.cpp: Idem.
 	* src/LinReg.cpp: Idem.
 	* src/LinReg_LA.cpp: Idem.
 	* src/pflineart.cpp: Idem.
@@ -20,7 +30,7 @@
 	* src/LinReg_LA.cpp: Adjusting to take into account that the temperature of zero is included and using C++11
 	
 	* src/Makevars: Using C++11
-	* src/blockpfgaussianopt: Idem.
+	* src/blockpfgaussianopt.cpp: Idem.
 	* src/LinReg.cpp: Idem.
 	* src/pflineart.cpp: Idem.
 	* src/pfnonlinbs.cpp: Idem.
