@@ -1,5 +1,15 @@
 2017-06-30  Leah South  <leah.south@hdr.qut.edu.au>
 
+	* DESCRIPTION: Setting lazy data to true
+	* data/pfdata.rda: Switching the previous pf-data.csv to a new format and location
+	* data/radiata.rda: Switching the regression example radiata.csv data to a new format and location 
+	* R/LinRegBS.R: Taking account of the new data location
+	* R/LinRegLABS.R: Taking account of the new data location and switching to using a simple sequence
+	  of temperatures
+	* R/pfLineartBS.R: Taking account of the new data location
+
+2017-06-30  Leah South  <leah.south@hdr.qut.edu.au>
+
 	* src/nonLinPMMH.cpp: Replaces PMMH.cpp. Creating a function for the prior and cleaning up unnecessary commented lines.
 	* R/simNonLinPMMH.R: Creating a function to simulate data and removing the script (simPMMH.R)
 	  and the example simulated data (PMMH-data.csv).

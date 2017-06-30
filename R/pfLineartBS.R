@@ -1,8 +1,11 @@
 
-pfLineartBS<- function(data, particles=1000, plot=FALSE, onlinePlot) {
+pfLineartBS<- function(dat, particles=1000, plot=FALSE, onlinePlot) {
 
     # if no data supplied, use default
-    if (missing(data)) data <- getPfLineartBSData()
+    if (missing(dat)){
+		data(pfdata)
+		dat <- pfdata
+	}
 
     if (missing(onlinePlot)) {
         useOnline <- FALSE
@@ -15,28 +18,20 @@ pfLineartBS<- function(data, particles=1000, plot=FALSE, onlinePlot) {
     }
 
     # more eloquent tests can be added
-    stopifnot(nrow(data) > 0,
-              ncol(data) == 2,
-              colnames(data) == c("x", "y"),
+    stopifnot(nrow(dat) > 0,
+              ncol(dat) == 2,
+              colnames(dat) == c("x", "y"),
               class(onlinePlot) == "function")
 				 
-    res <- pfLineartBS_cpp(as.matrix(data), particles, useOnline, onlinePlot)
+    res <- pfLineartBS_cpp(as.matrix(dat), particles, useOnline, onlinePlot)
 
     if (plot) {
         ## plot 5.1 from vignette / paper
-        with(data, plot(x, y, col="red"))
+        with(dat, plot(x, y, col="red"))
         with(res, lines(Xm, Ym, lty="dashed"))
     }
 
     invisible(res)
-}
-
-# simple convenience function, should probably make the data a
-# data component of the package...
-getPfLineartBSData <- function() {
-    file <- system.file("sampleData", "pf-data.csv", package="RcppSMC")
-    dat <- read.table(file, skip=1, header=FALSE, col.names=c("x","y"))
-    invisible(dat)
 }
 
 pfLineartRange <- function(rrng)
