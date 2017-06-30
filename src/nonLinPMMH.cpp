@@ -1,8 +1,8 @@
 // -*- mode: C++; c-indent-level: 4; c-basic-offset: 4; indent-tabs-mode: nil; -*-
 //
-// PMMH.cpp: Example 3.1 of Andrieu et al. (2010). Implementing particle marginal
-// Metropolis-Hastings for an application previous described in Gordon et al. (1993)
-// and Kitagawa (1996).
+// nonLinPMMH.cpp: Example 3.1 of Andrieu et al. (2010). Implementing particle marginal
+// Metropolis-Hastings for a toy non-linear state space model previously described in
+// Gordon et al. (1993) and Kitagawa (1996).
 //
 // Copyright (C) 2017         Dirk Eddelbuettel, Adam Johansen and Leah South
 //
@@ -23,7 +23,7 @@
 
 
 #include "smctc.h"
-#include "PMMH.h"
+#include "nonLinPMMH.h"
 #include "rngR.h"
 #include <RcppArmadillo.h>
 
@@ -36,31 +36,26 @@
 #include <cmath>
 //#include <gsl/gsl_randist.h>
 
-namespace PMMH {
+namespace nonLinPMMH {
     const double a_prior = 0.01;
 	const double b_prior = 0.01;
 }
 
 using namespace std;
-using namespace PMMH;
+using namespace nonLinPMMH;
 
 
-// PMMH() function callable from R via Rcpp::
+// nonLinPMMH() function callable from R via Rcpp::
 // [[Rcpp::export]]
-Rcpp::List PMMH_cpp(arma::vec data, unsigned long inlNumber, unsigned long lMCMCits) { 	
-  
-  long lIterates;
-  Rcpp::NumericVector sigv(lMCMCits);
-  Rcpp::NumericVector sigw(lMCMCits);
+Rcpp::DataFrame nonLinPMMH_cpp(arma::vec data, unsigned long lNumber, unsigned long lMCMCits) { 	
   
   try {
-    lNumber = inlNumber; // number of particles
-    
-    lIterates = data.n_rows;
+	Rcpp::NumericVector sigv(lMCMCits), sigw(lMCMCits);
+	long lIterates = data.n_rows;
     y = data;
 	
-	loglike = arma::zeros(lMCMCits);
-	logprior = arma::zeros(lMCMCits);
+	arma::vec loglike = arma::zeros(lMCMCits);
+	arma::vec logprior = arma::zeros(lMCMCits);
 	
 	double dRand;
 	double loglike_prop;
@@ -86,16 +81,13 @@ Rcpp::List PMMH_cpp(arma::vec data, unsigned long inlNumber, unsigned long lMCMC
 	loglike(0) = Sampler.GetLogNCPath();
 	
 	// Inverse gamma prior
-	logprior(0) = 2*a_prior*log(b_prior)-2*lgamma(a_prior)-(a_prior+1)*log(sigv(0))-b_prior/sigv(0)-(a_prior+1)*log(sigw(0))-b_prior/sigw(0);
+	logprior(0) = logPrior(theta_prop);
 	
 	double MH_ratio;
 	for (unsigned int i = 1; i<lMCMCits; i++){
 		// RW proposal for parameters
 		theta_prop.sigv = pRng1->Normal(sigv(i-1),0.15);
-		theta_prop.sigw = pRng1->Normal(sigw(i-1),0.08);
-		//theta_prop.sigv = pow(pRng1->Gamma(a_prior,b_prior),-1.0);
-		//theta_prop.sigw = pow(pRng1->Gamma(a_prior,b_prior),-1.0);
-		
+		theta_prop.sigw = pRng1->Normal(sigw(i-1),0.08);		
 		
 		// Getting a particle filtering estimate of the log likelihood.
 		Sampler.Initialise();
@@ -103,10 +95,9 @@ Rcpp::List PMMH_cpp(arma::vec data, unsigned long inlNumber, unsigned long lMCMC
 		loglike_prop = Sampler.GetLogNCPath();
 		
 		// Inverse gamma prior
-		logprior_prop = 2*a_prior*log(b_prior)-2*lgamma(a_prior)-(a_prior+1)*log(theta_prop.sigv)-b_prior/theta_prop.sigv-(a_prior+1)*log(theta_prop.sigw)-b_prior/theta_prop.sigw;
+		logprior_prop = logPrior(theta_prop);
 		
 		MH_ratio = exp(loglike_prop - loglike(i-1));
-		//MH_ratio = exp(loglike_prop - loglike(i-1) + logprior_prop - logprior(i-1));
 		dRand = pRng1->Uniform(0,1);
       
 		if (MH_ratio>dRand){
@@ -131,13 +122,22 @@ Rcpp::List PMMH_cpp(arma::vec data, unsigned long inlNumber, unsigned long lMCMC
                                    Rcpp::Named("logprior") = logprior);
   }
   catch(smc::exception  e) {
-    Rcpp::Rcout << e;       	// not cerr, as R doesn't like to mix with i/o 
-    //exit(e.lCode);		// we're just called from R so we should not exit
+    Rcpp::Rcout << e;       	// not cerr, as R doesn't like to mix with i/o
   }
   return R_NilValue;          	// to provide a return 
 }
 
-namespace PMMH {
+namespace nonLinPMMH {
+	
+///A function to calculate the log prior for a proposal. The prior for this example is IG(0.01,0.01).
+
+/// \param proposal		The proposed values of the parameters
+double logPrior(const parameters & proposal)
+{
+	return 2*a_prior*log(b_prior)-2*lgamma(a_prior)-(a_prior+1)*log(proposal.sigv)-b_prior/proposal.sigv-(a_prior+1)*log(proposal.sigw)-b_prior/proposal.sigw;
+}
+
+
 ///A function to initialise a particle
 
 /// \param pRng 		A pointer to the random number generator which is to be used

@@ -107,8 +107,7 @@ Rcpp::List pfLineartBS_cpp(arma::mat data, unsigned long inlNumber, bool useF, R
 		Rcpp::Named("logNC") = logNC);
 	}
 	catch(smc::exception  e) {
-		Rcpp::Rcout << e;       	// not cerr, as R doesn't like to mix with i/o 
-		//exit(e.lCode);		// we're just called from R so we should not exit
+		Rcpp::Rcout << e;       	// not cerr, as R doesn't like to mix with i/o
 	}
 	return R_NilValue;          	// to provide a return 
 }
@@ -130,7 +129,6 @@ namespace pflineart {
 		return d*d;
 	}
 
-	// }
 #include <iostream>
 #include <cmath>
 	//#include <gsl/gsl_randist.h>
@@ -169,7 +167,6 @@ namespace std {
 
 	/// \param os The output stream to which the display should be made.
 	/// \param p  The particle which is to be displayed.
-	//template <class rad_state>
 	std::ostream & operator << (std::ostream & os, cv_state & value)
 	{
 		double x_pos = value.x_pos;

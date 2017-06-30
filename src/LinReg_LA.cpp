@@ -114,8 +114,7 @@ Rcpp::List LinRegLABS_cpp(arma::mat data, arma::vec intemps, unsigned long inlNu
 		Rcpp::Named("logNC_ps_trap2_copy") = logNC_ps_trap2_copy);
 	}
 	catch(smc::exception  e) {
-		Rcpp::Rcout << e;       	// not cerr, as R doesn't like to mix with i/o 
-		//exit(e.lCode);		// we're just called from R so we should not exit
+		Rcpp::Rcout << e;       	// not cerr, as R doesn't like to mix with i/o
 	}
 	return R_NilValue;          	// to provide a return 
 }

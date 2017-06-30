@@ -207,7 +207,6 @@ namespace LinReg {
 	///\param pRng  A random number generator.
 	int fMCMC(long lTime, rad_state & value, smc::rng *pRng)
 	{
-		//Rcpp::Rcout << "lTime is " << lTime << std::endl;
 		double MH_ratio;
 		double dRand;
 		int count = 0;

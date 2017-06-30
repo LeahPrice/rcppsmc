@@ -1,20 +1,20 @@
-\name{PMMH}
-\alias{PMMH}
-\title{Particle marginal Metropolis-Hastings}
+\name{nonLinPMMH}
+\alias{nonLinPMMH}
+\title{Particle marginal Metropolis-Hastings for a non-linear state space model}
 \description{
-  The \code{PMMH} function implements particle marginal Metropolis-Hastings
+  The \code{nonLinPMMH} function implements particle marginal Metropolis-Hastings
   for the non-linear state space model described in Section 3.1 of
   Andrieu et al. (2010).
   
   The same prior and random walk tuning parameters are used as in Andrieu et al. (2010).
   The default data was also simulated based on the specifications in this paper,
-  and the \code{simPMMH.R} script was used to simulate this data.  
+  and the \code{simnonLinPMMH.R} script was used to simulate this data.  
   
   This toy non-linear state space model has also been described in Gordon et al. (1993)
   and Kitagawa (1996).
 }
 \usage{
-  PMMH(data, particles=1000, iterations=10000)
+  nonLinPMMH(data, particles=1000, iterations=10000)
 }
 \arguments{
   \item{data}{A vector of the observed data - the default }
@@ -23,12 +23,12 @@
   \item{iterations}{An integer specifying the number of MCMC iterations}
 }
 \value{
-  The \code{PMMH} function returns a \code{data.frame} containing the chain
+  The \code{nonLinPMMH} function returns a \code{data.frame} containing the chain
   of simulated \eqn{\sigma_v} and \eqn{\sigma_w} values, as well as the
   corresponding log likelihood estimates and log prior values.
 }
 \details{
-  The \code{PMMH} function provides an example implementation of PMMH for
+  The \code{nonLinPMMH} function provides an example implementation of PMMH for
   \pkg{RcppSMC}.
 }
 \references{
@@ -45,7 +45,8 @@
   5(1):1-25, 1996.
 }
 \examples{
-  res <- PMMH(particles=1000,iterations=10000)
+  sim <- simNonlinPMMH(len=500)
+  res <- nonLinPMMH(sim$data,particles=1000,iterations=10000)
 }
 \author{Adam M. Johansen, Dirk Eddelbuettel and Leah South}
 \keyword{programming}

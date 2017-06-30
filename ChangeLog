@@ -1,3 +1,16 @@
+2017-06-30  Leah South  <leah.south@hdr.qut.edu.au>
+
+	* src/nonLinPMMH.cpp: Replaces PMMH.cpp. Creating a function for the prior and cleaning up unnecessary commented lines.
+	* R/simNonLinPMMH.R: Creating a function to simulate data and removing the script (simPMMH.R)
+	  and the example simulated data (PMMH-data.csv).
+    * inst/include/nonLinPMMH.h: replaces PMMH.h.
+	* man/nonLin/nonLinPMMH.Rd: Replaces PMMH.Rd.
+	* R/nonLinPMMH.R: Replaces PMMH.R.
+	* src/pflineart.cpp: Removing unnecessary commented lines.
+	* src/LinReg.cpp: Removing unnecessary commented line.
+	* src/LinReg_LA.cpp: Removing unnecessary commented line.
+	* inst/include/rngR.h: removing commented lines for NormalTruncated.
+
 2017-06-29  Leah South  <leah.south@hdr.qut.edu.au>
 
     * inst/include/PMMH.h: Implementing a new example based on using PMMH for a non-linear

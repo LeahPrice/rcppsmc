@@ -187,19 +187,6 @@ namespace smc {
 			return ::Rf_rnorm(0.0, 1.0);
 		}
 
-		///Returns a random number from a normal distribution, conditional upon it exceeding the specified threshold.
-		// no Rcpp yet -- double NormalTruncated(double dMean, double dStd, double dThreshold);
-#if 0
-		///This function simply calls gsl_ran_gaussian_tail with the specified parameters and performs appropriate shifting.
-		///     \param dMean The mean of the distribution.
-		///     \param dStd  The standard deviation of the distribution
-		///     \param dThreshold The lower truncation threshold.
-		double rng::NormalTruncated(double dMean, double dStd, double dThreshold)
-		{
-			return dMean + gsl_ran_gaussian_tail(pWorkspace, dThreshold - dMean, dStd);
-		}
-#endif
-
 		///Return a student-t random number generated with a specified number of degrees of freedom
 		double StudentT(double dDF) {
 			return ::Rf_rt(dDF);

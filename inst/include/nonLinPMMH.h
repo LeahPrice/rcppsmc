@@ -1,8 +1,8 @@
 // -*- mode: C++; c-indent-level: 4; c-basic-offset: 4; indent-tabs-mode: nil; -*-
 //
-// PMMH.h: Example 3.1 of Andrieu et al. (2010). Implementing particle marginal
-// Metropolis-Hastings for an application previous described in Gordon et al. (1993)
-// and Kitagawa (1996).
+// nonLinPMMH.h: Example 3.1 of Andrieu et al. (2010). Implementing particle marginal
+// Metropolis-Hastings for a toy non-linear state space model previously described in
+// Gordon et al. (1993) and Kitagawa (1996).
 //
 // Copyright (C) 2017         Dirk Eddelbuettel, Adam Johansen and Leah South
 //
@@ -31,18 +31,13 @@ public:
     double sigv, sigw;
 };
 
-namespace PMMH {
+namespace nonLinPMMH {
     arma::vec y; //data
-	arma::vec loglike;
-	arma::vec logprior;
-	unsigned long lNumber;
 	
-	double logWeight(long lTime, double & value);
-	double logPosterior(long lTime, double & value);
+	double logPrior(const parameters & proposal);
 	void fInitialise(smc::rng *pRng, double & value, double & logweight);
 	void fMove(long lTime, double & value, double & logweight, smc::rng *pRng);
 	
 	parameters theta_prop;
-	unsigned int accept_count;
 }
 

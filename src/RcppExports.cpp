@@ -44,6 +44,19 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// nonLinPMMH_cpp
+Rcpp::DataFrame nonLinPMMH_cpp(arma::vec data, unsigned long lNumber, unsigned long lMCMCits);
+RcppExport SEXP RcppSMC_nonLinPMMH_cpp(SEXP dataSEXP, SEXP lNumberSEXP, SEXP lMCMCitsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type data(dataSEXP);
+    Rcpp::traits::input_parameter< unsigned long >::type lNumber(lNumberSEXP);
+    Rcpp::traits::input_parameter< unsigned long >::type lMCMCits(lMCMCitsSEXP);
+    rcpp_result_gen = Rcpp::wrap(nonLinPMMH_cpp(data, lNumber, lMCMCits));
+    return rcpp_result_gen;
+END_RCPP
+}
 // pfLineartBS_cpp
 Rcpp::List pfLineartBS_cpp(arma::mat data, unsigned long inlNumber, bool useF, Rcpp::Function f);
 RcppExport SEXP RcppSMC_pfLineartBS_cpp(SEXP dataSEXP, SEXP inlNumberSEXP, SEXP useFSEXP, SEXP fSEXP) {
@@ -67,19 +80,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::vec >::type data(dataSEXP);
     Rcpp::traits::input_parameter< long >::type inlNumber(inlNumberSEXP);
     rcpp_result_gen = Rcpp::wrap(pfNonlinBS_cpp(data, inlNumber));
-    return rcpp_result_gen;
-END_RCPP
-}
-// PMMH_cpp
-Rcpp::List PMMH_cpp(arma::vec data, unsigned long inlNumber, unsigned long lMCMCits);
-RcppExport SEXP RcppSMC_PMMH_cpp(SEXP dataSEXP, SEXP inlNumberSEXP, SEXP lMCMCitsSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::vec >::type data(dataSEXP);
-    Rcpp::traits::input_parameter< unsigned long >::type inlNumber(inlNumberSEXP);
-    Rcpp::traits::input_parameter< unsigned long >::type lMCMCits(lMCMCitsSEXP);
-    rcpp_result_gen = Rcpp::wrap(PMMH_cpp(data, inlNumber, lMCMCits));
     return rcpp_result_gen;
 END_RCPP
 }

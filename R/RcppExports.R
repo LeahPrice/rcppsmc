@@ -13,15 +13,15 @@ LinRegLABS_cpp <- function(data, intemps, inlNumber) {
     .Call('RcppSMC_LinRegLABS_cpp', PACKAGE = 'RcppSMC', data, intemps, inlNumber)
 }
 
+nonLinPMMH_cpp <- function(data, lNumber, lMCMCits) {
+    .Call('RcppSMC_nonLinPMMH_cpp', PACKAGE = 'RcppSMC', data, lNumber, lMCMCits)
+}
+
 pfLineartBS_cpp <- function(data, inlNumber, useF, f) {
     .Call('RcppSMC_pfLineartBS_cpp', PACKAGE = 'RcppSMC', data, inlNumber, useF, f)
 }
 
 pfNonlinBS_cpp <- function(data, inlNumber) {
     .Call('RcppSMC_pfNonlinBS_cpp', PACKAGE = 'RcppSMC', data, inlNumber)
-}
-
-PMMH_cpp <- function(data, inlNumber, lMCMCits) {
-    .Call('RcppSMC_PMMH_cpp', PACKAGE = 'RcppSMC', data, inlNumber, lMCMCits)
 }
 
