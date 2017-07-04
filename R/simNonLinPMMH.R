@@ -1,3 +1,16 @@
+#' Simulates from the associated model.
+#' 
+#' The \code{simNonlinPMMH} function simulates data from the associated non-linear state space model.
+#' 
+#' @param len The length of the data sequence to simulate.
+#' 
+#' @return The \code{simNonlinPMMH} function returns a list containing the state and data sequences.
+#' 
+#' @details The \code{simNonLinPMMH} function simulates from the same model returning both
+#' the state and observation vectors.
+#' 
+#' @rdname nonLinPMMH
+#' @export
 simNonlinPMMH <- function(len = 500)
 {
    sim <- list()

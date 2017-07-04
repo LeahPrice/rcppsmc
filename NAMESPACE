@@ -11,10 +11,12 @@ importFrom("utils", "read.table")
 export("blockpfGaussianOpt",
 		"pfLineartBS",
        "pfLineartBSOnlinePlot",
-       "LinRegBS", 
-       "LinRegLABS", 
+       "LinReg", 
+       "LinRegLA", 
+       "nonLinPMMH", 
        "pfNonlinBS",
        "simGaussian",
        "simLineart",
+       "simNonlinPMMH",
        "simNonlin")
 

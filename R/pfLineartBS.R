@@ -1,4 +1,49 @@
-
+#' Particle Filter Example.
+#'
+#' @description The \code{pfLineartBS} function provides a simple example for
+#' \pkg{RcppSMC}. It is based on the first example in \code{SMCTC} and
+#' the discussion in Section 5.1 of Johansen (2009). A simple 'vehicle
+#' tracking' problem of 100 observations is solved with 1000 particles.
+#' 
+#' @param dat	A two-column matrix or dataframe containing x and y
+#' values. The default data set from Johansen (2009) is used as the
+#' default if no data is supplied.
+#' 
+#' @param particles	An integer specifying the number of particles.
+#' 
+#' @param plot	A boolean variable describing whether plot should
+#' illustrate the estimated path along with the data.
+#' 
+#' @param onlinePlot	A user-supplied callback function which is called with the
+#' x and y position vectors during each iteration of the algorithm; see
+#' pfExOnlinePlot for a simple example.
+#' 
+#' @return	The \code{pfLineartBS} function returns a \code{list} containing the estimated \eqn{x}{x} and
+#' \eqn{y}{y} coordinates as well as the estimated velocity in these two
+#' directions. The effective sample size (ESS) at each iteration and the 
+#' log estimate of the ratio of normalising constants between the
+#' final and initial distibutions is also returned.
+#'
+#' @details The \code{pfLineartBS} function provides a simple example for
+#' \pkg{RcppSMC}. The model is linear with t-distributed innovations.
+#' It is based on the \code{pf} example in the
+#' \code{SMCTC} library, and discussed in the Section 5.1 of his
+#' corresponding paper (Johansen, 2009).
+#' 
+#' @references	A. M. Johansen. SMCTC: Sequential Monte Carlo in C++.
+#' Journal of Statistical Software, 30(6):1-41, April
+#' 2009. \url{http://www.jstatsoft.org/v30/i06/paper}
+#' 
+#' @seealso The SMCTC paper and code at \url{http://www.jstatsoft.org/v30/i06/paper}.
+#' 
+#' @examples
+#' res <- pfLineartBS(plot=TRUE)
+#' if (interactive()) ## if not running R CMD check etc
+#' res <- pfLineartBS(onlinePlot=pfLineartBSOnlinePlot)
+#' 
+#' @author		Adam M. Johansen, Dirk Eddelbuettel and Leah F. South
+#' @keywords	programming
+#' @export
 pfLineartBS<- function(dat, particles=1000, plot=FALSE, onlinePlot) {
 
     # if no data supplied, use default
@@ -58,6 +103,21 @@ pfLineartRange <- function(rrng)
    invisible(c(rmin,rmax))
 }
 
+#' For online plotting example
+#'
+#' The \code{pfLineartBSOnlinePlot} function provides a simple default
+#' \sQuote{online} plotting function that is invoked during the
+#' estimation process.
+#' 
+#' @param xm Vector with x position.
+#' @param ym Vector with y position.
+#' 
+#' @details Using the simple \code{pfExOnlinePlot} function illustrates how
+#' callbacks into R, for example for plotting,  can be made during the
+#' operation of SMC algorithm.
+#' 
+#' @rdname pfLineartBS
+#' @export
 pfLineartBSOnlinePlot <- function(xm, ym) {
     plot(xm, ym, xlim = pfLineartRange(range(xm)), ylim=pfLineartRange(range(ym)))
     # FIXME sleep time should also be a variable

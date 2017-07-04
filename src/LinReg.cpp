@@ -48,9 +48,9 @@ using namespace std;
 using namespace LinReg;
 
 
-// LinRegBS() function callable from R via Rcpp::
+// LinReg() function callable from R via Rcpp::
 // [[Rcpp::export]]
-Rcpp::List LinRegBS_cpp(arma::mat data, unsigned long inlNumber) { 	
+Rcpp::List LinReg_cpp(arma::mat data, unsigned long inlNumber) { 	
 
 	long lIterates;
 

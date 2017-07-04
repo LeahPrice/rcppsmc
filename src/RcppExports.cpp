@@ -19,28 +19,28 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// LinRegBS_cpp
-Rcpp::List LinRegBS_cpp(arma::mat data, unsigned long inlNumber);
-RcppExport SEXP RcppSMC_LinRegBS_cpp(SEXP dataSEXP, SEXP inlNumberSEXP) {
+// LinReg_cpp
+Rcpp::List LinReg_cpp(arma::mat data, unsigned long inlNumber);
+RcppExport SEXP RcppSMC_LinReg_cpp(SEXP dataSEXP, SEXP inlNumberSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< arma::mat >::type data(dataSEXP);
     Rcpp::traits::input_parameter< unsigned long >::type inlNumber(inlNumberSEXP);
-    rcpp_result_gen = Rcpp::wrap(LinRegBS_cpp(data, inlNumber));
+    rcpp_result_gen = Rcpp::wrap(LinReg_cpp(data, inlNumber));
     return rcpp_result_gen;
 END_RCPP
 }
-// LinRegLABS_cpp
-Rcpp::List LinRegLABS_cpp(arma::mat data, arma::vec intemps, unsigned long inlNumber);
-RcppExport SEXP RcppSMC_LinRegLABS_cpp(SEXP dataSEXP, SEXP intempsSEXP, SEXP inlNumberSEXP) {
+// LinRegLA_cpp
+Rcpp::List LinRegLA_cpp(arma::mat data, arma::vec intemps, unsigned long inlNumber);
+RcppExport SEXP RcppSMC_LinRegLA_cpp(SEXP dataSEXP, SEXP intempsSEXP, SEXP inlNumberSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< arma::mat >::type data(dataSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type intemps(intempsSEXP);
     Rcpp::traits::input_parameter< unsigned long >::type inlNumber(inlNumberSEXP);
-    rcpp_result_gen = Rcpp::wrap(LinRegLABS_cpp(data, intemps, inlNumber));
+    rcpp_result_gen = Rcpp::wrap(LinRegLA_cpp(data, intemps, inlNumber));
     return rcpp_result_gen;
 END_RCPP
 }

@@ -1,3 +1,14 @@
+2017-07-4  Leah South  <leah.south@hdr.qut.edu.au>
+
+	* DESCRIPTION: automatically added RoxygenNote.
+	* NAMESPACE: Updating names for linear regression examples (unnecessary BS in titles removed)
+	  and adding the non-linear PMMH example to exports.
+	* R/*.R: Adding documentation for Roxygen
+	* man/*.Rd: Newly produced Roxygen documentation
+	* rcppsmc.Rproj: enabling tools for automatic documentation
+	*src/LinReg.cpp: fixed function to not use BS in title
+	*src/LinReg_LA.cpp: fixed function to not use BS in title
+
 2017-06-30  Leah South  <leah.south@hdr.qut.edu.au>
 
 	* DESCRIPTION: Setting lazy data to true

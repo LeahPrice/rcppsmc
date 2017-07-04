@@ -5,12 +5,12 @@ blockpfGaussianOpt_cpp <- function(data, inlNumber, inlLag) {
     .Call('RcppSMC_blockpfGaussianOpt_cpp', PACKAGE = 'RcppSMC', data, inlNumber, inlLag)
 }
 
-LinRegBS_cpp <- function(data, inlNumber) {
-    .Call('RcppSMC_LinRegBS_cpp', PACKAGE = 'RcppSMC', data, inlNumber)
+LinReg_cpp <- function(data, inlNumber) {
+    .Call('RcppSMC_LinReg_cpp', PACKAGE = 'RcppSMC', data, inlNumber)
 }
 
-LinRegLABS_cpp <- function(data, intemps, inlNumber) {
-    .Call('RcppSMC_LinRegLABS_cpp', PACKAGE = 'RcppSMC', data, intemps, inlNumber)
+LinRegLA_cpp <- function(data, intemps, inlNumber) {
+    .Call('RcppSMC_LinRegLA_cpp', PACKAGE = 'RcppSMC', data, intemps, inlNumber)
 }
 
 nonLinPMMH_cpp <- function(data, lNumber, lMCMCits) {
