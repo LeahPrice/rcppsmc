@@ -97,7 +97,7 @@ Rcpp::DataFrame nonLinPMMH_cpp(arma::vec data, unsigned long lNumber, unsigned l
 		// Inverse gamma prior
 		logprior_prop = logPrior(theta_prop);
 		
-		MH_ratio = exp(loglike_prop - loglike(i-1));
+		MH_ratio = exp(loglike_prop - loglike(i-1) + logprior_prop - logprior(i-1));
 		dRand = pRng1->Uniform(0,1);
       
 		if (MH_ratio>dRand){
