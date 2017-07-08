@@ -23,7 +23,6 @@
 
 #include "smctc.h"
 #include "LinReg_LA.h"
-#include "rngR.h"
 #include <RcppArmadillo.h>
 
 #include <cstdio> 
@@ -167,23 +166,23 @@ namespace LinReg_LA {
 
 	///A function to initialise a particle
 
-	/// \param pRng A pointer to the random number generator which is to be used
-	void fInitialise(smc::rng *pRng, rad_state & value, double & logweight)
+	/// \param value		Reference to the empty particle value
+	/// \param logweight	Refernce to the empty particle log weight
+	void fInitialise(rad_state & value, double & logweight)
 	{
 		// drawing from the prior
-		value.alpha = pRng->Normal(3000.0,1000.0);
-		value.beta = pRng->Normal(185.0,100.0);
-		value.phi = log(pow(pRng->Gamma(3,pow(2.0*300.0*300.0,-1.0)),-1.0));
+		value.alpha = R::rnorm(3000.0,1000.0);
+		value.beta = R::rnorm(185.0,100.0);
+		value.phi = log(pow(R::rgamma(3,pow(2.0*300.0*300.0,-1.0)),-1.0));
 		logweight = temps(0)*logLikelihood(value);
 	}
 
 	///The proposal function.
 
-	///\param lTime The sampler iteration.
-	///\param value The value of the particle being moved
-	///\param logweight The log weight of the particle being moved
-	///\param pRng  A random number generator.
-	void fMove(long lTime, rad_state & value, double & logweight, smc::rng *pRng)
+	///\param lTime			The sampler iteration.
+	/// \param value		Reference to the current particle value
+	/// \param logweight	Refernce to the current particle log weight
+	void fMove(long lTime, rad_state & value, double & logweight)
 	{
 		logweight += (temps(lTime) - temps(lTime-1))*logLikelihood(value);
 	}
@@ -191,9 +190,8 @@ namespace LinReg_LA {
 	///The proposal function.
 
 	///\param lTime The sampler iteration.
-	///\param value The value of the particle being moved
-	///\param pRng  A random number generator.
-	int fMCMC(long lTime, rad_state & value, smc::rng *pRng)
+	///\param value Reference to the value of the particle being moved
+	int fMCMC(long lTime, rad_state & value)
 	{
 		double MH_ratio;
 		double dRand;
@@ -205,15 +203,15 @@ namespace LinReg_LA {
 		double logprior_prop;
 		
 		for (unsigned int j=0; j<10; j++){
-			value_prop.alpha = pRng->Normal(value.alpha,std_alpha);
-			value_prop.beta = pRng->Normal(value.beta,std_beta);
-			value_prop.phi = pRng->Normal(value.phi,std_phi);
+			value_prop.alpha = R::rnorm(value.alpha,std_alpha);
+			value_prop.beta = R::rnorm(value.beta,std_beta);
+			value_prop.phi = R::rnorm(value.phi,std_phi);
 			
 			loglike_prop = logLikelihood(value_prop);
 			logprior_prop = logPrior(value_prop);
 			
 			MH_ratio = exp(temps(lTime)*(loglike_prop - loglike_curr) + logprior_prop - logprior_curr);
-			dRand = pRng->Uniform(0,1);
+			dRand = R::runif(0,1);
 			
 			if (MH_ratio>dRand){
 				value = value_prop;

@@ -24,7 +24,6 @@
 
 #include "smctc.h"
 #include "nonLinPMMH.h"
-#include "rngR.h"
 #include <RcppArmadillo.h>
 
 #include <cstdio> 
@@ -64,7 +63,6 @@ Rcpp::DataFrame nonLinPMMH_cpp(arma::vec data, unsigned long lNumber, unsigned l
 	
     //Initialise and run the sampler
     smc::sampler<double> Sampler(lNumber, HistoryType::NONE);
-	smc::rng* pRng1 = new smc::rng();
 	theta_prop.sigv = sqrt(10.0);
 	theta_prop.sigw = 1.0;
 		
@@ -86,8 +84,8 @@ Rcpp::DataFrame nonLinPMMH_cpp(arma::vec data, unsigned long lNumber, unsigned l
 	double MH_ratio;
 	for (unsigned int i = 1; i<lMCMCits; i++){
 		// RW proposal for parameters
-		theta_prop.sigv = pRng1->Normal(sigv(i-1),0.15);
-		theta_prop.sigw = pRng1->Normal(sigw(i-1),0.08);		
+		theta_prop.sigv = R::rnorm(sigv(i-1),0.15);
+		theta_prop.sigw = R::rnorm(sigw(i-1),0.08);		
 		
 		// Getting a particle filtering estimate of the log likelihood.
 		Sampler.Initialise();
@@ -98,7 +96,7 @@ Rcpp::DataFrame nonLinPMMH_cpp(arma::vec data, unsigned long lNumber, unsigned l
 		logprior_prop = logPrior(theta_prop);
 		
 		MH_ratio = exp(loglike_prop - loglike(i-1) + logprior_prop - logprior(i-1));
-		dRand = pRng1->Uniform(0,1);
+		dRand = R::runif(0,1);
       
 		if (MH_ratio>dRand){
 			sigv(i) = theta_prop.sigv;
@@ -114,7 +112,6 @@ Rcpp::DataFrame nonLinPMMH_cpp(arma::vec data, unsigned long lNumber, unsigned l
 			logprior(i) = logprior(i-1);
 		}
 	}
-	delete pRng1;
 		   
     return Rcpp::DataFrame::create(Rcpp::Named("samples_sigv") = sigv,
 								   Rcpp::Named("samples_sigw") = sigw,
@@ -140,12 +137,11 @@ double logPrior(const parameters & proposal)
 
 ///A function to initialise a particle
 
-/// \param pRng 		A pointer to the random number generator which is to be used
 /// \param X			A reference to the empty particle value
 /// \param logweight	A reference to the empty particle log weight
-void fInitialise(smc::rng *pRng, double & X, double & logweight)
+void fInitialise(double & X, double & logweight)
 {
-	X = pRng->Normal(0.0,sqrt(5.0));
+	X = R::rnorm(0.0,sqrt(5.0));
 	double mean = pow(X,2)/20.0;
 	logweight = -log(theta_prop.sigw) - pow(y(0) - mean,2.0)/(2.0*theta_prop.sigw*theta_prop.sigw) -0.5*log(2.0*M_PI);
 }
@@ -155,10 +151,9 @@ void fInitialise(smc::rng *pRng, double & X, double & logweight)
 ///\param lTim		The sampler iteration.
 ///\param X			A reference to the current particle value
 ///\param logweight	A reference to the current particle log weight
-///\param pRng		A random number generator.
-void fMove(long lTime, double & X, double & logweight, smc::rng *pRng)
+void fMove(long lTime, double & X, double & logweight)
 {
-	X = X/2.0 + 25.0*X/(1+pow(X,2)) + 8*cos(1.2*(lTime+1)) + pRng->Normal(0.0,theta_prop.sigv);
+	X = X/2.0 + 25.0*X/(1+pow(X,2)) + 8*cos(1.2*(lTime+1)) + R::rnorm(0.0,theta_prop.sigv);
 	double mean = pow(X,2)/20.0;
 	logweight += -log(theta_prop.sigw) - pow(y(lTime) - mean,2.0)/(2.0*theta_prop.sigw*theta_prop.sigw) -0.5*log(2.0*M_PI);
 }

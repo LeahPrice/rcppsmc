@@ -92,19 +92,20 @@ namespace nonlinbs {
 
 	///A function to initialise a particle
 
-	/// \param pRng A pointer to the random number generator which is to be used
-	void fInitialise(smc::rng *pRng, double & value, double & logweight) {
-		value = pRng->Normal(0,std_x0);
+	/// \param value		Reference to the empty particle value
+	/// \param logweight	Reference to the empty particle log weight
+	void fInitialise(double & value, double & logweight) {
+		value = R::rnorm(0,std_x0);
 		logweight = -0.5 * pow(y(int(0)) - value*value*scale_y,2) / var_y;
 	}
 
 	///The proposal function.
 
-	///\param lTime The sampler iteration.
-	///\param pFrom The population to move.
-	///\param pRng  A random number generator.
-	void fMove(long lTime, double & value, double & logweight, smc::rng *pRng) {
-		value = 0.5 * value + 25.0*value / (1.0 + value * value) + 8.0 * cos(1.2  * ( lTime)) + pRng->Normal(0.0,std_x);
+	///\param lTime			The sampler iteration.
+	/// \param value		Reference to the current particle value
+	/// \param logweight	Refernce to the current particle log weight
+	void fMove(long lTime, double & value, double & logweight) {
+		value = 0.5 * value + 25.0*value / (1.0 + value * value) + 8.0 * cos(1.2  * ( lTime)) + R::rnorm(0.0,std_x);
 		logweight += logLikelihood(lTime, value);
 	}
 

@@ -96,8 +96,6 @@
 #include <cstdlib>
 #include <iostream>
 
-#include "rngR.h"
-
 #include "smc-exception.h"
 #include "sampler.h"
 

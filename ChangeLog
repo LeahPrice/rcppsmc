@@ -1,3 +1,23 @@
+2017-07-8  Leah South  <leah.south@hdr.qut.edu.au>
+
+	* inst/include/rngR.h: Removed because we are now using Rcpp attributes.
+	* inst/include/moveset.h: Removed use of rng class
+	* inst/include/sampler.h: Idem
+	* inst/include/smctc.h: Idem
+
+	* inst/include/blockpfgaussianopt.h: Removed use of rng class
+	* inst/include/LinReg.h: Idem
+	* inst/include/LinReg_LA.h: Idem
+	* inst/include/nonLinPMMH.h: Idem
+	* inst/include/pflineart.h: Idem
+	* inst/include/pfnonlinbs.h: Idem
+	* src/blockpfgaussianopt.cpp: Idem
+	* src/LinReg.cpp: Idem.
+	* src/LinReg_LA.cpp: Idem
+	* src/nonLinPMMH.cpp: Idem
+	* src/pflineart.cpp: Idem
+	* src/pfnonlinbs.cpp: Idem
+	
 2017-07-4  Leah South  <leah.south@hdr.qut.edu.au>
 
 	* DESCRIPTION: automatically added RoxygenNote.

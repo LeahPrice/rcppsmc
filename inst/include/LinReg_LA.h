@@ -45,9 +45,9 @@ namespace LinReg_LA {
 	double logLikelihood(const rad_state & value);
 	double logPrior(const rad_state & value);
 	
-	void fInitialise(smc::rng *pRng, rad_state & value, double & logweight);
-	void fMove(long lTime, rad_state & value, double & logweight, smc::rng *pRng);
-	int fMCMC(long lTime, rad_state & value, smc::rng *pRng);
+	void fInitialise(rad_state & value, double & logweight);
+	void fMove(long lTime, rad_state & value, double & logweight);
+	int fMCMC(long lTime, rad_state & value);
 	
 	double integrand_mean_alpha(const rad_state&, void*);
 	double integrand_mean_beta(const rad_state&, void*);

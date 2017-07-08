@@ -23,7 +23,6 @@
 
 #include "smctc.h"
 #include "blockpfgaussianopt.h"
-#include "rngR.h"
 
 #include <cstdlib>
 #include <cmath>
@@ -72,23 +71,25 @@ Rcpp::List blockpfGaussianOpt_cpp(Rcpp::NumericVector data, long inlNumber, long
 using namespace std;
 
 namespace BSPFG {
-
-	/// \param pRng A pointer to the random number generator which is to be used
-	void fInitialise(smc::rng *pRng, vector<double> & value, double & logweight)
+	///The initialisation function.
+	
+	/// \param value		Reference to the current particle value
+	/// \param logweight	Refernce to the current particle log weight
+	void fInitialise(vector<double> & value, double & logweight)
 	{
-		value.push_back(pRng->Normal(0.5 * y[0],1.0/sqrt(2.0)));
+		value.push_back(R::rnorm(0.5 * y[0],1.0/sqrt(2.0)));
 		logweight = 1.0;
 	}
 
 	///The proposal function.
 
-	///\param lTime The sampler iteration.
-	///\param pFrom The population to move.
-	///\param pRng  A random number generator.
-	void fMove(long lTime, vector<double> & value, double & logweight, smc::rng *pRng)
+	///\param lTime			The sampler iteration.
+	/// \param value		Reference to the current particle value
+	/// \param logweight	Refernce to the current particle log weight
+	void fMove(long lTime, vector<double> & value, double & logweight)
 	{
 		if(lTime == 1) {
-			value.push_back((value.at(lTime-1) + y[int(lTime)])/2.0 + pRng->Normal(0.0,1.0/sqrt(2.0)));
+			value.push_back((value.at(lTime-1) + y[int(lTime)])/2.0 + R::rnorm(0.0,1.0/sqrt(2.0)));
 			logweight += -0.25*(y[int(lTime)] - value.at(lTime-1))*(y[int(lTime)]-value.at(lTime-1));
 			return;
 		}
@@ -113,11 +114,11 @@ namespace BSPFG {
 		}
 		// Backward smoothing
 		mub[lag] = mu[lag];
-		value.push_back(pRng->Normal(mub[lag],sqrt(sigma[lag])));
+		value.push_back(R::rnorm(mub[lag],sqrt(sigma[lag])));
 		for(int i = lag-1; i; --i)
 		{
 			mub[i] = (sigma[i]*value.at(lTime-lag+i+1) + mu[i]) / (sigma[i]+1);
-			value.at(lTime-lag+i) = pRng->Normal(mub[i],sqrt(sigma[lag]/(sigma[lag] + 1)));
+			value.at(lTime-lag+i) = R::rnorm(mub[i],sqrt(sigma[lag]/(sigma[lag] + 1)));
 		}
 		
 		// Importance weighting

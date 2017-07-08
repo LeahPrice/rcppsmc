@@ -33,9 +33,8 @@ namespace nonlinbs {
 	
 	double logLikelihood(long lTime, const double & value);
 
-	void fInitialise(smc::rng *pRng, double & value, double & logweight);
-	long fSelect(long lTime, const smc::population<double> & p, smc::rng *pRng);
-	void fMove(long lTime, double & value, double & logweight, smc::rng *pRng);
+	void fInitialise(double & value, double & logweight);
+	void fMove(long lTime, double & value, double & logweight);
 
 	double integrand_mean_x(const double&, void*);
 	double integrand_var_x(const double&, void*);

@@ -25,7 +25,6 @@
 
 #include "smctc.h"
 #include "pflineart.h"
-#include "rngR.h"
 #include <typeinfo>
 #include <cxxabi.h> // for demangling the type name
 
@@ -140,21 +139,21 @@ namespace pflineart {
 		return - 0.5 * (nu_y + 1.0) * (log(1 + pow((value.x_pos - y.x_pos[lTime])/scale_y,2) / nu_y) + log(1 + pow((value.y_pos - y.y_pos[lTime])/scale_y,2) / nu_y));
 	}
 
-	void fInitialise(smc::rng *pRng, cv_state & value, double & logweight)
+	void fInitialise(cv_state & value, double & logweight)
 	{ 
-		value.x_pos = pRng->Normal(0,sqrt(var_s0));
-		value.y_pos  = pRng->Normal(0,sqrt(var_s0));
-		value.x_vel  = pRng->Normal(0,sqrt(var_u0));
-		value.y_vel  = pRng->Normal(0,sqrt(var_u0));
+		value.x_pos = R::rnorm(0,sqrt(var_s0));
+		value.y_pos  = R::rnorm(0,sqrt(var_s0));
+		value.x_vel  = R::rnorm(0,sqrt(var_u0));
+		value.y_vel  = R::rnorm(0,sqrt(var_u0));
 		logweight = - 0.5 * (nu_y + 1.0) * (log(1 + pow((value.x_pos - y.x_pos[0])/scale_y,2) / nu_y) + log(1 + pow((value.y_pos - y.y_pos[0])/scale_y,2) / nu_y));
 	}
 
-	void fMove(long lTime, cv_state & value, double & logweight, smc::rng *pRng)
+	void fMove(long lTime, cv_state & value, double & logweight)
 	{
-		value.x_pos += value.x_vel * Delta + pRng->Normal(0,sqrt(var_s));
-		value.x_vel += pRng->Normal(0,sqrt(var_u));
-		value.y_pos += value.y_vel * Delta + pRng->Normal(0,sqrt(var_s));
-		value.y_vel += pRng->Normal(0,sqrt(var_u));
+		value.x_pos += value.x_vel * Delta + R::rnorm(0,sqrt(var_s));
+		value.x_vel += R::rnorm(0,sqrt(var_u));
+		value.y_pos += value.y_vel * Delta + R::rnorm(0,sqrt(var_s));
+		value.y_vel += R::rnorm(0,sqrt(var_u));
 
 		logweight += logLikelihood(lTime, value);
 	}
