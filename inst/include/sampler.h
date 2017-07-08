@@ -36,6 +36,7 @@
 
 #include "history.h"
 #include "moveset.h"
+#include "algParam.h"
 #include "population.h"
 #include "smc-exception.h"
 
@@ -74,6 +75,9 @@ namespace smc {
 		long N;
 		///The current evolution time of the system.
 		long T;
+		
+		///The algorithm parameters.
+		algParam<Space>* pAlgParams;
 
 		///The resampling mode which is to be employed.
 		ResampleType::Enum rtResampleMode;
@@ -107,7 +111,7 @@ namespace smc {
 
 	public:
 		///Create a particle system containing lSize uninitialised particles with the specified mode.
-		sampler(long lSize, HistoryType::Enum htHistoryMode);
+		sampler(long lSize, HistoryType::Enum htHistoryMode, algParam<Space>* inParams);
 		///Dispose of a sampler.
 		~sampler();
 		///Calculates and Returns the Effective Sample Size.
@@ -115,7 +119,9 @@ namespace smc {
 		/// Returns the effective sample size of the specified particle generation.
 		double GetESS(long lGeneration) const;
 		///Returns a pointer to the History of the particle system
-		const std::vector<historyelement< population<Space> > > & GetHistory(void) const { return History; }																											   
+		const std::vector<historyelement< population<Space> > > & GetHistory(void) const { return History; }
+		///Returns a pointer to the algorithm parameters
+		algParam<Space> * GetAlgs(void) const { return pAlgParams; }																											   
 		///Returns the current estimate of the log normalising constant ratio over the entire path
 		double GetLogNCPath(void) const { return dlogNCPath; }
 		///Returns the current estimate of the log normalising constant ratio over the last step
@@ -207,20 +213,14 @@ namespace smc {
 	/// \param htHM The history mode to use: set this to HistoryType::RAM to store the whole history of the system and SMC_HISTORY_NONE to avoid doing so.
 	/// \tparam Space The class used to represent a point in the sample space.
 	template <class Space>
-	sampler<Space>::sampler(long lSize, HistoryType::Enum htHM)
+	sampler<Space>::sampler(long lSize, HistoryType::Enum htHM, algParam<Space>* inParams)
 	{N = lSize;
-
-		//population<Space>* pPopulation; 
-		//pPopulation = new population<Space>;
-
-
+		if(inParams){
+			pAlgParams = inParams; //later want to add lSize, history type to this
+		} else{
+			pAlgParams = new algParam<Space>(); //later want to add lSize, history type to this
+		}
 		uRSCount = arma::zeros<arma::Col<unsigned int> >((int)N);
-		// //Allocate some storage for internal workspaces
-		// dRSWeights = new double[N];
-		// ///Structure used internally for resampling.
-		// uRSCount  = new unsigned[N];
-		// ///Structure used internally for resampling.
-		// uRSIndices = new unsigned[N];
 
 		//Some workable defaults.	
 		htHistoryMode = htHM;
@@ -231,15 +231,7 @@ namespace smc {
 	template <class Space>
 	sampler<Space>::~sampler()
 	{
-
-		//if (pPopulation)
-		//delete pPopulation;
-		//if (dRSWeights)
-		//  delete [] dRSWeights;
-		//if (uRSCount)
-		//  delete [] uRSCount;
-		//if (uRSIndices)
-		//  delete [] uRSIndices;
+		delete pAlgParams;
 	}
 
 
@@ -305,7 +297,7 @@ namespace smc {
 		//Normalise the weights to sensible values....
 		pPopulation.SetLogWeight(pPopulation.GetLogWeight() - dlogNCIt*arma::ones(N));
 		
-
+		pAlgParams->updateForMCMC(pPopulation);
 		//Check if the ESS is below some reasonable threshold and resample if necessary.
 		double ESS = GetESS();
 		if(ESS < dResampleThreshold) {
@@ -487,6 +479,7 @@ namespace smc {
 		//Normalise the weights
 		pPopulation.SetLogWeight(pPopulation.GetLogWeight()  - dlogNCIt*arma::ones(N));
 
+		pAlgParams->updateForMCMC(pPopulation);
 		//Check if the ESS is below some reasonable threshold and resample if necessary.
 		//A mechanism for setting this threshold is required.
 		double ESS = GetESS();
@@ -508,6 +501,7 @@ namespace smc {
 			History.push_back(histel);
 			//History.emplace_back(historyelement<population<Space> >(N, pPopulation, nAccepted, historyflags(nResampled)));
 		}
+		
 
 		return ESS;
 	}

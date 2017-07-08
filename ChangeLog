@@ -1,5 +1,21 @@
 2017-07-8  Leah South  <leah.south@hdr.qut.edu.au>
 
+	* inst/include/algParams.h: Setting up a base class for adaptation (will add basic parameters later) 
+	* inst/include/sampler.h: Using a pointer to a parameter object which can be updated before MCMC steps.
+
+	* inst/include/LinReg.h: Adding a parameter object which gets
+	  the standard deviation of the parameters before the MCMC step.
+	* src/LinReg.cpp: Idem.
+	
+	* src/blockpfgaussianopt.cpp: Adjusting the call to the sampler
+	  constructor to include a NULL parameter object pointer.
+	* src/LinReg_LA.cpp: Idem
+	* src/nonLinPMMH.cpp: Idem
+	* src/pflineart.cpp: Idem
+	* src/pfnonlinbs.cpp: Idem
+
+2017-07-8  Leah South  <leah.south@hdr.qut.edu.au>
+
 	* inst/include/rngR.h: Removed because we are now using Rcpp attributes.
 	* inst/include/moveset.h: Removed use of rng class
 	* inst/include/sampler.h: Idem

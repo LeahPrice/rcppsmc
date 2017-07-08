@@ -62,7 +62,7 @@ Rcpp::DataFrame nonLinPMMH_cpp(arma::vec data, unsigned long lNumber, unsigned l
 	long accept_count = 0;
 	
     //Initialise and run the sampler
-    smc::sampler<double> Sampler(lNumber, HistoryType::NONE);
+    smc::sampler<double> Sampler(lNumber, HistoryType::NONE, NULL);
 	theta_prop.sigv = sqrt(10.0);
 	theta_prop.sigw = 1.0;
 		

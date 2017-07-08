@@ -64,7 +64,7 @@ Rcpp::List pfLineartBS_cpp(arma::mat data, unsigned long inlNumber, bool useF, R
 		y.y_pos = data.col(1);
 		
 		///Initialise and run the sampler 
-		smc::sampler<cv_state> Sampler(lNumber, HistoryType::NONE);  
+		smc::sampler<cv_state> Sampler(lNumber, HistoryType::NONE, NULL);  
 		smc::moveset<cv_state> Moveset(fInitialise, fMove, NULL);
 		
 		

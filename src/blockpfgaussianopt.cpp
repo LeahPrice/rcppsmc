@@ -42,7 +42,7 @@ Rcpp::List blockpfGaussianOpt_cpp(Rcpp::NumericVector data, long inlNumber, long
 	lIterates = y.size();
 
 	//Initialise and run the sampler
-	smc::sampler<vector<double> > Sampler(lNumber, HistoryType::NONE);  
+	smc::sampler<vector<double> > Sampler(lNumber, HistoryType::NONE, NULL);  
 	smc::moveset<vector<double> > Moveset(fInitialise, fMove, NULL);
 
 	Sampler.SetResampleParams(ResampleType::SYSTEMATIC, 0.5);
