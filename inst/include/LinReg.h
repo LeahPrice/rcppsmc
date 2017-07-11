@@ -25,7 +25,6 @@
 #include <RcppArmadillo.h>
 
 
-
 namespace LinReg {
 	unsigned long lNumber;
 	
@@ -41,34 +40,6 @@ namespace LinReg {
 		arma::vec data_x, data_y;
 	};
 
-	class rad_params:
-	public smc::algParam<rad_state>
-	{
-	private:
-		double std_alpha,std_beta,std_phi;
-	public:
-		
-		///Returns a random number generated from a Beta distribution with the specified parameters.
-		void updateForMCMCExtra(const smc::population<rad_state> & pop) {
-			arma::vec vAlpha(lNumber), vBeta(lNumber), vPhi(lNumber);
-			arma::vec weights = pop.GetWeight();
-			for (unsigned int i=0; i<lNumber; i++){
-				vAlpha(i) = pop.GetValueN(i).alpha;
-				vBeta(i) = pop.GetValueN(i).beta;
-				vPhi(i) = pop.GetValueN(i).phi;
-			}
-			std_alpha = sqrt(arma::sum(weights%pow(vAlpha-arma::sum(vAlpha%weights),2)));
-			std_beta = sqrt(arma::sum(weights%pow(vBeta-arma::sum(vBeta%weights),2)));
-			std_phi = sqrt(arma::sum(weights%pow(vPhi-arma::sum(vPhi%weights),2)));
-		}
-		
-		double GetStdAlpha(void){return std_alpha;}
-		double GetStdBeta(void){return std_beta;}
-		double GetStdPhi(void){return std_phi;}
-	};
-	
-	
-	rad_params * myParams;
 	rad_obs y;
 	double mean_x;
 	

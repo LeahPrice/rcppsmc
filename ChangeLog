@@ -1,3 +1,26 @@
+2017-07-11  Leah South  <leah.south@hdr.qut.edu.au>
+
+	* inst/include/algParams.h: Bringing in some basic parameters and adding more virtual functions
+	* inst/include/sampler.h: Putting the basic parameters into the algorithm parameter class.
+	
+	* inst/include/LinReg.h: Removing adaptation (using diagonal covariance not optimal anyway -
+	  moving adaptation into another example)
+	* src/LinReg.cpp: Removing adaptation and updating the sampler constructor.
+	
+	* inst/include/LinReg_LA_auto.h: A version of LinReg_LA with adaptation of the random walk
+	  covariance matrix and temperature schedule
+	* src/LinReg_LA_auto.cpp: Idem
+	* R/LinRegLA_auto.R: Idem
+	* NAMESPACE: adding this new function
+
+	* inst/include/LinReg_LA.h: renaming rad_obs2 class to rad_obs and putting in example namespace
+	
+	* src/blockpfgaussianopt.cpp: Adjusting the call to the sampler constructor.
+	* src/LinReg_LA.cpp: Idem
+	* src/nonLinPMMH.cpp: Idem
+	* src/pflineart.cpp: Idem
+	* src/pfnonlinbs.cpp: Idem
+
 2017-07-8  Leah South  <leah.south@hdr.qut.edu.au>
 
 	* inst/include/algParams.h: Setting up a base class for adaptation (will add basic parameters later) 

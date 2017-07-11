@@ -35,6 +35,9 @@
 //#include <gsl/gsl_randist.h>
 
 namespace LinReg {
+	const double std_alpha = 50.0;
+	const double std_beta = 11.0;
+	const double std_phi = 0.2;
 	const double a_prior = 3.0;
 	const double b_prior = pow(2.0*300.0*300.0,-1.0);
 }
@@ -58,12 +61,11 @@ Rcpp::List LinReg_cpp(arma::mat data, unsigned long inlNumber) {
 		y.data_y = data.col(1);
 		mean_x = arma::sum(y.data_x)/lIterates;
 		
-		myParams = new rad_params();
 		//Initialise and run the sampler
-		smc::sampler<rad_state> Sampler(lNumber, HistoryType::RAM, myParams);  
+		smc::sampler<rad_state> Sampler(lNumber, HistoryType::RAM);  
 		smc::moveset<rad_state> Moveset(fInitialise, fMove, fMCMC);
 		
-		Sampler.SetResampleParams(ResampleType::SYSTEMATIC, 0.5);
+		Sampler.SetSMCParams(ResampleType::SYSTEMATIC, 0.5);
 		Sampler.SetMoveSet(Moveset);
 		Sampler.Initialise();
 		
@@ -94,8 +96,6 @@ Rcpp::List LinReg_cpp(arma::mat data, unsigned long inlNumber) {
 		//Rcpp::Rcout << Sampler << std::endl;
 		
 		double logNC = Sampler.GetLogNCPath();
-		
-		delete myParams;
 		
 		//return Rcpp::DataFrame::create		   
 		return Rcpp::List::create(Rcpp::Named("alpham") = alpham,
@@ -212,13 +212,9 @@ namespace LinReg {
 
 		for (unsigned int j=0; j<10; j++){
 			
-			//value_prop.alpha = R::rnorm(value.alpha,50.0);
-			//value_prop.beta = R::rnorm(value.beta,11.0);
-			//value_prop.phi = R::rnorm(value.phi,0.2);
-			
-			value_prop.alpha = R::rnorm(value.alpha,myParams->GetStdAlpha());
-			value_prop.beta = R::rnorm(value.beta,myParams->GetStdBeta());
-			value_prop.phi = R::rnorm(value.phi,myParams->GetStdPhi());
+			value_prop.alpha = R::rnorm(value.alpha,std_alpha);
+			value_prop.beta = R::rnorm(value.beta,std_beta);
+			value_prop.phi = R::rnorm(value.phi,std_phi);
 			
 			logposterior_prop = logPosterior(lTime, value_prop);
 			

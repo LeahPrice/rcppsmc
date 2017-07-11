@@ -57,10 +57,10 @@ Rcpp::List pfNonlinBS_cpp(arma::vec data, long inlNumber) {
 	long lIterates = y.n_rows;
 
 	//Initialise and run the sampler 
-	smc::sampler<double> Sampler(lNumber, HistoryType::NONE, NULL);  
+	smc::sampler<double> Sampler(lNumber, HistoryType::NONE);  
 	smc::moveset<double> Moveset(fInitialise, fMove, NULL);
 
-	Sampler.SetResampleParams(ResampleType::MULTINOMIAL, 1.01 * lNumber);
+	Sampler.SetSMCParams(ResampleType::MULTINOMIAL, 1.01 * lNumber);
 	Sampler.SetMoveSet(Moveset);
 	Sampler.Initialise();
 

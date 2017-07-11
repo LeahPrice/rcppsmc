@@ -64,12 +64,12 @@ Rcpp::List pfLineartBS_cpp(arma::mat data, unsigned long inlNumber, bool useF, R
 		y.y_pos = data.col(1);
 		
 		///Initialise and run the sampler 
-		smc::sampler<cv_state> Sampler(lNumber, HistoryType::NONE, NULL);  
+		smc::sampler<cv_state> Sampler(lNumber, HistoryType::NONE);  
 		smc::moveset<cv_state> Moveset(fInitialise, fMove, NULL);
 		
 		
-		//Sampler.SetResampleParams(ResampleType::RESIDUAL, 0.5);
-		Sampler.SetResampleParams(ResampleType::RESIDUAL, 0.999);
+		//Sampler.SetSMCParams(ResampleType::RESIDUAL, 0.5);
+		Sampler.SetSMCParams(ResampleType::RESIDUAL, 0.999);
 		Sampler.SetMoveSet(Moveset);
 		Sampler.Initialise();
 		

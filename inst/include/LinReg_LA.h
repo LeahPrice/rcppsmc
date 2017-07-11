@@ -23,20 +23,22 @@
 #include "smctc.h"
 #include <RcppArmadillo.h>
 
+
+namespace LinReg_LA {
+	
 class rad_state
 {
 public:
 	double alpha, beta, phi;
 };
 
-class rad_obs2
+class rad_obs
 {
 public:
 	arma::vec data_x, data_y;
 };
 
-namespace LinReg_LA {
-	rad_obs2 y;
+	rad_obs y;
 	double mean_x;
 	unsigned long lNumber;
 	long lIterates;

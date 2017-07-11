@@ -44,6 +44,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// LinRegLA_auto_cpp
+Rcpp::List LinRegLA_auto_cpp(arma::mat data, unsigned long inlNumber, double resampTol, double tempTol);
+RcppExport SEXP RcppSMC_LinRegLA_auto_cpp(SEXP dataSEXP, SEXP inlNumberSEXP, SEXP resampTolSEXP, SEXP tempTolSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type data(dataSEXP);
+    Rcpp::traits::input_parameter< unsigned long >::type inlNumber(inlNumberSEXP);
+    Rcpp::traits::input_parameter< double >::type resampTol(resampTolSEXP);
+    Rcpp::traits::input_parameter< double >::type tempTol(tempTolSEXP);
+    rcpp_result_gen = Rcpp::wrap(LinRegLA_auto_cpp(data, inlNumber, resampTol, tempTol));
+    return rcpp_result_gen;
+END_RCPP
+}
 // nonLinPMMH_cpp
 Rcpp::DataFrame nonLinPMMH_cpp(arma::vec data, unsigned long lNumber, unsigned long lMCMCits);
 RcppExport SEXP RcppSMC_nonLinPMMH_cpp(SEXP dataSEXP, SEXP lNumberSEXP, SEXP lMCMCitsSEXP) {

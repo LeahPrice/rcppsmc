@@ -13,6 +13,10 @@ LinRegLA_cpp <- function(data, intemps, inlNumber) {
     .Call('RcppSMC_LinRegLA_cpp', PACKAGE = 'RcppSMC', data, intemps, inlNumber)
 }
 
+LinRegLA_auto_cpp <- function(data, inlNumber, resampTol, tempTol) {
+    .Call('RcppSMC_LinRegLA_auto_cpp', PACKAGE = 'RcppSMC', data, inlNumber, resampTol, tempTol)
+}
+
 nonLinPMMH_cpp <- function(data, lNumber, lMCMCits) {
     .Call('RcppSMC_nonLinPMMH_cpp', PACKAGE = 'RcppSMC', data, lNumber, lMCMCits)
 }

@@ -63,10 +63,10 @@ Rcpp::List LinRegLA_cpp(arma::mat data, arma::vec intemps, unsigned long inlNumb
 		
 		
 		//Initialise and run the sampler
-		smc::sampler<rad_state> Sampler(lNumber, HistoryType::RAM, NULL);
+		smc::sampler<rad_state> Sampler(lNumber, HistoryType::RAM);
 		smc::moveset<rad_state> Moveset(fInitialise, fMove, fMCMC);
 		
-		Sampler.SetResampleParams(ResampleType::SYSTEMATIC, 0.5);
+		Sampler.SetSMCParams(ResampleType::SYSTEMATIC, 0.5);
 		Sampler.SetMoveSet(Moveset);
 		Sampler.Initialise();
 		

@@ -62,7 +62,7 @@ Rcpp::DataFrame nonLinPMMH_cpp(arma::vec data, unsigned long lNumber, unsigned l
 	long accept_count = 0;
 	
     //Initialise and run the sampler
-    smc::sampler<double> Sampler(lNumber, HistoryType::NONE, NULL);
+    smc::sampler<double> Sampler(lNumber, HistoryType::NONE);
 	theta_prop.sigv = sqrt(10.0);
 	theta_prop.sigw = 1.0;
 		
@@ -72,7 +72,7 @@ Rcpp::DataFrame nonLinPMMH_cpp(arma::vec data, unsigned long lNumber, unsigned l
 	
 	// Getting a particle filtering estimate of the log likelihood.
 	smc::moveset<double> Moveset(fInitialise, fMove, NULL);
-    Sampler.SetResampleParams(ResampleType::MULTINOMIAL, 0.5);
+    Sampler.SetSMCParams(ResampleType::MULTINOMIAL, 0.5);
     Sampler.SetMoveSet(Moveset);
     Sampler.Initialise();
 	Sampler.IterateUntil(lIterates-1);

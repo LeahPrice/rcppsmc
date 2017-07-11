@@ -23,10 +23,8 @@
 
 
 //! \file 
-//! \brief Random number generation.
+//! \brief Algorithm parameter class
 //!
-//! This file contains the definitions for the smc::rng and smc::rnginfo class.
-//! It wraps the random number generation facilities provided by the GSL and provides a convenient interfaces to access several of its more commonly-used features.
 
 #ifndef __SMC_ALGPARAM_H
 #define __SMC_ALGPARAM_H 1.0
@@ -34,30 +32,75 @@
 #include <RcppArmadillo.h>
 #include <population.h>
 
+///Specifiers for various resampling algorithms:
+namespace ResampleType
+{
+	enum Enum {MULTINOMIAL = 0, 
+		RESIDUAL, 
+		STRATIFIED, 
+		SYSTEMATIC };
+};
+
 namespace smc {
 
 	///A class which contains the algorithm parameters.
 	template <class Space> class algParam {
 	private:
+		long myN;
+		ResampleType::Enum myResample;
+		double myResampleThreshold;
+		
 		///A base update function (updates that are always done)
-		void updateForMCMCBase(const population<Space> & pop) {
-		}
+		void updateForMCMCBase(const population<Space> & pop) {}
+		
+		///A base update function (updates that are always done)
+		void updateForMoveBase(const population<Space> & pop) {}
+		
+		///A base update function (updates that are always done)
+		void updateEndBase(const population<Space> & pop) {}
+		
+		
 		
 	public:
-		///Initialise the random number generator using default settings
-		algParam(void) {
+		///Initialise the algorithm parameters
+		algParam(void){};
+		
+		///Initialise the algorithm parameters
+		algParam(long n) : myN(n), myResample(ResampleType::STRATIFIED), myResampleThreshold(0.5*n){};
+		
+		///Initialise the algorithm parameters
+		algParam(long n, ResampleType::Enum restype, double resthresh) : myN(n), myResample(restype), myResampleThreshold(resthresh){};
+		
+		void SetN(long n){ myN = n;}
+		
+		long GetN(void){return myN;}
+		
+		void SetResThresh(double dThreshold){
+		if(dThreshold < 1)
+		 myResampleThreshold = dThreshold * myN;
+		else
+		myResampleThreshold = dThreshold;
 		}
 		
+		double GetResThresh(void){return myResampleThreshold;}
+		
+		void SetResample(ResampleType::Enum inRes){ myResample = inRes;}
+		
+		ResampleType::Enum GetResample(void){return myResample;}
+		
 		///Free the workspace allocated for the algorithm parameters
-		~algParam() {
+		virtual ~algParam() {
 			
 		}
 
 		///Holder function for additional updates that can be done (to be changed by the user)
-		virtual void updateForMCMCExtra(const population<Space> & pop) {
-			
-		}
+		virtual void updateForMCMCExtra(const population<Space> & pop) {}
 		
+		///Holder function for additional updates that can be done (to be changed by the user)
+		virtual void updateForMoveExtra(const population<Space> & pop) {}
+
+		///Holder function for additional updates that can be done (to be changed by the user)
+		virtual void updateEndExtra(const population<Space> & pop) {}
 		
 		///The function called from within the sampler object which combines the two
 		void updateForMCMC(const population<Space> & pop) {
@@ -65,7 +108,16 @@ namespace smc {
 			updateForMCMCExtra(pop);
 		}
 
-
+		///The function called from within the sampler object which combines the two
+		void updateForMove(const population<Space> & pop) {
+			updateForMoveBase(pop);
+			updateForMoveExtra(pop);
+		}
+		///The function called from within the sampler object which combines the two
+		void updateEnd(const population<Space> & pop) {
+			updateEndBase(pop);
+			updateEndExtra(pop);
+		}
 	};
 }
 
