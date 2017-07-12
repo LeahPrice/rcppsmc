@@ -72,7 +72,7 @@ Rcpp::DataFrame nonLinPMMH_cpp(arma::vec data, unsigned long lNumber, unsigned l
 	
 	// Getting a particle filtering estimate of the log likelihood.
 	smc::moveset<double> Moveset(fInitialise, fMove, NULL);
-    Sampler.SetSMCParams(ResampleType::MULTINOMIAL, 0.5);
+    Sampler.SetResampParams(ResampleType::MULTINOMIAL, 0.5);
     Sampler.SetMoveSet(Moveset);
     Sampler.Initialise();
 	Sampler.IterateUntil(lIterates-1);

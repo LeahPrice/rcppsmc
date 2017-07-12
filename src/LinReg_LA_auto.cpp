@@ -59,13 +59,14 @@ Rcpp::List LinRegLA_auto_cpp(arma::mat data, unsigned long inlNumber, double res
 		mean_x = arma::sum(y.data_x)/lIterates;
 		
 		
-		myParams = new rad_params(lNumber,ResampleType::SYSTEMATIC, resampTol);
+		myParams = new rad_params;
 		//Initialise and run the sampler
 		smc::sampler<rad_state> Sampler(lNumber, HistoryType::RAM);
 		smc::moveset<rad_state> Moveset(fInitialise, fMove, fMCMC);
 		
-		Sampler.SetSMCParams(myParams);
+		Sampler.SetResampParams(ResampleType::SYSTEMATIC, resampTol);
 		Sampler.SetMoveSet(Moveset);
+		Sampler.SetAdaptSet(myParams);
 		Sampler.Initialise();
 		
 		std::vector<double> temps;
@@ -78,7 +79,7 @@ Rcpp::List LinRegLA_auto_cpp(arma::mat data, unsigned long inlNumber, double res
 		long n = 0;
 		Rcpp::Rcout << "Current temperature is : " << myParams->GetTemp() << std::endl;
 		
-		while (myParams->GetDone() == 0){
+		while (myParams->GetTemp() != 1){
 			n++;
 			Sampler.Iterate();
 			Rcpp::Rcout << "Current temperature is : " << myParams->GetTemp() << std::endl;

@@ -69,7 +69,7 @@ Rcpp::List pfLineartBS_cpp(arma::mat data, unsigned long inlNumber, bool useF, R
 		
 		
 		//Sampler.SetSMCParams(ResampleType::RESIDUAL, 0.5);
-		Sampler.SetSMCParams(ResampleType::RESIDUAL, 0.999);
+		Sampler.SetResampParams(ResampleType::RESIDUAL, 0.999);
 		Sampler.SetMoveSet(Moveset);
 		Sampler.Initialise();
 		

@@ -32,24 +32,12 @@
 #include <RcppArmadillo.h>
 #include <population.h>
 
-///Specifiers for various resampling algorithms:
-namespace ResampleType
-{
-	enum Enum {MULTINOMIAL = 0, 
-		RESIDUAL, 
-		STRATIFIED, 
-		SYSTEMATIC };
-};
 
 namespace smc {
 
 	///A class which contains the algorithm parameters.
 	template <class Space> class algParam {
-	private:
-		long myN;
-		ResampleType::Enum myResample;
-		double myResampleThreshold;
-		
+	private:		
 		///A base update function (updates that are always done)
 		void updateForMCMCBase(const population<Space> & pop) {}
 		
@@ -62,35 +50,9 @@ namespace smc {
 		
 		
 	public:
-		///Initialise the algorithm parameters
-		algParam(void){};
-		
-		///Initialise the algorithm parameters
-		algParam(long n) : myN(n), myResample(ResampleType::STRATIFIED), myResampleThreshold(0.5*n){};
-		
-		///Initialise the algorithm parameters
-		algParam(long n, ResampleType::Enum restype, double resthresh) : myN(n), myResample(restype), myResampleThreshold(resthresh){};
-		
-		void SetN(long n){ myN = n;}
-		
-		long GetN(void){return myN;}
-		
-		void SetResThresh(double dThreshold){
-		if(dThreshold < 1)
-		 myResampleThreshold = dThreshold * myN;
-		else
-		myResampleThreshold = dThreshold;
-		}
-		
-		double GetResThresh(void){return myResampleThreshold;}
-		
-		void SetResample(ResampleType::Enum inRes){ myResample = inRes;}
-		
-		ResampleType::Enum GetResample(void){return myResample;}
 		
 		///Free the workspace allocated for the algorithm parameters
 		virtual ~algParam() {
-			
 		}
 
 		///Holder function for additional updates that can be done (to be changed by the user)

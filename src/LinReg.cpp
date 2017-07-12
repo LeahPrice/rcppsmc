@@ -65,7 +65,7 @@ Rcpp::List LinReg_cpp(arma::mat data, unsigned long inlNumber) {
 		smc::sampler<rad_state> Sampler(lNumber, HistoryType::RAM);  
 		smc::moveset<rad_state> Moveset(fInitialise, fMove, fMCMC);
 		
-		Sampler.SetSMCParams(ResampleType::SYSTEMATIC, 0.5);
+		Sampler.SetResampParams(ResampleType::SYSTEMATIC, 0.5);
 		Sampler.SetMoveSet(Moveset);
 		Sampler.Initialise();
 		

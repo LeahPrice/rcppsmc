@@ -61,19 +61,17 @@ namespace LinReg_LA_auto {
 	private:
 		double temp_curr;
 		double temp_previous;
-		bool done;
 		arma::mat cholCov;
 	public:
 		
-		rad_params(long n, ResampleType::Enum restype, double resthresh) : algParam(n,restype,resthresh) {temp_curr = 0; temp_previous = 0; done = 0;}
+		rad_params() {temp_curr = 0; temp_previous = 0;}
 		
 		///Returns a random number generated from a Beta distribution with the specified parameters.
 		void updateForMoveExtra(const smc::population<rad_state> & pop) {
-			if (CESSdiff(pop,1-temp_curr,rho*this->GetN())>=0){
+			if (CESSdiff(pop,1-temp_curr,rho*pop.GetN())>=0){
 				temp_curr = 1;
-				done = 1;
 			} else {
-				temp_curr = bisection(temp_curr, temp_curr, 1, pop, rho*this->GetN());
+				temp_curr = bisection(temp_curr, temp_curr, 1, pop, rho*pop.GetN());
 			}
 		}
 		
@@ -89,7 +87,6 @@ namespace LinReg_LA_auto {
 		
 		double GetTemp(void){return temp_curr;}
 		double GetTempPrevious(void){return temp_previous;}
-		double GetDone(void){return done;}
 		arma::mat GetCholCov(void){return cholCov;}
 		
 		///Free the workspace allocated for the algorithm parameters
@@ -129,17 +126,17 @@ namespace LinReg_LA_auto {
 			long double sum1 = 0;
 			long double sum2 = 0;
 
-			for(int i = 0; i < this->GetN(); i++) {
+			for(int i = 0; i < pop.GetN(); i++) {
 				sum1 += expl(pop.GetLogWeightN(i) + multiplier*pop.GetValueN(i).loglike);
 				sum2 += expl(pop.GetLogWeightN(i) + 2*multiplier*pop.GetValueN(i).loglike);
 			}
 
-			return expl(log(this->GetN()) + 2*log(sum1) - log(sum2)) - desiredCESS;
+			return expl(log(pop.GetN()) + 2*log(sum1) - log(sum2)) - desiredCESS;
 		}
 		
 		/// Gets the cholesky decomposition of the current covariance matrix
 		void calcCholCov(const smc::population<rad_state> & pop){
-			long N = this->GetN();
+			long N = pop.GetN();
 			arma::vec normWeights = exp(pop.GetLogWeight() - log(sum(exp(pop.GetLogWeight()))));
 			arma::mat thetaMat(N,3);
 			for (long i=0; i<N; i++){

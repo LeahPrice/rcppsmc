@@ -1,3 +1,20 @@
+2017-07-12  Leah South  <leah.south@hdr.qut.edu.au>
+
+	* inst/include/algParams.h: Moving basic parameters out of algParams and back into sampler.
+	* inst/include/sampler.h: Idem.
+	
+	* inst/include/population.h: Adding a function GetN() to get the number of particles from the
+	  population object.
+	* inst/include/LinReg_LA_auto.h: Using GetN() from population object instead of parameter adaptation object
+	
+	* src/LinReg_LA_auto.cpp: Changing SetSMCParams back to SetResampParams and calling SetAdaptSet
+	* src/blockpfgaussianopt.cpp: Changing SetSMCParams back to SetResampParams
+	* src/LinReg.cpp: Idem
+	* src/LinReg_LA.cpp: Idem
+	* src/nonLinPMMH.cpp: Idem
+	* src/pflineart.cpp: Idem
+	* src/pfnonlinbs.cpp: Idem
+
 2017-07-11  Leah South  <leah.south@hdr.qut.edu.au>
 
 	* inst/include/algParams.h: Bringing in some basic parameters and adding more virtual functions

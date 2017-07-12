@@ -56,6 +56,8 @@ namespace smc {
 		~population();
 
 		/// Returns the population values 
+		long GetN(void) const {return logweight.n_rows;}
+		/// Returns the population values 
 		const std::vector<Space> & GetValue(void) const {return value;}
 		/// Returns the value of the nth particle in the population
 		const Space & GetValueN(int n) const {return value[n];}

@@ -40,6 +40,15 @@
 #include "population.h"
 #include "smc-exception.h"
 
+///Specifiers for various resampling algorithms:
+namespace ResampleType
+{
+	enum Enum {MULTINOMIAL = 0, 
+		RESIDUAL, 
+		STRATIFIED, 
+		SYSTEMATIC };
+};
+
 ///Specifiers for various path sampling methods:
 namespace PathSamplingType
 {
@@ -68,6 +77,11 @@ namespace smc {
 		///The current evolution time of the system.
 		long T;
 		
+		///The resampling mode which is to be employed.
+		ResampleType::Enum rtResampleMode;
+		///The effective sample size at which resampling should be used.
+		double dResampleThreshold;
+
 		///Structure used internally for resampling.
 		arma::vec dRSWeights;
 		///Structure used internally for resampling.
@@ -158,9 +172,9 @@ namespace smc {
 		///Sets the entire moveset to the one which is supplied
 		void SetMoveSet(moveset<Space>& pNewMoveset) {Moves = pNewMoveset;}
 		///Set Resampling Parameters
-		void SetSMCParams(ResampleType::Enum rtMode, double dThreshold);
-		///Set Resampling Parameters
-		void SetSMCParams(algParam<Space>* inParams);
+		void SetResampParams(ResampleType::Enum rtMode, double dThreshold);
+		///Set Adaptation Parameters
+		void SetAdaptSet(algParam<Space>* inParams);
 		///Dump a specified particle to the specified output stream in a human readable form
 		const std::ostream & StreamParticle(std::ostream & os, long n) const;
 		///Dump the entire particle set to the specified output stream in a human readable form
@@ -180,24 +194,24 @@ namespace smc {
 		void Multinomial(unsigned n, unsigned k, arma::vec w, unsigned int * X);		
 		
 
-protected:
-	///Returns the crude normalising constant ratio estimate implied by the weights.
-	double CalcLogNC(void) const;
-};
+	protected:
+		///Returns the crude normalising constant ratio estimate implied by the weights.
+		double CalcLogNC(void) const;
+	};
 
-template <class Space>
-void sampler<Space>::Multinomial(unsigned n, unsigned k, arma::vec w, unsigned int * X) {		
-	Rcpp::IntegerVector v(k);
-	w = w/arma::sum(w);
-	
-	double * w_mem = w.memptr();
-	
-	// R sources:  rmultinom(int n, double* prob, int K, int* rN);
-	rmultinom(static_cast<int>(n), const_cast<double*>(w_mem), static_cast<int>(k), &(v[0]));
-	
-	for (unsigned int i=0; i<k; i++) {
-		X[i] = static_cast<unsigned int>(v[i]);
-	}	
+	template <class Space>
+	void sampler<Space>::Multinomial(unsigned n, unsigned k, arma::vec w, unsigned int * X) {		
+		Rcpp::IntegerVector v(k);
+		w = w/arma::sum(w);
+		
+		double * w_mem = w.memptr();
+		
+		// R sources:  rmultinom(int n, double* prob, int K, int* rN);
+		rmultinom(static_cast<int>(n), const_cast<double*>(w_mem), static_cast<int>(k), &(v[0]));
+		
+		for (unsigned int i=0; i<k; i++) {
+			X[i] = static_cast<unsigned int>(v[i]);
+		}	
 	}
 
 
@@ -210,16 +224,23 @@ void sampler<Space>::Multinomial(unsigned n, unsigned k, arma::vec w, unsigned i
 	/// \tparam Space The class used to represent a point in the sample space.
 	template <class Space>
 	sampler<Space>::sampler(long lSize, HistoryType::Enum htHM)
-	{N = lSize;
-	pAlgParams = new algParam<Space>(lSize);
+	{
+		N = lSize;
+		pAlgParams = NULL;
 		uRSCount = arma::zeros<arma::Col<unsigned int> >((int)N);
+		
+		//Some workable defaults.
 		htHistoryMode = htHM;
+		rtResampleMode = ResampleType::STRATIFIED;
+		dResampleThreshold = 0.5 * N;
+
 	}
 
 	template <class Space>
 	sampler<Space>::~sampler()
 	{
-		delete pAlgParams;
+		if (pAlgParams)
+			delete pAlgParams;
 	}
 
 
@@ -285,12 +306,14 @@ void sampler<Space>::Multinomial(unsigned n, unsigned k, arma::vec w, unsigned i
 		//Normalise the weights to sensible values....
 		pPopulation.SetLogWeight(pPopulation.GetLogWeight() - dlogNCIt*arma::ones(N));
 		
-		pAlgParams->updateForMCMC(pPopulation);
+		if (pAlgParams)
+			pAlgParams->updateForMCMC(pPopulation);
+		
 		//Check if the ESS is below some reasonable threshold and resample if necessary.
 		double ESS = GetESS();
-		if(ESS < pAlgParams->GetResThresh()) {
+		if(ESS < dResampleThreshold) {
 			nResampled = 1;
-			Resample(pAlgParams->GetResample());
+			Resample(rtResampleMode);
 		}
 		else {
 			nResampled = 0;
@@ -307,7 +330,9 @@ void sampler<Space>::Multinomial(unsigned n, unsigned k, arma::vec w, unsigned i
 			
 		}  
 		
-		pAlgParams->updateEnd(pPopulation);
+		if (pAlgParams)
+			pAlgParams->updateEnd(pPopulation);
+
 		return;
 	}
 
@@ -458,7 +483,9 @@ void sampler<Space>::Multinomial(unsigned n, unsigned k, arma::vec w, unsigned i
 	double sampler<Space>::IterateEss(void)
 	{
 		nAccepted = 0;
-		pAlgParams->updateForMove(pPopulation);
+		
+		if (pAlgParams)
+			pAlgParams->updateForMove(pPopulation);
 		//Move the particle set.
 		MovePopulations();
 
@@ -469,13 +496,15 @@ void sampler<Space>::Multinomial(unsigned n, unsigned k, arma::vec w, unsigned i
 		//Normalise the weights
 		pPopulation.SetLogWeight(pPopulation.GetLogWeight()  - dlogNCIt*arma::ones(N));
 
-		pAlgParams->updateForMCMC(pPopulation);
+		
+		if (pAlgParams)
+			pAlgParams->updateForMCMC(pPopulation);
 		//Check if the ESS is below some reasonable threshold and resample if necessary.
 		//A mechanism for setting this threshold is required.
 		double ESS = GetESS();
-		if(ESS < pAlgParams->GetResThresh()) {
+		if(ESS < dResampleThreshold) {
 			nResampled = 1;
-			Resample(pAlgParams->GetResample());
+			Resample(rtResampleMode);
 		}
 		else
 		nResampled = 0;
@@ -492,7 +521,8 @@ void sampler<Space>::Multinomial(unsigned n, unsigned k, arma::vec w, unsigned i
 			//History.emplace_back(historyelement<population<Space> >(N, pPopulation, nAccepted, historyflags(nResampled)));
 		}
 		
-		pAlgParams->updateEnd(pPopulation);
+		if (pAlgParams)
+			pAlgParams->updateEnd(pPopulation);
 
 		return ESS;
 	}
@@ -627,18 +657,21 @@ void sampler<Space>::Multinomial(unsigned n, unsigned k, arma::vec w, unsigned i
 	///
 	/// The dThreshold parameter can be set to a value in the range [0,1) corresponding to a fraction of the size of
 	/// the particle set or it may be set to an integer corresponding to an actual effective sample size.
-
-	template <class Space>
-	void sampler<Space>::SetSMCParams(algParam<Space>* inParams)
-	{
-		pAlgParams = inParams; //later want to add lSize, history type to this
-	}
 	
 	template <class Space>
-	void sampler<Space>::SetSMCParams(ResampleType::Enum rtMode, double dThreshold)
+	void sampler<Space>::SetResampParams(ResampleType::Enum rtMode, double dThreshold)
 	{
-		pAlgParams->SetResample(rtMode);
-		pAlgParams->SetResThresh(dThreshold);
+		rtResampleMode = rtMode;
+		if(dThreshold < 1)
+		dResampleThreshold = dThreshold * N;
+		else
+		dResampleThreshold = dThreshold;
+	}
+
+	template <class Space>
+	void sampler<Space>::SetAdaptSet(algParam<Space>* inParams)
+	{
+		pAlgParams = inParams; //later want to add lSize, history type to this
 	}
 
 	template <class Space>
