@@ -82,7 +82,7 @@ namespace LinReg_LA_auto {
 		
 	};
 	
-	rad_adapt * myParams;
+	smc::algParam<rad_state,smc::staticModelAdapt> * myParams;
 	
 	
 	
