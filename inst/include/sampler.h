@@ -39,6 +39,7 @@
 #include "algParam.h"
 #include "population.h"
 #include "smc-exception.h"
+#include "staticModelAdapt.h"
 
 ///Specifiers for various resampling algorithms:
 namespace ResampleType
@@ -65,10 +66,14 @@ namespace HistoryType
 		RAM};
 };
 
+class nullParams{
+	
+};
+
 namespace smc {
 
 	/// A template class for an interacting particle system suitable for SMC sampling
-	template <class Space> 
+	template <class Space, class Params = nullParams> 
 	class sampler
 	{
 	protected:
@@ -94,7 +99,7 @@ namespace smc {
 		///The set of moves available.
 		moveset<Space> Moves;
 		///The algorithm parameters.
-		algParam<Space>* pAlgParams;
+		algParam<Space,Params>* pAlgParams;
 		///The historical process associated with the particle system.
 		std::vector<historyelement< population<Space> > > History;
 
@@ -113,6 +118,8 @@ namespace smc {
 	public:
 		///Create a particle system containing lSize uninitialised particles with the specified mode.
 		sampler(long lSize, HistoryType::Enum htHistoryMode);
+		///Create a particle system containing lSize uninitialised particles with the specified mode.
+		sampler(long lSize, HistoryType::Enum htHistoryMode, algParam<Space,Params>* inParams);
 		///Dispose of a sampler.
 		~sampler();
 		///Calculates and Returns the Effective Sample Size.
@@ -122,7 +129,7 @@ namespace smc {
 		///Returns a pointer to the History of the particle system
 		const std::vector<historyelement< population<Space> > > & GetHistory(void) const { return History; }
 		///Returns a pointer to the algorithm parameters
-		algParam<Space> * GetAlgs(void) const { return pAlgParams; }																											   
+		algParam<Space,Params> * GetAlgs(void) const { return pAlgParams; }																											   
 		///Returns the current estimate of the log normalising constant ratio over the entire path
 		double GetLogNCPath(void) const { return dlogNCPath; }
 		///Returns the current estimate of the log normalising constant ratio over the last step
@@ -173,8 +180,8 @@ namespace smc {
 		void SetMoveSet(moveset<Space>& pNewMoveset) {Moves = pNewMoveset;}
 		///Set Resampling Parameters
 		void SetResampParams(ResampleType::Enum rtMode, double dThreshold);
-		///Set Adaptation Parameters
-		void SetAdaptSet(algParam<Space>* inParams);
+		// ///Set Adaptation Parameters
+		// void SetAdaptSet(algParam<Space,Params>* inParams);
 		///Dump a specified particle to the specified output stream in a human readable form
 		const std::ostream & StreamParticle(std::ostream & os, long n) const;
 		///Dump the entire particle set to the specified output stream in a human readable form
@@ -187,9 +194,9 @@ namespace smc {
 
 	private:
 		///Duplication of smc::sampler is not currently permitted.
-		sampler(const sampler<Space> & sFrom);
+		sampler(const sampler<Space,Params> & sFrom);
 		///Duplication of smc::sampler is not currently permitted.
-		sampler<Space> & operator=(const sampler<Space> & sFrom);
+		sampler<Space,Params> & operator=(const sampler<Space,Params> & sFrom);
 		///Generate a multinomial random vector with parameters (n,w[1:k]) and store it in X
 		void Multinomial(unsigned n, unsigned k, arma::vec w, unsigned int * X);		
 		
@@ -199,8 +206,8 @@ namespace smc {
 		double CalcLogNC(void) const;
 	};
 
-	template <class Space>
-	void sampler<Space>::Multinomial(unsigned n, unsigned k, arma::vec w, unsigned int * X) {		
+	template <class Space, class Params>
+	void sampler<Space,Params>::Multinomial(unsigned n, unsigned k, arma::vec w, unsigned int * X) {		
 		Rcpp::IntegerVector v(k);
 		w = w/arma::sum(w);
 		
@@ -222,11 +229,25 @@ namespace smc {
 	/// \param lSize The number of particles present in the ensemble (at time 0 if this is a variable quantity)
 	/// \param htHM The history mode to use: set this to HistoryType::RAM to store the whole history of the system and SMC_HISTORY_NONE to avoid doing so.
 	/// \tparam Space The class used to represent a point in the sample space.
-	template <class Space>
-	sampler<Space>::sampler(long lSize, HistoryType::Enum htHM)
+	template <class Space, class Params>
+	sampler<Space,Params>::sampler(long lSize, HistoryType::Enum htHM)
 	{
 		N = lSize;
-		pAlgParams = NULL;
+		pAlgParams = new algParam<Space,Params>;
+		uRSCount = arma::zeros<arma::Col<unsigned int> >((int)N);
+		
+		//Some workable defaults.
+		htHistoryMode = htHM;
+		rtResampleMode = ResampleType::STRATIFIED;
+		dResampleThreshold = 0.5 * N;
+
+	}
+	
+	template <class Space, class Params>
+	sampler<Space,Params>::sampler(long lSize, HistoryType::Enum htHM, algParam<Space,Params>* inParams)
+	{
+		N = lSize;
+		pAlgParams = inParams;
 		uRSCount = arma::zeros<arma::Col<unsigned int> >((int)N);
 		
 		//Some workable defaults.
@@ -236,16 +257,15 @@ namespace smc {
 
 	}
 
-	template <class Space>
-	sampler<Space>::~sampler()
+	template <class Space, class Params>
+	sampler<Space,Params>::~sampler()
 	{
-		if (pAlgParams)
-			delete pAlgParams;
+		delete pAlgParams;
 	}
 
 
-	template <class Space>
-	double sampler<Space>::GetESS(void) const
+	template <class Space, class Params>
+	double sampler<Space,Params>::GetESS(void) const
 	{
 		double sum = arma::sum(exp(pPopulation.GetLogWeight()));
 		double sumsq = arma::sum(exp(2.0*pPopulation.GetLogWeight()));
@@ -256,8 +276,8 @@ namespace smc {
 
 
 	/// Returns the effective sample size of the specified particle generation.
-	template <class Space>
-	double  sampler<Space>::GetESS(long lGeneration) const
+	template <class Space, class Params>
+	double  sampler<Space,Params>::GetESS(long lGeneration) const
 	{
 		typename std::vector<historyelement<population<Space> > >::const_iterator it = History.begin();
 		std::advance(it,lGeneration);
@@ -265,8 +285,8 @@ namespace smc {
 	}
 
 
-	template <class Space>
-	double sampler<Space>::CalcLogNC(void) const
+	template <class Space, class Params>
+	double sampler<Space,Params>::CalcLogNC(void) const
 	{
 		double dMaxWeight = arma::max(pPopulation.GetLogWeight());
 		double sum = arma::sum(exp(pPopulation.GetLogWeight() - dMaxWeight*arma::ones(N)));
@@ -283,8 +303,8 @@ namespace smc {
 	///
 	/// Note that the initialisation function must be specified before calling this function.
 
-	template <class Space>
-	void sampler<Space>::Initialise(void)
+	template <class Space, class Params>
+	void sampler<Space,Params>::Initialise(void)
 	{
 		T = 0;
 		dlogNCIt = 0;
@@ -306,8 +326,7 @@ namespace smc {
 		//Normalise the weights to sensible values....
 		pPopulation.SetLogWeight(pPopulation.GetLogWeight() - dlogNCIt*arma::ones(N));
 		
-		if (pAlgParams)
-			pAlgParams->updateForMCMC(pPopulation);
+		pAlgParams->updateForMCMC(pPopulation);
 		
 		//Check if the ESS is below some reasonable threshold and resample if necessary.
 		double ESS = GetESS();
@@ -330,8 +349,7 @@ namespace smc {
 			
 		}  
 		
-		if (pAlgParams)
-			pAlgParams->updateEnd(pPopulation);
+		pAlgParams->updateEnd(pPopulation);
 
 		return;
 	}
@@ -343,8 +361,8 @@ namespace smc {
 	/// \param pIntegrand The function to integrate with respect to the particle set 
 	/// \param pAuxiliary A pointer to any auxiliary data which should be passed to the function
 
-	template <class Space>
-	double sampler<Space>::Integrate(double(*pIntegrand)(const Space&,void*), void * pAuxiliary) const
+	template <class Space, class Params>
+	double sampler<Space,Params>::Integrate(double(*pIntegrand)(const Space&,void*), void * pAuxiliary) const
 	{
 		long double rValue = 0;
 		for(int i =0; i < N; i++)
@@ -382,8 +400,8 @@ namespace smc {
 	/// \param pWidth      The function which returns the width of the path sampling grid at the specified evolution time. The final argument is always pAuxiliary
 	/// \param pAuxiliary  A pointer to auxiliary data to pass to both of the above functions
 
-	template <class Space>
-	double sampler<Space>::IntegratePathSampling(PathSamplingType::Enum PStype, double (*pIntegrand)(long,const population<Space> &,long,void*), double (*pWidth)(long,void*), void* pAuxiliary)
+	template <class Space, class Params>
+	double sampler<Space,Params>::IntegratePathSampling(PathSamplingType::Enum PStype, double (*pIntegrand)(long,const population<Space> &,long,void*), double (*pWidth)(long,void*), void* pAuxiliary)
 	{
 		if(htHistoryMode == HistoryType::NONE)
 		throw SMC_EXCEPTION(SMCX_MISSING_HISTORY, "The path sampling integral cannot be computed as the history of the system was not stored.");
@@ -456,15 +474,15 @@ namespace smc {
 	///         -# performs a mcmc step if required
 	///         -# appends the current particle set to the history if desired
 	///         -# increments the current evolution time
-	template <class Space>
-	void sampler<Space>::Iterate(void)
+	template <class Space, class Params>
+	void sampler<Space,Params>::Iterate(void)
 	{
 		IterateEss();
 		return;
 	}
 
-	template <class Space>
-	void sampler<Space>::IterateBack(void)
+	template <class Space, class Params>
+	void sampler<Space,Params>::IterateBack(void)
 	{
 		if(htHistoryMode == HistoryType::NONE)
 		throw SMC_EXCEPTION(SMCX_MISSING_HISTORY, "An attempt to undo an iteration was made; unforunately, the system history has not been stored.");
@@ -479,13 +497,12 @@ namespace smc {
 		return;
 	}
 
-	template <class Space>
-	double sampler<Space>::IterateEss(void)
+	template <class Space, class Params>
+	double sampler<Space,Params>::IterateEss(void)
 	{
 		nAccepted = 0;
 		
-		if (pAlgParams)
-			pAlgParams->updateForMove(pPopulation);
+		pAlgParams->updateForMove(pPopulation);
 		//Move the particle set.
 		MovePopulations();
 
@@ -496,9 +513,7 @@ namespace smc {
 		//Normalise the weights
 		pPopulation.SetLogWeight(pPopulation.GetLogWeight()  - dlogNCIt*arma::ones(N));
 
-		
-		if (pAlgParams)
-			pAlgParams->updateForMCMC(pPopulation);
+		pAlgParams->updateForMCMC(pPopulation);
 		//Check if the ESS is below some reasonable threshold and resample if necessary.
 		//A mechanism for setting this threshold is required.
 		double ESS = GetESS();
@@ -521,27 +536,26 @@ namespace smc {
 			//History.emplace_back(historyelement<population<Space> >(N, pPopulation, nAccepted, historyflags(nResampled)));
 		}
 		
-		if (pAlgParams)
-			pAlgParams->updateEnd(pPopulation);
+		pAlgParams->updateEnd(pPopulation);
 
 		return ESS;
 	}
 
-	template <class Space>
-	void sampler<Space>::IterateUntil(long lTerminate)
+	template <class Space, class Params>
+	void sampler<Space,Params>::IterateUntil(long lTerminate)
 	{
 		while(T < lTerminate)
 		Iterate();
 	}
 
-	template <class Space>
-	void sampler<Space>::MovePopulations(void)
+	template <class Space, class Params>
+	void sampler<Space,Params>::MovePopulations(void)
 	{
 		Moves.DoMove(T+1,pPopulation, N);
 	}
 
-	template <class Space>
-	void sampler<Space>::Resample(ResampleType::Enum lMode)
+	template <class Space, class Params>
+	void sampler<Space,Params>::Resample(ResampleType::Enum lMode)
 	{
 		//Resampling is done in place.
 		unsigned uMultinomialCount;
@@ -658,8 +672,8 @@ namespace smc {
 	/// The dThreshold parameter can be set to a value in the range [0,1) corresponding to a fraction of the size of
 	/// the particle set or it may be set to an integer corresponding to an actual effective sample size.
 	
-	template <class Space>
-	void sampler<Space>::SetResampParams(ResampleType::Enum rtMode, double dThreshold)
+	template <class Space, class Params>
+	void sampler<Space,Params>::SetResampParams(ResampleType::Enum rtMode, double dThreshold)
 	{
 		rtResampleMode = rtMode;
 		if(dThreshold < 1)
@@ -668,14 +682,14 @@ namespace smc {
 		dResampleThreshold = dThreshold;
 	}
 
-	template <class Space>
-	void sampler<Space>::SetAdaptSet(algParam<Space>* inParams)
-	{
-		pAlgParams = inParams; //later want to add lSize, history type to this
-	}
+	// template <class Space, class Params>
+	// void sampler<Space,Params>::SetAdaptSet(algParam<Space,Params>* inParams)
+	// {
+		// pAlgParams = inParams; //later want to add lSize, history type to this
+	// }
 
-	template <class Space>
-	const std::ostream & sampler<Space>::StreamParticle(std::ostream & os, long n) const
+	template <class Space, class Params>
+	const std::ostream & sampler<Space,Params>::StreamParticle(std::ostream & os, long n) const
 	{
 		Space val = pPopulation.GetValueN(n);
 		double weight = pPopulation.GetWeightN(n);
@@ -683,8 +697,8 @@ namespace smc {
 		return os;
 	}
 
-	template <class Space>
-	const std::ostream & sampler<Space>::StreamParticles(std::ostream & os) const
+	template <class Space, class Params>
+	const std::ostream & sampler<Space,Params>::StreamParticles(std::ostream & os) const
 	{
 		Space value;
 		double weight;
@@ -701,8 +715,8 @@ namespace smc {
 	/// the number of moves accepted at each time instant.
 	///
 	/// \param os The output stream to send the data to.
-	template <class Space>
-	void sampler<Space>:: OstreamMCMCRecordToStream(std::ostream &os) const
+	template <class Space, class Params>
+	void sampler<Space,Params>:: OstreamMCMCRecordToStream(std::ostream &os) const
 	{
 		os << "Accepted MCMC proposals history:" << std::endl;
 		os << "======================" << std::endl;
@@ -714,8 +728,8 @@ namespace smc {
 	/// the value 1 for those time instances when resampling occured and 0 otherwise.
 	///
 	/// \param os The output stream to send the data to.
-	template <class Space>
-	void sampler<Space>:: OstreamResamplingRecordToStream(std::ostream &os) const
+	template <class Space, class Params>
+	void sampler<Space,Params>:: OstreamResamplingRecordToStream(std::ostream &os) const
 	{
 		os << "Resampling history:" << std::endl;
 		os << "======================" << std::endl;
@@ -739,8 +753,8 @@ namespace std {
 
 	/// \param os The output stream to which the display should be made.
 	/// \param s  The sampler which is to be displayed.
-	template <class Space>
-	std::ostream & operator<< (std::ostream & os, smc::sampler<Space> & s)
+	template <class Space, class Params>
+	std::ostream & operator<< (std::ostream & os, smc::sampler<Space,Params> & s)
 	{
 		os << "Sampler Configuration:" << std::endl;
 		os << "======================" << std::endl;

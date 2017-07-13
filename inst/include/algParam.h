@@ -36,18 +36,10 @@
 namespace smc {
 
 	///A class which contains the algorithm parameters.
-	template <class Space> class algParam {
-	private:		
-		///A base update function (updates that are always done)
-		void updateForMCMCBase(const population<Space> & pop) {}
+	template <class Space, class Params> class algParam {
 		
-		///A base update function (updates that are always done)
-		void updateForMoveBase(const population<Space> & pop) {}
-		
-		///A base update function (updates that are always done)
-		void updateEndBase(const population<Space> & pop) {}
-		
-		
+	protected:
+		Params param;
 		
 	public:
 		
@@ -55,31 +47,17 @@ namespace smc {
 		virtual ~algParam() {
 		}
 
-		///Holder function for additional updates that can be done (to be changed by the user)
-		virtual void updateForMCMCExtra(const population<Space> & pop) {}
+		///Holder function for updates to be done before the MCMC step
+		virtual void updateForMCMC(const population<Space> & pop) {}
 		
-		///Holder function for additional updates that can be done (to be changed by the user)
-		virtual void updateForMoveExtra(const population<Space> & pop) {}
+		///Holder function for updates to be done before the move step
+		virtual void updateForMove(const population<Space> & pop) {}
 
-		///Holder function for additional updates that can be done (to be changed by the user)
-		virtual void updateEndExtra(const population<Space> & pop) {}
+		///Holder function for updates to be done at the end of each iteration
+		virtual void updateEnd(const population<Space> & pop) {}
 		
-		///The function called from within the sampler object which combines the two
-		void updateForMCMC(const population<Space> & pop) {
-			updateForMCMCBase(pop);
-			updateForMCMCExtra(pop);
-		}
-
-		///The function called from within the sampler object which combines the two
-		void updateForMove(const population<Space> & pop) {
-			updateForMoveBase(pop);
-			updateForMoveExtra(pop);
-		}
-		///The function called from within the sampler object which combines the two
-		void updateEnd(const population<Space> & pop) {
-			updateEndBase(pop);
-			updateEndExtra(pop);
-		}
+		///To get the values of the parameters
+		Params GetParams(void){return param;}
 	};
 }
 

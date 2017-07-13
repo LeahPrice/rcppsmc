@@ -1,3 +1,13 @@
+2017-07-13  Leah South  <leah.south@hdr.qut.edu.au>
+
+	* inst/include/algParams.h: Adding template argument for parameter type
+	* inst/include/sampler.h: Idem.
+	* inst/include/staticModelAdapt: Adding a new class of parameters that might be useful in
+	  adaptation for static models
+	
+	* inst/include/LinReg_LA_auto.h: Adding template argument for parameters and using the class set up in staticModelAdapt
+	* src/LinReg_LA_auto.cpp: Idem.
+
 2017-07-12  Leah South  <leah.south@hdr.qut.edu.au>
 
 	* inst/include/algParams.h: Moving basic parameters out of algParams and back into sampler.

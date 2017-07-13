@@ -59,31 +59,31 @@ Rcpp::List LinRegLA_auto_cpp(arma::mat data, unsigned long inlNumber, double res
 		mean_x = arma::sum(y.data_x)/lIterates;
 		
 		
-		myParams = new rad_params;
+		myParams = new rad_adapt;
 		//Initialise and run the sampler
-		smc::sampler<rad_state> Sampler(lNumber, HistoryType::RAM);
+		smc::sampler<rad_state,smc::staticModelAdapt> Sampler(lNumber, HistoryType::RAM, myParams);
 		smc::moveset<rad_state> Moveset(fInitialise, fMove, fMCMC);
 		
 		Sampler.SetResampParams(ResampleType::SYSTEMATIC, resampTol);
 		Sampler.SetMoveSet(Moveset);
-		Sampler.SetAdaptSet(myParams);
+		//Sampler.SetAdaptSet(myParams);
 		Sampler.Initialise();
 		
 		std::vector<double> temps;
 		temps.push_back(0);
-		temps.push_back(myParams->GetTemp());
+		temps.push_back(myParams->GetParams().GetTemp());
 		
 		std::vector<double> ESS;
 		ESS.push_back(Sampler.GetESS());
 
 		long n = 0;
-		Rcpp::Rcout << "Current temperature is : " << myParams->GetTemp() << std::endl;
+		Rcpp::Rcout << "Current temperature is : " << myParams->GetParams().GetTemp() << std::endl;
 		
-		while (myParams->GetTemp() != 1){
+		while (myParams->GetParams().GetTemp() != 1){
 			n++;
 			Sampler.Iterate();
-			Rcpp::Rcout << "Current temperature is : " << myParams->GetTemp() << std::endl;
-			temps.push_back(myParams->GetTemp());
+			Rcpp::Rcout << "Current temperature is : " << myParams->GetParams().GetTemp() << std::endl;
+			temps.push_back(myParams->GetParams().GetTemp());
 			ESS.push_back(Sampler.GetESS());
 		}
 		
@@ -129,7 +129,7 @@ namespace LinReg_LA_auto {
 		value.theta(1) = R::rnorm(185.0,100.0);
 		value.theta(2) = log(pow(R::rgamma(3,pow(2.0*300.0*300.0,-1.0)),-1.0));
 		value.loglike = logLikelihood(value);
-		logweight = myParams->GetTemp()*value.loglike;
+		logweight = myParams->GetParams().GetTemp()*value.loglike;
 	}
 
 	///The move function.
@@ -139,7 +139,7 @@ namespace LinReg_LA_auto {
 	/// \param logweight	Refernce to the current particle log weight
 	void fMove(long lTime, rad_state & value, double & logweight)
 	{
-		logweight += (myParams->GetTemp() - myParams->GetTempPrevious())*value.loglike;
+		logweight += (myParams->GetParams().GetTemp() - myParams->GetParams().GetTempPrevious())*value.loglike;
 	}
 
 	///The proposal function.
@@ -157,11 +157,11 @@ namespace LinReg_LA_auto {
 		arma::mat randPrep(3,3);
 		
 		for (unsigned int j=0; j<10; j++){
-			value_prop.theta = value.theta + myParams->GetCholCov()*Rcpp::as<arma::vec>(Rcpp::rnorm(3));
+			value_prop.theta = value.theta + myParams->GetParams().GetCholCov()*Rcpp::as<arma::vec>(Rcpp::rnorm(3));
 			value_prop.loglike = logLikelihood(value_prop);
 			logprior_prop = logPrior(value_prop);
 			
-			MH_ratio = exp(myParams->GetTemp()*(value_prop.loglike - value.loglike) + logprior_prop - logprior_curr);
+			MH_ratio = exp(myParams->GetParams().GetTemp()*(value_prop.loglike - value.loglike) + logprior_prop - logprior_curr);
 			dRand = R::runif(0,1);
 			
 			if (MH_ratio>dRand){
