@@ -23,7 +23,6 @@
 // along with RcppSMC.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "smctc.h"
-#include <RcppArmadillo.h>
 
 
 namespace LinReg_LA_auto {
@@ -32,7 +31,6 @@ namespace LinReg_LA_auto {
 	{
 	public:
 		arma::vec theta; //alpha, beta, phi
-		//arma::vec::fixed<3> theta; //alpha, beta, phi
 		double loglike;
 	};
 
@@ -80,7 +78,6 @@ namespace LinReg_LA_auto {
 			param.SetTempPrevious(param.GetTemp());
 		}
 		
-		///Free the workspace allocated for the algorithm parameters
 		~rad_adapt() {};
 		
 	};

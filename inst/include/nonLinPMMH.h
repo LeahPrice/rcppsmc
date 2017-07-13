@@ -23,16 +23,15 @@
 
 
 #include "smctc.h"
-#include <RcppArmadillo.h>
-
-class parameters 
-{
-public:
-    double sigv, sigw;
-};
 
 namespace nonLinPMMH {
-    arma::vec y; //data
+
+	class parameters 
+	{
+	public:
+		double sigv, sigw;
+	};
+	arma::vec y; //data
 	
 	double logPrior(const parameters & proposal);
 	void fInitialise(double & value, double & logweight);

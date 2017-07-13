@@ -22,7 +22,6 @@
 
 
 #include "smctc.h"
-#include <RcppArmadillo.h>
 
 
 namespace LinReg {

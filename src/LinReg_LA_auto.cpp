@@ -34,7 +34,6 @@
 
 #include <iostream>
 #include <cmath>
-//#include <gsl/gsl_randist.h>
 
 namespace LinReg_LA_auto {
 	const double a_prior = 3.0;

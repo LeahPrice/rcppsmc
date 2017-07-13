@@ -33,7 +33,6 @@
 
 #include <iostream>
 #include <cmath>
-//#include <gsl/gsl_randist.h>
 
 namespace nonLinPMMH {
     const double a_prior = 0.01;

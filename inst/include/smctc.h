@@ -103,7 +103,7 @@
 
 ///
 ///    The classes and functions within this namespace are intended to be used for producing
-///    implemenetations of SMC samplers and related simulation techniques.
+///    implementations of SMC samplers and related simulation techniques.
 
 namespace smc {}
 

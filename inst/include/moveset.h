@@ -33,8 +33,8 @@
 #include "population.h"
 
 namespace smc {
+	
 	/// A template class for a set of moves for use in an SMC samplers framework.
-
 	template <class Space> class moveset
 	{
 	private:
@@ -154,7 +154,7 @@ namespace smc {
 		for (long i=0; i<N; i++){
 			(*pfInitialise)(pFrom.GetValueRefN(i),pFrom.GetLogWeightRefN(i));
 		}
-	};
+	}
 	
 	///Perform an MCMC move on the particles
 	template <class Space>

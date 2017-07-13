@@ -22,23 +22,22 @@
 // along with RcppSMC.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "smctc.h"
-#include <RcppArmadillo.h>
-
-class cv_state 
-{
-public:
-	double x_pos, y_pos;
-	double x_vel, y_vel;
-};
-
-class cv_obs
-{
-public:
-	arma::vec x_pos, y_pos;
-};
 
 
 namespace pflineart {
+	class cv_state 
+	{
+	public:
+		double x_pos, y_pos;
+		double x_vel, y_vel;
+	};
+
+	class cv_obs
+	{
+	public:
+		arma::vec x_pos, y_pos;
+	};
+
 	cv_obs y;
 	unsigned long lNumber;
 

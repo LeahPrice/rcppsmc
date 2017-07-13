@@ -26,7 +26,6 @@
 // along with RcppSMC.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "smctc.h"
-#include <RcppArmadillo.h>
 
 namespace nonlinbs {
 	long lNumber;

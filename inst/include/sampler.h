@@ -48,7 +48,7 @@ namespace ResampleType
 		RESIDUAL, 
 		STRATIFIED, 
 		SYSTEMATIC };
-};
+}
 
 ///Specifiers for various path sampling methods:
 namespace PathSamplingType
@@ -56,7 +56,7 @@ namespace PathSamplingType
 	enum Enum { TRAPEZOID2 = 0, 
 		TRAPEZOID1, 
 		RECTANGLE};
-};
+}
 
 
 ///Storage types for the history of the particle system. 
@@ -64,7 +64,7 @@ namespace HistoryType
 {
 	enum Enum {NONE = 0, 
 		RAM};
-};
+}
 
 class nullParams{
 	
@@ -118,8 +118,8 @@ namespace smc {
 	public:
 		///Create a particle system containing lSize uninitialised particles with the specified mode.
 		sampler(long lSize, HistoryType::Enum htHistoryMode);
-		///Create a particle system containing lSize uninitialised particles with the specified mode.
-		sampler(long lSize, HistoryType::Enum htHistoryMode, algParam<Space,Params>* inParams);
+		///Create a particle system containing lSize uninitialised particles with the specified mode and also set a pointer to the parameter adaptation class.
+		sampler(long lSize, HistoryType::Enum htHistoryMode, algParam<Space,Params>* adaptSet);
 		///Dispose of a sampler.
 		~sampler();
 		///Calculates and Returns the Effective Sample Size.
@@ -140,19 +140,19 @@ namespace smc {
 		double GetNCStep(void) const { return exp(dlogNCIt); }
 		///Returns the number of particles within the system.
 		long GetNumber(void) const {return N;}
-		///Returns the number of particles within the system.
+		///Returns the number of evolution times stored in the history
 		long GetHistoryLength(void) const {return History.size();}
-		///Return the values of particles
+		///Returns the values of particles
 		const std::vector<Space> &  GetPopulationValue(void) const { return pPopulation.GetValue(); }
-		///Return the values of particles
+		///Returns the current population object
 		const population<Space> &  GetPopulation(void) const { return pPopulation; }
-		///Return the values of particles
+		///Returns the value of particle n
 		const Space &  GetPopulationValueN(long n) const { return pPopulation.GetValueN(n); }
-		///Return the logarithmic unnormalized weights of particles
+		///Returns the logarithmic unnormalized weights of particles
 		const arma::vec & GetPopulationLogWeight(void) const { return pPopulation.GetLogWeight(); }
-		///Return the unnormalized weights of particls
+		///Returns the unnormalized weights of particles
 		arma::vec GetPopulationWeight(void) const { return pPopulation.GetWeight(); }  
-		///Return the unnormalized weights of particls
+		///Returns the unnormalized weights of particle n
 		double GetPopulationWeightN(int n) const { return pPopulation.GetWeightN(n); }  
 		///Returns the current evolution time of the system.
 		long GetTime(void) const {return T;}
@@ -160,21 +160,21 @@ namespace smc {
 		void Initialise(void);
 		///Integrate the supplied function with respect to the current particle set.
 		double Integrate(double(*pIntegrand)(const Space &,void*), void* pAuxiliary) const;
-		///Integrate the supplied function over the path path using the supplied width function and integration method.
+		///Integrate the supplied function over the path using the supplied width function and integration method.
 		double IntegratePathSampling(PathSamplingType::Enum, double (*pIntegrand)(long,const population<Space>&,long,void*), double (*pWidth)(long,void*), void* pAuxiliary);
-		///Integrate the supplied function over the path path using the supplied width function and the default integration method (the corrected trapezoid rule).
+		///Integrate the supplied function over the path using the supplied width function and the default integration method (the corrected trapezoid rule).
 		double IntegratePathSampling(double (*pIntegrand)(long,const population<Space>&,long,void*), double (*pWidth)(long,void*), void* pAuxiliary) {return IntegratePathSampling(PathSamplingType::TRAPEZOID2, pIntegrand, pWidth, pAuxiliary);}
 		///Perform one iteration of the simulation algorithm.
 		void Iterate(void);
 		///Cancel one iteration of the simulation algorithm.
 		void IterateBack(void);
-		///Perform one iteration of the simulation algorithm and return the resulting ess
+		///Perform one iteration of the simulation algorithm and return the resulting ESS
 		double IterateEss(void);
 		///Perform iterations until the specified evolution time is reached
 		void IterateUntil(long lTerminate);
-		///Move the particle set by proposing an applying an appropriate move to each particle.
+		///Move the particle set by proposing and applying an appropriate move to each particle.
 		void MovePopulations(void);
-		///Resample the particle set using the specified resmpling scheme.
+		///Resample the particle set using the specified resampling scheme.
 		void Resample(ResampleType::Enum lMode);
 		///Sets the entire moveset to the one which is supplied
 		void SetMoveSet(moveset<Space>& pNewMoveset) {Moves = pNewMoveset;}
@@ -222,13 +222,14 @@ namespace smc {
 	}
 
 
-	/// The constructor prepares a sampler for use but does not assign any moves to the moveset, initialise the particles
+	/// The constructor prepares a sampler for use but does not assign any moves to the moveset, set any method for adaptation, initialise the particles
 	/// or otherwise perform any sampling related tasks. Its main function is to allocate a region of memory in which to
-	/// store the particle set and to initialise a random number generator.
+	/// store the particle set.
 	///
 	/// \param lSize The number of particles present in the ensemble (at time 0 if this is a variable quantity)
 	/// \param htHM The history mode to use: set this to HistoryType::RAM to store the whole history of the system and SMC_HISTORY_NONE to avoid doing so.
 	/// \tparam Space The class used to represent a point in the sample space.
+	/// \tparam Params (optional) The class used for any additional parameters.
 	template <class Space, class Params>
 	sampler<Space,Params>::sampler(long lSize, HistoryType::Enum htHM)
 	{
@@ -243,11 +244,20 @@ namespace smc {
 
 	}
 	
+	/// The constructor prepares a sampler for use but does not assign any moves to the moveset, initialise the particles
+	/// or otherwise perform any sampling related tasks. Its main function is to allocate a region of memory in which to
+	/// store the particle set.
+	///
+	/// \param lSize The number of particles present in the ensemble (at time 0 if this is a variable quantity)
+	/// \param htHM The history mode to use: set this to HistoryType::RAM to store the whole history of the system and SMC_HISTORY_NONE to avoid doing so.
+	/// \param adaptSet The class derived from algParam for parameter adaptation.
+	/// \tparam Space The class used to represent a point in the sample space.
+	/// \tparam Params The class used for additional algorithm parameters.
 	template <class Space, class Params>
-	sampler<Space,Params>::sampler(long lSize, HistoryType::Enum htHM, algParam<Space,Params>* inParams)
+	sampler<Space,Params>::sampler(long lSize, HistoryType::Enum htHM, algParam<Space,Params>* adaptSet)
 	{
 		N = lSize;
-		pAlgParams = inParams;
+		pAlgParams = adaptSet;
 		uRSCount = arma::zeros<arma::Col<unsigned int> >((int)N);
 		
 		//Some workable defaults.
@@ -274,8 +284,6 @@ namespace smc {
 	}
 
 
-
-	/// Returns the effective sample size of the specified particle generation.
 	template <class Space, class Params>
 	double  sampler<Space,Params>::GetESS(long lGeneration) const
 	{
@@ -296,7 +304,7 @@ namespace smc {
 
 
 	/// The initialise function:
-	///          -# resets the system evolution time to 0 and calls the moveset initialisor to assign each particle in the ensemble.
+	///         -# resets the system evolution time to 0 and calls the moveset initialisor to assign each particle in the ensemble.
 	///         -# checks the effective sample size and resamples if necessary
 	///         -# performs a mcmc step if required
 	///         -# appends the particle set to the history if desired
@@ -379,26 +387,29 @@ namespace smc {
 	/// normalising constant of a distribution obtain using a sequence of potential functions proportional to densities with respect
 	/// to the initial distribution to define a sequence of distributions leading up to the terminal, interesting distribution.
 	///
-	/// In this context, the particle set at each time is used to make an estimate of the path sampling integrand, and a
-	/// trapezoidal integration is then performed to obtain an estimate of the path sampling integral which is the natural logarithm
+	/// In this context, the particle set at each time is used to make an estimate of the path sampling integrand, and
+	/// numerical integration is then performed to obtain an estimate of the path sampling integral which is the natural logarithm
 	/// of the ratio of normalising densities.
-
-	/// The function performs a trapezoidal integration of the type which is useful when using path sampling to estimate the
-	/// normalising constant of a potential function in those cases where a sequence of distributions is produced by deforming
-	/// the initial distribution by a sequence of progressively more influential potential functions which are proportional
-	/// to the density of some other distribution with respect to the starting distribution.
 	///
 	/// The integrand is integrated at every time point in the population history. The results of this integration are
 	/// taken to be point-evaluations of the path sampling integrand which are spaced on a grid of intervals given by the
-	/// width function. The path sampling integral is then calculated by performing a suitable trapezoidal integration and
+	/// width function. The path sampling integral is then calculated by performing a suitable numerical integration and
 	/// the results of this integration is returned.
 	///
 	/// pAuxiliary is passed to both of the user specified functions to allow the user to pass additional data to either or
 	/// both of these functions in a convenient manner. It is safe to use NULL if no such data is used by either function.
 	///
+	/// \param PStype  The numerical integration method to use
 	/// \param pIntegrand  The function to integrated. The first argument is evolution time, the second the population at which the function is to be evaluated, the third is the particle index and the final argument is always pAuxiliary.
 	/// \param pWidth      The function which returns the width of the path sampling grid at the specified evolution time. The final argument is always pAuxiliary
 	/// \param pAuxiliary  A pointer to auxiliary data to pass to both of the above functions
+	/// \tparam Space The class used to represent a point in the sample space.
+	/// \tparam Params (optional) The class used for any additional parameters.
+	///
+	/// The PStype parameter should be set to one of the following:
+	/// -# PathSamplingType::RECTANGLE to use the rectangle rule for integration  
+	/// -# PathSamplingType::TRAPEZOID1 to use the trapezoidal rule for integration
+	/// -# PathSamplingType::TRAPEZOID2 to use the trapezoidal rule for integration with a second order correction
 
 	template <class Space, class Params>
 	double sampler<Space,Params>::IntegratePathSampling(PathSamplingType::Enum PStype, double (*pIntegrand)(long,const population<Space> &,long,void*), double (*pWidth)(long,void*), void* pAuxiliary)
@@ -469,7 +480,7 @@ namespace smc {
 	}
 
 	/// The iterate function:
-	///          -# moves the current particle set
+	///         -# moves the current particle set
 	///         -# checks the effective sample size and resamples if necessary
 	///         -# performs a mcmc step if required
 	///         -# appends the current particle set to the history if desired

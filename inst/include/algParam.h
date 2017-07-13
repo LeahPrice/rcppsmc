@@ -56,7 +56,7 @@ namespace smc {
 		///Holder function for updates to be done at the end of each iteration
 		virtual void updateEnd(const population<Space> & pop) {}
 		
-		///To get the values of the parameters
+		///Function to get the values of the parameters
 		Params GetParams(void){return param;}
 	};
 }

@@ -41,7 +41,7 @@ namespace smc {
 	private:
 		/// Value of the particles
 		std::vector<Space>    value;
-		/// Natural logarithm of this particles' weights.
+		/// Natural logarithm of the particle weights.
 		arma::vec   logweight;
 
 	public:
@@ -55,19 +55,19 @@ namespace smc {
 
 		~population();
 
-		/// Returns the population values 
+		/// Returns the size of the population of particles
 		long GetN(void) const {return logweight.n_rows;}
 		/// Returns the population values 
 		const std::vector<Space> & GetValue(void) const {return value;}
 		/// Returns the value of the nth particle in the population
 		const Space & GetValueN(int n) const {return value[n];}
-		/// Returns the value of the nth particle in the population
+		/// Returns a reference to the value of the nth particle in the population
 		Space & GetValueRefN(int n) {return value[n];}
 		/// Returns the particles' log weights.
 		const arma::vec & GetLogWeight(void) const {return logweight;}
 		/// Returns the nth particle's log weight.
 		double GetLogWeightN(int n) const {return logweight(n);}
-		/// Returns the nth particle's log weight.
+		/// Returns a reference to the nth particle's log weight.
 		double & GetLogWeightRefN(int n) {return logweight(n);}
 		/// Returns the particles' unnormalised weights.
 		arma::vec GetWeight(void) const {return exp(logweight);}
@@ -79,18 +79,22 @@ namespace smc {
 		/// \param sValue The particle values to use 
 		/// \param dLogWeight The natural logarithm of the new particle weights
 		void Set(const std::vector<Space> &sValue,const arma::vec & dLogWeight){value = sValue; logweight = dLogWeight;}
-		/// \brief Sets the particle's value explicitly
+		
+		/// \brief Sets the particle values explicitly
 		///
 		/// \param sValue The particle values to use
 		void SetValue(const std::vector<Space> & sValue){value = sValue;}
-		/// \brief Sets the particles' values explicitly
+		
+		/// \brief Sets the nth particle value explicitly
 		///
-		/// \param sValue The particle values to use
+		/// \param sValue The particle value to use
 		void SetValueN(const Space & sValue, int n){value[n] = sValue;}
+		
 		/// \brief Sets the particle log weights explicitly
 		///
 		/// \param dLogWeight The natural logarithm of the new particle weights
 		void SetLogWeight(const arma::vec & dLogWeight) {logweight = dLogWeight;}
+		
 		/// \brief Sets the particle weights explicitly
 		///
 		/// \param dWeight The new particle weights
@@ -100,6 +104,7 @@ namespace smc {
 		///
 		/// \param dIncrement The amount to add to the log weights.
 		void AddToLogWeight(const arma::vec & dIncrement) { logweight += dIncrement;}
+		
 		/// \brief Multiply the weights by a specified factor
 		///
 		/// \param dMultiplier The factor to multiply the weights by.
@@ -111,7 +116,6 @@ namespace smc {
 	template <class Space>
 	population<Space>::population()
 	{	
-		arma::vec logweight;
 	}
 
 

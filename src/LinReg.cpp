@@ -32,7 +32,6 @@
 
 #include <iostream>
 #include <cmath>
-//#include <gsl/gsl_randist.h>
 
 namespace LinReg {
 	const double std_alpha = 50.0;

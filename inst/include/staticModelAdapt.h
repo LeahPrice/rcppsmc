@@ -1,9 +1,13 @@
 // -*- mode: C++; c-indent-level: 4; c-basic-offset: 4; indent-tabs-mode: nil; -*-
 //
-// LinReg_LA_auto.h: Rcpp wrapper for SMC library -- A simple example for estimating
-// the parameters of a linear regression model using likelihood annealing SMC,
-// with adaptation of the temperature schedule and the multivariate normal random
-// walk covariance matrix.
+// staticModelAdapt.h: A class containing parameters and functions to update
+// these parameters in the context of static Bayesian models. The methods to
+// estimate the empirical covariance and its Cholesky decomposition are applicable
+// for all applications where the particle values are a vector of doubles. The methods
+// to compute the next 'temperature' are relevant to likelihood annealing SMC where the
+// power posteriors are defined by P_t(theta|y) \propto P(y|theta)^\gamma_t P(theta).
+// Here y is observed data, theta denotes the parameters of the model and \gamma_t
+// denotes the 'temperatures' which start at 0 and finish at 1 (the posterior).
 //
 // Copyright (C) 2017         Dirk Eddelbuettel, Adam Johansen and Leah South
 //
@@ -26,14 +30,18 @@
 
 
 namespace smc {
-	
+
+/// A class containing parameters and functions to update these parameters in the context of static Bayesian models
 class staticModelAdapt{
 	private:
+		/// The current temperature
 		double temp_curr;
+		/// The previous temperature
 		double temp_previous;
+		/// The Cholesky decomposition of the empirical covariance matrix estimated from the population of particles
 		arma::mat cholCov;
 		
-		/// Computes the conditional ESS given the specified temperature differenceminus the desired conditional ESS
+		/// Computes the difference between the conditional ESS given the specified temperature difference and the desired conditional ESS
 		double CESSdiff(const arma::vec & logweight, const arma::vec & loglike, double tempDiff, double desiredCESS){
 			double sum1 = arma::sum(exp(logweight + tempDiff*loglike));
 			double sum2 = arma::sum(exp(logweight + 2*tempDiff*loglike));
@@ -41,7 +49,7 @@ class staticModelAdapt{
 			return expl(log(logweight.n_rows) + 2*log(sum1) - log(sum2)) - desiredCESS;
 		}
 		
-		///Performs the bisection method 
+		///Performs the bisection method to find the temperature which gives the desired conditional ESS with initial limits [temp_curr,1]
 		double bisection(double curr, const arma::vec & logweight, const arma::vec & loglike, const double & desiredCESS){
 			double a = curr;
 			double b = 1;
@@ -76,9 +84,14 @@ class staticModelAdapt{
 		///Free the workspace allocated for the algorithm parameters
 		~staticModelAdapt() {};
 		
+		///The class constructor which sets the current and previous temperatures to zero.
 		staticModelAdapt() {temp_curr = 0; temp_previous = 0;}
 		
-		/// Determines the next temperature using the bisection method
+		/// Determines the next temperature by using the bisection method to find the temperature which gives the desired conditional ESS
+		///
+		/// \param logweight An armadillo vector with the logarithm of the current particle weights
+		/// \param loglike An armadillo vector containing the log likelihood of the current particle values
+		/// \param desiredCESS The target conditional ESS for the next temperature (generally fixed)
 		void ChooseTemp(const arma::vec & logweight, const arma::vec & loglike, double desiredCESS) {
 			if (CESSdiff(logweight,loglike,1-temp_curr,desiredCESS)>=0){
 				temp_curr = 1;
@@ -88,7 +101,11 @@ class staticModelAdapt{
 		}
 		
 		
-		/// Gets the cholesky decomposition of the current covariance matrix. Theta should be stored in a [Nxd] matrix where d is the dimension of the parameter
+		/// Calculates the Cholesky decomposition of the empirical covariance matrix based on the current weighted particle set
+		///
+		/// \param theta An [Nxd] armadillo matrix of doubles for the current particle values, where N is
+		/// the number of particles and d is the dimension of the parameter
+		/// \param logweight An armadillo vector of the logarithm of the current particle weights
 		void calcCholCov(const arma::mat & theta, const arma::vec logweight){
 			long N = logweight.n_rows;
 			arma::vec normWeights = exp(logweight - log(sum(exp(logweight))));
@@ -99,12 +116,17 @@ class staticModelAdapt{
 			cholCov = arma::chol(emp_cov);
 		}
 		
+		/// Returns the current temperature
 		double GetTemp(void){return temp_curr;}
+		/// Sets the current temperature
 		void SetTemp(double tempin){temp_curr = tempin;}
 		
+		/// Returns the previous temperature
 		double GetTempPrevious(void){return temp_previous;}
+		/// Sets the previous temperature
 		void SetTempPrevious(double tempin){temp_previous = tempin;}
 		
+		/// Returns the Cholesky decomposition of the empirical covariance matrix based on the current weighted particle set
 		arma::mat GetCholCov(void){return cholCov;}
 	};
 
