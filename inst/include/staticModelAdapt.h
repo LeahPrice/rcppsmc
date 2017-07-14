@@ -38,7 +38,9 @@ class staticModelAdapt{
 		double temp_curr;
 		/// The previous temperature
 		double temp_previous;
-		/// The Cholesky decomposition of the empirical covariance matrix estimated from the population of particles
+		/// The empirical covariance matrix estimated from the population of particles
+		arma::mat empCov;
+		/// The Cholesky decomposition of the empirical covariance matrix
 		arma::mat cholCov;
 		
 		/// Computes the difference between the conditional ESS given the specified temperature difference and the desired conditional ESS
@@ -101,19 +103,27 @@ class staticModelAdapt{
 		}
 		
 		
+		/// Calculates the empirical covariance matrix based on the current weighted particle set
+		///
+		/// \param theta An [Nxd] armadillo matrix of doubles for the current particle values, where N is
+		/// the number of particles and d is the dimension of the parameter
+		/// \param logweight An armadillo vector of the logarithm of the current particle weights
+		void calcEmpCov(const arma::mat & theta, const arma::vec logweight){
+			long N = logweight.n_rows;
+			arma::vec normWeights = exp(logweight - log(sum(exp(logweight))));
+						
+			arma::mat diff = theta - arma::ones(N,1)*arma::mean(theta,0);
+			empCov = diff.t()*diagmat(normWeights)*diff;
+		}
+		
 		/// Calculates the Cholesky decomposition of the empirical covariance matrix based on the current weighted particle set
 		///
 		/// \param theta An [Nxd] armadillo matrix of doubles for the current particle values, where N is
 		/// the number of particles and d is the dimension of the parameter
 		/// \param logweight An armadillo vector of the logarithm of the current particle weights
 		void calcCholCov(const arma::mat & theta, const arma::vec logweight){
-			long N = logweight.n_rows;
-			arma::vec normWeights = exp(logweight - log(sum(exp(logweight))));
-						
-			arma::mat diff = theta - arma::ones(N,1)*arma::mean(theta,0);
-			arma::mat emp_cov = diff.t()*diagmat(normWeights)*diff;
-			
-			cholCov = arma::chol(emp_cov);
+			calcEmpCov(theta,logweight);
+			cholCov = arma::chol(empCov);
 		}
 		
 		/// Returns the current temperature
@@ -128,6 +138,8 @@ class staticModelAdapt{
 		
 		/// Returns the Cholesky decomposition of the empirical covariance matrix based on the current weighted particle set
 		arma::mat GetCholCov(void){return cholCov;}
+		/// Returns the empirical covariance matrix based on the current weighted particle set
+		arma::mat GetEmpCov(void){return empCov;}
 	};
 
 	

@@ -1,8 +1,16 @@
+2017-07-14  Leah South  <leah.south@hdr.qut.edu.au>
+	
+	* inst/include/sampler.h: Deleting the pointer to the adaptation class if it was created inside sampler
+	* inst/include/staticModelAdapt: Storing the empirical covariance matrix and its Cholesky decomposition
+	
+	* src/LinReg_LA_auto.cpp: Adapting the number of MCMC repeats (a bit messy, can be improved)
+	* inst/include/LinReg_LA_auto.h: Idem.
+
 2017-07-13  Leah South  <leah.south@hdr.qut.edu.au>
 	
 	* inst/include/LinReg_LA_auto.h: Changing myParams pointer type to base
 	
-	2017-07-13  Leah South  <leah.south@hdr.qut.edu.au>
+2017-07-13  Leah South  <leah.south@hdr.qut.edu.au>
 
 	* inst/include/algParams.h: Adding template argument for parameter type
 	* inst/include/sampler.h: Idem.

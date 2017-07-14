@@ -86,5 +86,6 @@ namespace LinReg_LA_auto {
 	
 	
 	
+	std::vector<int> mcmcRepeats;
 	
 }

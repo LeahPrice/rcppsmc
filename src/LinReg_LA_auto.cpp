@@ -46,8 +46,8 @@ using namespace LinReg_LA_auto;
 // LinRegLA_auto() function callable from R via Rcpp:: 
 // [[Rcpp::export]]
 Rcpp::List LinRegLA_auto_cpp(arma::mat data, unsigned long inlNumber, double resampTol, double tempTol) { 	
-
-
+	
+	
 	try {
 		lNumber = inlNumber;
 		rho = tempTol;
@@ -66,10 +66,10 @@ Rcpp::List LinRegLA_auto_cpp(arma::mat data, unsigned long inlNumber, double res
 		Sampler.SetResampParams(ResampleType::SYSTEMATIC, resampTol);
 		Sampler.SetMoveSet(Moveset);
 		//Sampler.SetAdaptSet(myParams);
+		mcmcRepeats.push_back(10); //Initial number of MCMC repeats
 		Sampler.Initialise();
 		
 		std::vector<double> temps;
-		temps.push_back(0);
 		temps.push_back(myParams->GetParams().GetTemp());
 		
 		std::vector<double> ESS;
@@ -80,6 +80,8 @@ Rcpp::List LinRegLA_auto_cpp(arma::mat data, unsigned long inlNumber, double res
 		
 		while (myParams->GetParams().GetTemp() != 1){
 			n++;
+			mcmcRepeats.push_back(std::ceil(log(0.01)/log(1-(double)Sampler.GetHistory().back().AcceptCount()/((double)mcmcRepeats.back()*(double)lNumber))));
+			Rcpp::Rcout << "Number of MCMC repeats is " << mcmcRepeats.back() << std::endl;
 			Sampler.Iterate();
 			Rcpp::Rcout << "Current temperature is : " << myParams->GetParams().GetTemp() << std::endl;
 			temps.push_back(myParams->GetParams().GetTemp());
@@ -147,28 +149,28 @@ namespace LinReg_LA_auto {
 	///\param value Reference to the value of the particle being moved
 	int fMCMC(long lTime, rad_state & value)
 	{
-		double MH_ratio;
-		double dRand;
-		int count = 0;
-		rad_state value_prop;
-		double logprior_curr = logPrior(value);
-		double logprior_prop;
-		arma::mat randPrep(3,3);
-		
-		for (unsigned int j=0; j<10; j++){
-			value_prop.theta = value.theta + myParams->GetParams().GetCholCov()*Rcpp::as<arma::vec>(Rcpp::rnorm(3));
-			value_prop.loglike = logLikelihood(value_prop);
-			logprior_prop = logPrior(value_prop);
+			double MH_ratio;
+			double dRand;
+			int count = 0;
+			rad_state value_prop;
+			double logprior_curr = logPrior(value);
+			double logprior_prop;
+			arma::mat randPrep(3,3);
 			
-			MH_ratio = exp(myParams->GetParams().GetTemp()*(value_prop.loglike - value.loglike) + logprior_prop - logprior_curr);
-			dRand = R::runif(0,1);
-			
-			if (MH_ratio>dRand){
-				value = value_prop;
-				logprior_curr = logprior_prop;
-				count++;
+			for (int j=0; j<mcmcRepeats.back(); j++){
+				value_prop.theta = value.theta + myParams->GetParams().GetCholCov()*Rcpp::as<arma::vec>(Rcpp::rnorm(3));
+				value_prop.loglike = logLikelihood(value_prop);
+				logprior_prop = logPrior(value_prop);
+				
+				MH_ratio = exp(myParams->GetParams().GetTemp()*(value_prop.loglike - value.loglike) + logprior_prop - logprior_curr);
+				dRand = R::runif(0,1);
+				
+				if (MH_ratio>dRand){
+					value = value_prop;
+					logprior_curr = logprior_prop;
+					count++;
+				}
 			}
-		}
-		return count; 
+			return count; 
 	}
 }

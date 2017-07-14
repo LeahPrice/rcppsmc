@@ -100,6 +100,8 @@ namespace smc {
 		moveset<Space> Moves;
 		///The algorithm parameters.
 		algParam<Space,Params>* pAlgParams;
+		///Indicator for whether the pointer to the algorithm parameters and adaptation object was created here
+		bool pAlgBelong;
 		///The historical process associated with the particle system.
 		std::vector<historyelement< population<Space> > > History;
 
@@ -124,6 +126,10 @@ namespace smc {
 		~sampler();
 		///Calculates and Returns the Effective Sample Size.
 		double GetESS(void) const;
+		///Returns the number of accepted values from the most recent MCMC iteration.
+		int GetAccepted(void) const {return nAccepted;}
+		///Returns the number of accepted values from the most recent MCMC iteration.
+		int GetResampled(void) const {return nResampled;}
 		/// Returns the effective sample size of the specified particle generation.
 		double GetESS(long lGeneration) const;
 		///Returns a pointer to the History of the particle system
@@ -235,6 +241,7 @@ namespace smc {
 	{
 		N = lSize;
 		pAlgParams = new algParam<Space,Params>;
+		pAlgBelong = 1;
 		uRSCount = arma::zeros<arma::Col<unsigned int> >((int)N);
 		
 		//Some workable defaults.
@@ -258,6 +265,7 @@ namespace smc {
 	{
 		N = lSize;
 		pAlgParams = adaptSet;
+		pAlgBelong = 0;
 		uRSCount = arma::zeros<arma::Col<unsigned int> >((int)N);
 		
 		//Some workable defaults.
@@ -270,7 +278,8 @@ namespace smc {
 	template <class Space, class Params>
 	sampler<Space,Params>::~sampler()
 	{
-		delete pAlgParams;
+		if(pAlgBelong)
+			delete pAlgParams;
 	}
 
 
@@ -323,7 +332,7 @@ namespace smc {
 		arma::vec InitWeights(N);
 		pPopulation = population<Space>(InitVal,InitWeights);
 		Moves.DoInit(pPopulation,N);
-
+		
 		//Scaling weights by 1/N (mostly for evidence computation)
 		pPopulation.SetLogWeight(pPopulation.GetLogWeight() - log(static_cast<double>(N))*arma::ones(N));
 

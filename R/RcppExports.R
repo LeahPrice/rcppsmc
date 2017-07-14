@@ -5,6 +5,14 @@ blockpfGaussianOpt_cpp <- function(data, inlNumber, inlLag) {
     .Call('RcppSMC_blockpfGaussianOpt_cpp', PACKAGE = 'RcppSMC', data, inlNumber, inlLag)
 }
 
+linGauss_APF_cpp <- function(data, lNumber, lMCMCits) {
+    .Call('RcppSMC_linGauss_APF_cpp', PACKAGE = 'RcppSMC', data, lNumber, lMCMCits)
+}
+
+linGauss_iAPF_cpp <- function(data, lNumber, lMCMCits) {
+    .Call('RcppSMC_linGauss_iAPF_cpp', PACKAGE = 'RcppSMC', data, lNumber, lMCMCits)
+}
+
 LinReg_cpp <- function(data, inlNumber) {
     .Call('RcppSMC_LinReg_cpp', PACKAGE = 'RcppSMC', data, inlNumber)
 }
