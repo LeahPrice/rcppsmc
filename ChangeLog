@@ -1,3 +1,7 @@
+2017-07-18  Leah South  <leah.south@hdr.qut.edu.au>
+	
+	* src/LinReg_LA_auto.cpp: Applying power posterior recycling
+
 2017-07-14  Leah South  <leah.south@hdr.qut.edu.au>
 	
 	* inst/include/sampler.h: Deleting the pointer to the adaptation class if it was created inside sampler

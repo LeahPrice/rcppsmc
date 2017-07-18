@@ -92,7 +92,32 @@ Rcpp::List LinRegLA_auto_cpp(arma::mat data, unsigned long inlNumber, double res
 		
 		delete myParams;
 		
-		return Rcpp::List::create(Rcpp::Named("logNC") = logNC,Rcpp::Named("Temps") = temps,Rcpp::Named("ESS") = ESS);
+		
+		std::vector<smc::historyelement<smc::population<rad_state> > > Hist = Sampler.GetHistory();
+		int lTemps = Hist.size();
+		
+		arma::cube recycle_theta(lNumber,3,lTemps);
+		arma::mat loglike(lNumber,lTemps), recycle_logweight(lNumber,lTemps);
+		arma::vec rec_ess(lTemps);
+		for (long j=0; j<lTemps; j++){
+			for (unsigned long i=0; i<lNumber; i++){
+				recycle_theta(i,0,j) = Hist[j].GetRefs().GetValueN(i).theta(0); //can probably assign all 3 elements at once (just need to check Armadillo documentation)
+				recycle_theta(i,1,j) = Hist[j].GetRefs().GetValueN(i).theta(1);
+				recycle_theta(i,2,j) = Hist[j].GetRefs().GetValueN(i).theta(2);
+				loglike(i,j) = Hist[j].GetRefs().GetValueN(i).loglike;
+			}
+			recycle_logweight.col(j) = (1-temps[j])*loglike.col(j) + Hist[j].GetRefs().GetLogWeight(); //need to check if using the correct weights...
+			recycle_logweight.col(j) = recycle_logweight.col(j) - log(sum(exp(recycle_logweight.col(j)))); //normalising the log weights
+			rec_ess(j) = exp(- log(sum(exp(2*recycle_logweight.col(j))))); //Getting the ESS of this particle set when weighted to target the posterior
+		}
+		
+		double total_recycling_ess = sum(rec_ess);
+		
+		for (long j=0; j<lTemps; j++){
+			recycle_logweight.col(j) = recycle_logweight.col(j) + log(rec_ess(j)/total_recycling_ess);
+		}
+		
+		return Rcpp::List::create(Rcpp::Named("logNC") = logNC,Rcpp::Named("Temps") = temps,Rcpp::Named("ESS") = ESS, Rcpp::Named("Total_Recycling_ESS") = total_recycling_ess, Rcpp::Named("recycle_theta") = recycle_theta, Rcpp::Named("recycle_logweight") = recycle_logweight);
 	}
 	catch(smc::exception  e) {
 		Rcpp::Rcout << e;       	// not cerr, as R doesn't like to mix with i/o
