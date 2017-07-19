@@ -47,7 +47,7 @@ namespace smc {
 		///The functions which perform actual moves.
 		void (**pfMoves)(long, Space &, double &);
 		///A Markov Chain Monte Carlo move.
-		int (*pfMCMC)(long, Space &);
+		int (*pfMCMC)(long, Space &,double &);
 
 	public:
 		///Create a completely unspecified moveset
@@ -55,11 +55,11 @@ namespace smc {
 		///Create a reduced moveset with a single move
 		moveset(void (*pfInit)(Space &, double &),
 		void (*pfNewMoves)(long, Space &,double &),
-		int (*pfNewMCMC)(long,Space &));
+		int (*pfNewMCMC)(long,Space &,double &));
 		///Create a fully specified moveset
 		moveset(void (*pfInit)(Space &, double &),long (*pfMoveSelector)(long , const population<Space> &), 
 		long nMoves, void (**pfNewMoves)(long, Space &,double &),
-		int (*pfNewMCMC)(long,Space &));
+		int (*pfNewMCMC)(long,Space &, double &));
 		
 		///Initialise the population of particles
 		void DoInit(population<Space> & pFrom, long N);
@@ -78,7 +78,7 @@ namespace smc {
 
 		/// \brief Set the MCMC function
 		/// \param pfNewMCMC  The function which performs an MCMC move
-		void SetMCMCFunction(int (*pfNewMCMC)(long,Space &)) {pfMCMC = pfNewMCMC;}
+		void SetMCMCFunction(int (*pfNewMCMC)(long,Space &,double &)) {pfMCMC = pfNewMCMC;}
 
 		/// \brief Set the move selection function
 		/// \param pfMoveSelectNew returns the index of move to perform at the specified time given specified particles
@@ -114,7 +114,7 @@ namespace smc {
 	template <class Space>
 	moveset<Space>::moveset(void (*pfInit)(Space &, double &),
 	void (*pfNewMoves)(long, Space &,double &),
-	int (*pfNewMCMC)(long,Space &))
+	int (*pfNewMCMC)(long,Space &,double &))
 	{
 		SetInitialisor(pfInit);
 		SetMoveSelectionFunction(NULL);
@@ -133,7 +133,7 @@ namespace smc {
 	template <class Space>
 	moveset<Space>::moveset(void (*pfInit)(Space &, double &),long (*pfMoveSelector)(long ,const population<Space> &), 
 	long nMoves, void (**pfNewMoves)(long, Space &,double &),
-	int (*pfNewMCMC)(long,Space &))
+	int (*pfNewMCMC)(long,Space &,double &))
 	{
 		SetInitialisor(pfInit);
 		SetMoveSelectionFunction(pfMoveSelector);
@@ -162,7 +162,7 @@ namespace smc {
 	{    if(pfMCMC) {
 			int count = 0;
 			for (long i=0; i<N; i++){
-				count += pfMCMC(lTime,pFrom.GetValueRefN(i));
+				count += pfMCMC(lTime,pFrom.GetValueRefN(i),pFrom.GetLogWeightRefN(i));
 			}
 			return count;
 		}

@@ -48,7 +48,7 @@ public:
 	
 	void fInitialise(rad_state & value, double & logweight);
 	void fMove(long lTime, rad_state & value, double & logweight);
-	int fMCMC(long lTime, rad_state & value);
+	int fMCMC(long lTime, rad_state & value, double & logweight);
 	
 	double integrand_mean_alpha(const rad_state&, void*);
 	double integrand_mean_beta(const rad_state&, void*);

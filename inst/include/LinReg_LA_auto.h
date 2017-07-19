@@ -51,7 +51,7 @@ namespace LinReg_LA_auto {
 	
 	void fInitialise(rad_state & value, double & logweight);
 	void fMove(long lTime, rad_state & value, double & logweight);
-	int fMCMC(long lTime, rad_state & value);
+	int fMCMC(long lTime, rad_state & value, double & logweight);
 	
 	class rad_adapt:
 	public smc::algParam<rad_state,smc::staticModelAdapt>

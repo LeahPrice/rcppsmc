@@ -1,3 +1,14 @@
+2017-07-19  Leah South  <leah.south@hdr.qut.edu.au>
+
+	* inst/include/moveset.h: Adding the log weight to the MCMC function arguments
+	* inst/include/LinReg.h: Idem.
+	* inst/include/LinReg_LA.h: Idem.
+	* inst/include/LinReg_LA.h: Idem.
+	
+	* src/LinReg.cpp: Idem.
+	* src/LinReg_LA.cpp: Idem.
+	* src/LinReg_LA_auto.cpp: Idem.
+
 2017-07-18  Leah South  <leah.south@hdr.qut.edu.au>
 	
 	* src/LinReg_LA_auto.cpp: Applying power posterior recycling

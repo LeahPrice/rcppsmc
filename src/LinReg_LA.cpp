@@ -190,7 +190,8 @@ namespace LinReg_LA {
 
 	///\param lTime The sampler iteration.
 	///\param value Reference to the value of the particle being moved
-	int fMCMC(long lTime, rad_state & value)
+	///\param logweight Reference to the log weight of the particle being moved
+	int fMCMC(long lTime, rad_state & value, double & logweight)
 	{
 		double MH_ratio;
 		double dRand;

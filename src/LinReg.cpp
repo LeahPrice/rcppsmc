@@ -195,11 +195,12 @@ namespace LinReg {
 		logweight += logWeight(lTime, value);
 	}
 
-	///The proposal function.
+	///The MCMC function.
 
-	///\param lTime The sampler iteration.
+	/// \param lTime The sampler iteration.
 	/// \param value		Reference to the current particle value
-	int fMCMC(long lTime, rad_state & value)
+	/// \param logweight Reference to the log weight of the particle being moved
+	int fMCMC(long lTime, rad_state & value, double & logweight)
 	{
 		double MH_ratio;
 		double dRand;
