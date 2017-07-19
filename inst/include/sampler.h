@@ -326,7 +326,7 @@ namespace smc {
 		T = 0;
 		dlogNCIt = 0;
 		dlogNCPath = 0;
-		nAccepted = 0;
+		nAccepted = -1;
 
 		std::vector<Space> InitVal(N);
 		arma::vec InitWeights(N);
@@ -343,19 +343,19 @@ namespace smc {
 		//Normalise the weights to sensible values....
 		pPopulation.SetLogWeight(pPopulation.GetLogWeight() - dlogNCIt*arma::ones(N));
 		
-		pAlgParams->updateForMCMC(pPopulation);
-		
 		//Check if the ESS is below some reasonable threshold and resample if necessary.
 		double ESS = GetESS();
 		if(ESS < dResampleThreshold) {
 			nResampled = 1;
+			pAlgParams->updateForMCMC(pPopulation,nAccepted,nResampled);
 			Resample(rtResampleMode);
 		}
 		else {
 			nResampled = 0;
+			pAlgParams->updateForMCMC(pPopulation,nAccepted,nResampled);
 		}
 		//A possible MCMC step could be included here.
-		nAccepted += Moves.DoMCMC(0,pPopulation, N); 
+		nAccepted = Moves.DoMCMC(0,pPopulation, N);
 
 		if(htHistoryMode != HistoryType::NONE) {
 			History.clear();
@@ -519,9 +519,7 @@ namespace smc {
 
 	template <class Space, class Params>
 	double sampler<Space,Params>::IterateEss(void)
-	{
-		nAccepted = 0;
-		
+	{		
 		pAlgParams->updateForMove(pPopulation);
 		//Move the particle set.
 		MovePopulations();
@@ -533,18 +531,20 @@ namespace smc {
 		//Normalise the weights
 		pPopulation.SetLogWeight(pPopulation.GetLogWeight()  - dlogNCIt*arma::ones(N));
 
-		pAlgParams->updateForMCMC(pPopulation);
 		//Check if the ESS is below some reasonable threshold and resample if necessary.
 		//A mechanism for setting this threshold is required.
 		double ESS = GetESS();
 		if(ESS < dResampleThreshold) {
 			nResampled = 1;
+			pAlgParams->updateForMCMC(pPopulation,nAccepted,nResampled);
 			Resample(rtResampleMode);
 		}
-		else
+		else{
 		nResampled = 0;
+			pAlgParams->updateForMCMC(pPopulation,nAccepted,nResampled);
+		}
 		//A possible MCMC step could be included here.
-		nAccepted += Moves.DoMCMC(T+1,pPopulation,N);
+		nAccepted = Moves.DoMCMC(T+1,pPopulation,N);
 		// Increment the evolution time.
 		T++;
 

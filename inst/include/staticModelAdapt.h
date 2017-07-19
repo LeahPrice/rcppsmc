@@ -31,8 +31,8 @@
 
 namespace smc {
 
-/// A class containing parameters and functions to update these parameters in the context of static Bayesian models
-class staticModelAdapt{
+	/// A class containing parameters and functions to update these parameters in the context of static Bayesian models
+	class staticModelAdapt{
 	private:
 		/// The current temperature
 		double temp_curr;
@@ -42,6 +42,8 @@ class staticModelAdapt{
 		arma::mat empCov;
 		/// The Cholesky decomposition of the empirical covariance matrix
 		arma::mat cholCov;
+		/// The number of MCMC repeats
+		int mcmcRepeat;
 		
 		/// Computes the difference between the conditional ESS given the specified temperature difference and the desired conditional ESS
 		double CESSdiff(const arma::vec & logweight, const arma::vec & loglike, double tempDiff, double desiredCESS){
@@ -111,7 +113,7 @@ class staticModelAdapt{
 		void calcEmpCov(const arma::mat & theta, const arma::vec logweight){
 			long N = logweight.n_rows;
 			arma::vec normWeights = exp(logweight - log(sum(exp(logweight))));
-						
+			
 			arma::mat diff = theta - arma::ones(N,1)*arma::mean(theta,0);
 			empCov = diff.t()*diagmat(normWeights)*diff;
 		}
@@ -124,6 +126,21 @@ class staticModelAdapt{
 		void calcCholCov(const arma::mat & theta, const arma::vec logweight){
 			calcEmpCov(theta,logweight);
 			cholCov = arma::chol(empCov);
+		}
+		
+		/// Calculates the number of MCMC repeats based on the results of the most recent set of MCMC moves.
+		///
+		/// \param nAccepted The number of accepted particles in the most recent iteration
+		/// \param N The number of particles in the most recent iteration
+		/// \param desiredAcceptProb The desired probability of a successful move for each particle
+		/// \param defaultN The default number of MCMC repeats (to be used in the first iteration, for example)
+		void calcMcmcRepeats(int nAccepted, int N, double desiredAcceptProb, int defaultN){
+			
+			if (nAccepted == -1){
+				mcmcRepeat = defaultN;
+			} else{
+				mcmcRepeat = std::ceil(log(1-desiredAcceptProb)/log(1-(double)nAccepted/((double)mcmcRepeat*(double)N)));
+			}
 		}
 		
 		/// Returns the current temperature
@@ -140,6 +157,8 @@ class staticModelAdapt{
 		arma::mat GetCholCov(void){return cholCov;}
 		/// Returns the empirical covariance matrix based on the current weighted particle set
 		arma::mat GetEmpCov(void){return empCov;}
+		/// Returns the empirical covariance matrix based on the current weighted particle set
+		int GetMcmcRepeat(void){return mcmcRepeat;}
 	};
 
 	

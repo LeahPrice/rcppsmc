@@ -66,8 +66,8 @@ Rcpp::List LinRegLA_auto_cpp(arma::mat data, unsigned long inlNumber, double res
 		Sampler.SetResampParams(ResampleType::SYSTEMATIC, resampTol);
 		Sampler.SetMoveSet(Moveset);
 		//Sampler.SetAdaptSet(myParams);
-		mcmcRepeats.push_back(10); //Initial number of MCMC repeats
 		Sampler.Initialise();
+		mcmcRepeats.push_back(myParams->GetParams().GetMcmcRepeat()); //number of MCMC repeats
 		
 		std::vector<double> temps;
 		temps.push_back(myParams->GetParams().GetTemp());
@@ -80,10 +80,9 @@ Rcpp::List LinRegLA_auto_cpp(arma::mat data, unsigned long inlNumber, double res
 		
 		while (myParams->GetParams().GetTemp() != 1){
 			n++;
-			mcmcRepeats.push_back(std::ceil(log(0.01)/log(1-(double)Sampler.GetHistory().back().AcceptCount()/((double)mcmcRepeats.back()*(double)lNumber))));
-			Rcpp::Rcout << "Number of MCMC repeats is " << mcmcRepeats.back() << std::endl;
 			Sampler.Iterate();
 			Rcpp::Rcout << "Current temperature is : " << myParams->GetParams().GetTemp() << std::endl;
+			mcmcRepeats.push_back(myParams->GetParams().GetMcmcRepeat()); //number of MCMC repeats
 			temps.push_back(myParams->GetParams().GetTemp());
 			ESS.push_back(Sampler.GetESS());
 		}
@@ -117,7 +116,9 @@ Rcpp::List LinRegLA_auto_cpp(arma::mat data, unsigned long inlNumber, double res
 			recycle_logweight.col(j) = recycle_logweight.col(j) + log(rec_ess(j)/total_recycling_ess);
 		}
 		
-		return Rcpp::List::create(Rcpp::Named("logNC") = logNC,Rcpp::Named("Temps") = temps,Rcpp::Named("ESS") = ESS, Rcpp::Named("Total_Recycling_ESS") = total_recycling_ess, Rcpp::Named("recycle_theta") = recycle_theta, Rcpp::Named("recycle_logweight") = recycle_logweight);
+		return Rcpp::List::create(Rcpp::Named("logNC") = logNC,Rcpp::Named("Temps") = temps,
+		Rcpp::Named("mcmcRepeats") = mcmcRepeats,Rcpp::Named("ESS") = ESS, 
+		Rcpp::Named("Total_Recycling_ESS") = total_recycling_ess, Rcpp::Named("recycle_theta") = recycle_theta, Rcpp::Named("recycle_logweight") = recycle_logweight);
 	}
 	catch(smc::exception  e) {
 		Rcpp::Rcout << e;       	// not cerr, as R doesn't like to mix with i/o
@@ -182,7 +183,7 @@ namespace LinReg_LA_auto {
 			double logprior_prop;
 			arma::mat randPrep(3,3);
 			
-			for (int j=0; j<mcmcRepeats.back(); j++){
+			for (int j=0; j<myParams->GetParams().GetMcmcRepeat(); j++){
 				value_prop.theta = value.theta + myParams->GetParams().GetCholCov()*Rcpp::as<arma::vec>(Rcpp::rnorm(3));
 				value_prop.loglike = logLikelihood(value_prop);
 				logprior_prop = logPrior(value_prop);

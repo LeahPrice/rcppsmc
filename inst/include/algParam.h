@@ -48,7 +48,7 @@ namespace smc {
 		}
 
 		///Holder function for updates to be done before the MCMC step
-		virtual void updateForMCMC(const population<Space> & pop) {}
+		virtual void updateForMCMC(const population<Space> & pop, int nAccepted, int nResampled) {}
 		
 		///Holder function for updates to be done before the move step
 		virtual void updateForMove(const population<Space> & pop) {}

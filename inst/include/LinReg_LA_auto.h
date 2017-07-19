@@ -66,7 +66,9 @@ namespace LinReg_LA_auto {
 			param.ChooseTemp(pop.GetLogWeight(),loglike,rho*lNumber);
 		}
 		
-		void updateForMCMC(const smc::population<rad_state> & pop) {
+		void updateForMCMC(const smc::population<rad_state> & pop, int nAccepted, int nResampled) {
+			param.calcMcmcRepeats(nAccepted, pop.GetN(), 0.99, 10); //not good if changing N between iterations...
+				
 			arma::mat thetaMat(pop.GetN(),3);
 			for (long i=0; i<pop.GetN(); i++){
 				thetaMat.row(i) = pop.GetValueN(i).theta.t();

@@ -19,32 +19,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// linGauss_APF_cpp
-Rcpp::DataFrame linGauss_APF_cpp(arma::mat data, unsigned long lNumber, unsigned long lMCMCits);
-RcppExport SEXP RcppSMC_linGauss_APF_cpp(SEXP dataSEXP, SEXP lNumberSEXP, SEXP lMCMCitsSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type data(dataSEXP);
-    Rcpp::traits::input_parameter< unsigned long >::type lNumber(lNumberSEXP);
-    Rcpp::traits::input_parameter< unsigned long >::type lMCMCits(lMCMCitsSEXP);
-    rcpp_result_gen = Rcpp::wrap(linGauss_APF_cpp(data, lNumber, lMCMCits));
-    return rcpp_result_gen;
-END_RCPP
-}
-// linGauss_iAPF_cpp
-Rcpp::DataFrame linGauss_iAPF_cpp(arma::mat data, unsigned long lNumber, unsigned long lMCMCits);
-RcppExport SEXP RcppSMC_linGauss_iAPF_cpp(SEXP dataSEXP, SEXP lNumberSEXP, SEXP lMCMCitsSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type data(dataSEXP);
-    Rcpp::traits::input_parameter< unsigned long >::type lNumber(lNumberSEXP);
-    Rcpp::traits::input_parameter< unsigned long >::type lMCMCits(lMCMCitsSEXP);
-    rcpp_result_gen = Rcpp::wrap(linGauss_iAPF_cpp(data, lNumber, lMCMCits));
-    return rcpp_result_gen;
-END_RCPP
-}
 // LinReg_cpp
 Rcpp::List LinReg_cpp(arma::mat data, unsigned long inlNumber);
 RcppExport SEXP RcppSMC_LinReg_cpp(SEXP dataSEXP, SEXP inlNumberSEXP) {
