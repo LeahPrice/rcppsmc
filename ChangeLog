@@ -1,3 +1,10 @@
+2017-07-20  Leah South  <leah.south@hdr.qut.edu.au>
+
+	* inst/include/sampler.h: Some minor changes to commenting and adding a function
+	  to do the log(sum(exp())) of a set of weights in a more stable way
+	* TODO: Minor changes to make plans more specific and to remove things that are
+	  completed or not of interested
+
 2017-07-19  Leah South  <leah.south@hdr.qut.edu.au>
 
 	* inst/include/moveset.h: Adding the log weight to the MCMC function arguments

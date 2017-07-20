@@ -44,28 +44,29 @@
 ///Specifiers for various resampling algorithms:
 namespace ResampleType
 {
-	enum Enum {MULTINOMIAL = 0, 
-		RESIDUAL, 
-		STRATIFIED, 
-		SYSTEMATIC };
+	enum Enum {	MULTINOMIAL = 0, 
+				RESIDUAL, 
+				STRATIFIED, 
+				SYSTEMATIC };
 }
 
 ///Specifiers for various path sampling methods:
 namespace PathSamplingType
 {
-	enum Enum { TRAPEZOID2 = 0, 
-		TRAPEZOID1, 
-		RECTANGLE};
+	enum Enum {	TRAPEZOID2 = 0, 
+				TRAPEZOID1, 
+				RECTANGLE};
 }
 
 
 ///Storage types for the history of the particle system. 
 namespace HistoryType
 {
-	enum Enum {NONE = 0, 
-		RAM};
+	enum Enum {	NONE = 0, 
+				RAM};
 }
 
+///Class for additional algorithm parameters
 class nullParams{
 	
 };
@@ -98,37 +99,37 @@ namespace smc {
 		population<Space> pPopulation;
 		///The set of moves available.
 		moveset<Space> Moves;
-		///The algorithm parameters.
+		///An object for tracking and adapting additional algorithm parameters.
 		algParam<Space,Params>* pAlgParams;
-		///Indicator for whether the pointer to the algorithm parameters and adaptation object was created here
+		///A flag to track whether the adaptation object needs to be included in this destructor.
 		bool pAlgBelong;
+
+		///A mode flag which indicates whether historical information is stored.
+		HistoryType::Enum htHistoryMode;
 		///The historical process associated with the particle system.
 		std::vector<historyelement< population<Space> > > History;
-
-		///The number of MCMC moves which have been accepted during this iteration
+		
+		///The number of MCMC moves which have been accepted during this iteration.
 		int nAccepted;
-		///A flag which tracks whether the ensemble was resampled during this iteration
+		///A flag which tracks whether the ensemble was resampled during this iteration.
 		int nResampled;
-
-		///A mode flag which indicates whether historical information is stored
-		HistoryType::Enum htHistoryMode;
-		///An estimate of the overall ratio of normalising constants
+		///An estimate of the log normalising constant ratio over the entire path.
 		double dlogNCPath;
-		///An estimate of the latest iteration's ratio of normalising constants
+		///An estimate of the log normalising constant ratio over the last step.
 		double dlogNCIt;
 
 	public:
-		///Create a particle system containing lSize uninitialised particles with the specified mode.
+		///Create a particle system containing lSize uninitialised particles with the specified history mode.
 		sampler(long lSize, HistoryType::Enum htHistoryMode);
-		///Create a particle system containing lSize uninitialised particles with the specified mode and also set a pointer to the parameter adaptation class.
+		///Create a particle system containing lSize uninitialised particles with the specified history mode and adaptation object.
 		sampler(long lSize, HistoryType::Enum htHistoryMode, algParam<Space,Params>* adaptSet);
 		///Dispose of a sampler.
 		~sampler();
-		///Calculates and Returns the Effective Sample Size.
+		///Calculates and returns the effective sample size.
 		double GetESS(void) const;
 		///Returns the number of accepted values from the most recent MCMC iteration.
 		int GetAccepted(void) const {return nAccepted;}
-		///Returns the number of accepted values from the most recent MCMC iteration.
+		///Returns a flag for whether the ensemble was resampled during the most recent iteration.
 		int GetResampled(void) const {return nResampled;}
 		/// Returns the effective sample size of the specified particle generation.
 		double GetESS(long lGeneration) const;
@@ -146,19 +147,19 @@ namespace smc {
 		double GetNCStep(void) const { return exp(dlogNCIt); }
 		///Returns the number of particles within the system.
 		long GetNumber(void) const {return N;}
-		///Returns the number of evolution times stored in the history
+		///Returns the number of evolution times stored in the history.
 		long GetHistoryLength(void) const {return History.size();}
-		///Returns the values of particles
+		///Returns the values of the particles.
 		const std::vector<Space> &  GetPopulationValue(void) const { return pPopulation.GetValue(); }
-		///Returns the current population object
+		///Returns the current population object.
 		const population<Space> &  GetPopulation(void) const { return pPopulation; }
-		///Returns the value of particle n
+		///Returns the value of particle n.
 		const Space &  GetPopulationValueN(long n) const { return pPopulation.GetValueN(n); }
-		///Returns the logarithmic unnormalized weights of particles
+		///Returns the logarithmic unnormalized weights of the particles.
 		const arma::vec & GetPopulationLogWeight(void) const { return pPopulation.GetLogWeight(); }
-		///Returns the unnormalized weights of particles
+		///Returns the unnormalized weights of the particles.
 		arma::vec GetPopulationWeight(void) const { return pPopulation.GetWeight(); }  
-		///Returns the unnormalized weights of particle n
+		///Returns the unnormalized weight of particle n.
 		double GetPopulationWeightN(int n) const { return pPopulation.GetWeightN(n); }  
 		///Returns the current evolution time of the system.
 		long GetTime(void) const {return T;}
@@ -174,9 +175,9 @@ namespace smc {
 		void Iterate(void);
 		///Cancel one iteration of the simulation algorithm.
 		void IterateBack(void);
-		///Perform one iteration of the simulation algorithm and return the resulting ESS
+		///Perform one iteration of the simulation algorithm and return the resulting ESS.
 		double IterateEss(void);
-		///Perform iterations until the specified evolution time is reached
+		///Perform iterations until the specified evolution time is reached.
 		void IterateUntil(long lTerminate);
 		///Move the particle set by proposing and applying an appropriate move to each particle.
 		void MovePopulations(void);
@@ -186,8 +187,6 @@ namespace smc {
 		void SetMoveSet(moveset<Space>& pNewMoveset) {Moves = pNewMoveset;}
 		///Set Resampling Parameters
 		void SetResampParams(ResampleType::Enum rtMode, double dThreshold);
-		// ///Set Adaptation Parameters
-		// void SetAdaptSet(algParam<Space,Params>* inParams);
 		///Dump a specified particle to the specified output stream in a human readable form
 		const std::ostream & StreamParticle(std::ostream & os, long n) const;
 		///Dump the entire particle set to the specified output stream in a human readable form
@@ -206,26 +205,11 @@ namespace smc {
 		///Generate a multinomial random vector with parameters (n,w[1:k]) and store it in X
 		void Multinomial(unsigned n, unsigned k, arma::vec w, unsigned int * X);		
 		
-
 	protected:
 		///Returns the crude normalising constant ratio estimate implied by the weights.
-		double CalcLogNC(void) const;
+		double CalcLogNC(void) const {return stableLogSumWeights(pPopulation.GetLogWeight());}
 	};
 
-	template <class Space, class Params>
-	void sampler<Space,Params>::Multinomial(unsigned n, unsigned k, arma::vec w, unsigned int * X) {		
-		Rcpp::IntegerVector v(k);
-		w = w/arma::sum(w);
-		
-		double * w_mem = w.memptr();
-		
-		// R sources:  rmultinom(int n, double* prob, int K, int* rN);
-		rmultinom(static_cast<int>(n), const_cast<double*>(w_mem), static_cast<int>(k), &(v[0]));
-		
-		for (unsigned int i=0; i<k; i++) {
-			X[i] = static_cast<unsigned int>(v[i]);
-		}	
-	}
 
 
 	/// The constructor prepares a sampler for use but does not assign any moves to the moveset, set any method for adaptation, initialise the particles
@@ -275,6 +259,7 @@ namespace smc {
 
 	}
 
+	///The destructor deletes the adaptation object only if it was created inside the sampler.
 	template <class Space, class Params>
 	sampler<Space,Params>::~sampler()
 	{
@@ -286,10 +271,7 @@ namespace smc {
 	template <class Space, class Params>
 	double sampler<Space,Params>::GetESS(void) const
 	{
-		double sum = arma::sum(exp(pPopulation.GetLogWeight()));
-		double sumsq = arma::sum(exp(2.0*pPopulation.GetLogWeight()));
-
-		return expl(-log(sumsq) + 2*log(sum));
+		return expl(2*stableLogSumWeights(pPopulation.GetLogWeight())-stableLogSumWeights(2.0*pPopulation.GetLogWeight()));
 	}
 
 
@@ -300,17 +282,6 @@ namespace smc {
 		std::advance(it,lGeneration);
 		return it->GetESS(); 
 	}
-
-
-	template <class Space, class Params>
-	double sampler<Space,Params>::CalcLogNC(void) const
-	{
-		double dMaxWeight = arma::max(pPopulation.GetLogWeight());
-		double sum = arma::sum(exp(pPopulation.GetLogWeight() - dMaxWeight*arma::ones(N)));
-
-		return (dMaxWeight + log(sum));
-	}
-
 
 	/// The initialise function:
 	///         -# resets the system evolution time to 0 and calls the moveset initialisor to assign each particle in the ensemble.
@@ -771,7 +742,29 @@ namespace smc {
 		}
 	}
 
+	template <class Space, class Params>
+	void sampler<Space,Params>::Multinomial(unsigned n, unsigned k, arma::vec w, unsigned int * X) {		
+		Rcpp::IntegerVector v(k);
+		w = w/arma::sum(w);
+		
+		double * w_mem = w.memptr();
+		
+		// R sources:  rmultinom(int n, double* prob, int K, int* rN);
+		rmultinom(static_cast<int>(n), const_cast<double*>(w_mem), static_cast<int>(k), &(v[0]));
+		
+		for (unsigned int i=0; i<k; i++) {
+			X[i] = static_cast<unsigned int>(v[i]);
+		}	
+	}
 
+	
+	inline double stableLogSumWeights(const arma::vec & logw){
+		long N = logw.n_rows;
+		double dMaxWeight = arma::max(logw);
+		double sum = arma::sum(exp(logw - dMaxWeight*arma::ones(N)));
+
+		return (dMaxWeight + log(sum));
+	}
 }
 
 

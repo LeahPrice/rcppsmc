@@ -8,7 +8,7 @@
 
  * Add a flag so that the optional MCMC moves are only performed when resampling is performed.
  
- * Add back in support for a non-vectorised version
+ * Add support for an arma::mat version of the particle values.
  
  * Complete a full implementation using arma::Mat for the particle values. This will
    essentially mean that particles are restricted to be arma::Vec of a standard type. This
@@ -23,14 +23,13 @@
  * Add extra functionality to the history to store all particles and ancestral lines
    
  * Consider other evidence estimators (e.g. importance sampling based estimators in the
-   case of independent proposals and path sampling based estimators when the derivative of
-   the unnormalised density respect to the tempering parameter is known, for example in
-   likelihood annealing SMC)
+   case of independent proposals)
    
- * Specific to likelihood annealing SMC - add an example which uses power posterior
-   recycling (e.g. Nguyen et al. (2014)).
+ * Specific to likelihood annealing SMC - make power posterior recycling (e.g.
+   Nguyen et al. (2014)) easier to apply more generally
    
- * Consider the use of derivative information (e.g. via MALA)
+ * Consider the use of derivative information (e.g. via MALA) - though this is probably
+   something to demonstrate just through an example.
 
 
 
