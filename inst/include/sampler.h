@@ -357,6 +357,9 @@ namespace smc {
 		//A possible MCMC step could be included here.
 		nAccepted = Moves.DoMCMC(0,pPopulation, N);
 
+		//Normalise the weights to sensible values....
+		pPopulation.SetLogWeight(pPopulation.GetLogWeight() - CalcLogNC()*arma::ones(N));
+
 		if(htHistoryMode != HistoryType::NONE) {
 			History.clear();
 			historyelement<population<Space> > histel;
@@ -545,6 +548,10 @@ namespace smc {
 		}
 		//A possible MCMC step could be included here.
 		nAccepted = Moves.DoMCMC(T+1,pPopulation,N);
+		
+		//Normalise the weights to sensible values....
+		pPopulation.SetLogWeight(pPopulation.GetLogWeight() - CalcLogNC()*arma::ones(N));
+		
 		// Increment the evolution time.
 		T++;
 
