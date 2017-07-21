@@ -1,6 +1,22 @@
 \name{NEWS}
 \title{News for Package \pkg{RcppSMC}}
 
+\section{Changes in RcppSMC version 0.1.8 (2017-06-16)}{
+  \itemize{
+	\item Switching to armadillo vectors. The particle class is now
+		  on the whole population of particles level.
+    \item Added an example \code{radiataPPBS} for a likelihood annealing
+		  version of the radiata pine linear regression problem.
+  }
+}
+
+\section{Changes in RcppSMC version 0.1.7 (2017-06-06)}{
+  \itemize{
+    \item Added an example \code{radiataBS} for a linear regression problem
+	\item Added code to estimate the ratio of normalising constants between the initial and final targets
+  }
+}
+
 \section{Changes in RcppSMC version 0.1.6 (2017-xx-yy)}{
   \itemize{
     \item Also use \code{.registration=TRUE} in \code{useDynLib} in

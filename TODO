@@ -3,4 +3,36 @@
 
  * For blockpfGaussianOpt et al, we could be fancy and return an S3 object
    with a plot method.  Maybe later.
+   
+ * Update all documentation
+
+ * Add a flag so that the optional MCMC moves are only performed when resampling is performed.
+ 
+ * Add support for an arma::mat version of the particle values.
+ 
+ * Complete a full implementation using arma::Mat for the particle values. This will
+   essentially mean that particles are restricted to be arma::Vec of a standard type. This
+   implementation can be compared to less restrictive implementations and, if useful,
+   support can be added using e.g. derived classes.
+   
+ * Add other interesting SMC algorithms, e.g.
+   * The iterated auxiliary particle filter of Guarniero et al. (2015)
+   * Divide-and-Conquer SMC (Lindsten et al., 2016)
+   * Particle MCMC (Andrieu et al., 2010)
+   
+ * Add extra functionality to the history to store all particles and ancestral lines
+   
+ * Consider other evidence estimators (e.g. importance sampling based estimators in the
+   case of independent proposals)
+   
+ * Specific to likelihood annealing SMC - make power posterior recycling (e.g.
+   Nguyen et al. (2014)) easier to apply more generally
+   
+ * Consider the use of derivative information (e.g. via MALA) - though this is probably
+   something to demonstrate just through an example.
+
+
+
+
+ 
 

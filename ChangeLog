@@ -1,3 +1,384 @@
+2017-07-20  Leah South  <leah.south@hdr.qut.edu.au>
+
+	* inst/include/sampler.h: Some minor changes to commenting and adding a function
+	  to do the log(sum(exp())) of a set of weights in a more stable way
+	* TODO: Minor changes to make plans more specific and to remove things that are
+	  completed or not of interested
+
+2017-07-19  Leah South  <leah.south@hdr.qut.edu.au>
+
+	* inst/include/moveset.h: Adding the log weight to the MCMC function arguments
+	* inst/include/LinReg.h: Idem.
+	* inst/include/LinReg_LA.h: Idem.
+	* inst/include/LinReg_LA.h: Idem.
+	
+	* src/LinReg.cpp: Idem.
+	* src/LinReg_LA.cpp: Idem.
+	* src/LinReg_LA_auto.cpp: Idem.
+
+2017-07-18  Leah South  <leah.south@hdr.qut.edu.au>
+	
+	* src/LinReg_LA_auto.cpp: Applying power posterior recycling
+
+2017-07-14  Leah South  <leah.south@hdr.qut.edu.au>
+	
+	* inst/include/sampler.h: Deleting the pointer to the adaptation class if it was created inside sampler
+	* inst/include/staticModelAdapt: Storing the empirical covariance matrix and its Cholesky decomposition
+	
+	* src/LinReg_LA_auto.cpp: Adapting the number of MCMC repeats (a bit messy, can be improved)
+	* inst/include/LinReg_LA_auto.h: Idem.
+
+2017-07-13  Leah South  <leah.south@hdr.qut.edu.au>
+	
+	* inst/include/LinReg_LA_auto.h: Changing myParams pointer type to base
+	
+2017-07-13  Leah South  <leah.south@hdr.qut.edu.au>
+
+	* inst/include/algParams.h: Adding template argument for parameter type
+	* inst/include/sampler.h: Idem.
+	* inst/include/staticModelAdapt: Adding a new class of parameters that might be useful in
+	  adaptation for static models
+	
+	* inst/include/LinReg_LA_auto.h: Adding template argument for parameters and using the class set up in staticModelAdapt
+	* src/LinReg_LA_auto.cpp: Idem.
+
+2017-07-12  Leah South  <leah.south@hdr.qut.edu.au>
+
+	* inst/include/algParams.h: Moving basic parameters out of algParams and back into sampler.
+	* inst/include/sampler.h: Idem.
+	
+	* inst/include/population.h: Adding a function GetN() to get the number of particles from the
+	  population object.
+	* inst/include/LinReg_LA_auto.h: Using GetN() from population object instead of parameter adaptation object
+	
+	* src/LinReg_LA_auto.cpp: Changing SetSMCParams back to SetResampParams and calling SetAdaptSet
+	* src/blockpfgaussianopt.cpp: Changing SetSMCParams back to SetResampParams
+	* src/LinReg.cpp: Idem
+	* src/LinReg_LA.cpp: Idem
+	* src/nonLinPMMH.cpp: Idem
+	* src/pflineart.cpp: Idem
+	* src/pfnonlinbs.cpp: Idem
+
+2017-07-11  Leah South  <leah.south@hdr.qut.edu.au>
+
+	* inst/include/algParams.h: Bringing in some basic parameters and adding more virtual functions
+	* inst/include/sampler.h: Putting the basic parameters into the algorithm parameter class.
+	
+	* inst/include/LinReg.h: Removing adaptation (using diagonal covariance not optimal anyway -
+	  moving adaptation into another example)
+	* src/LinReg.cpp: Removing adaptation and updating the sampler constructor.
+	
+	* inst/include/LinReg_LA_auto.h: A version of LinReg_LA with adaptation of the random walk
+	  covariance matrix and temperature schedule
+	* src/LinReg_LA_auto.cpp: Idem
+	* R/LinRegLA_auto.R: Idem
+	* NAMESPACE: adding this new function
+
+	* inst/include/LinReg_LA.h: renaming rad_obs2 class to rad_obs and putting in example namespace
+	
+	* src/blockpfgaussianopt.cpp: Adjusting the call to the sampler constructor.
+	* src/LinReg_LA.cpp: Idem
+	* src/nonLinPMMH.cpp: Idem
+	* src/pflineart.cpp: Idem
+	* src/pfnonlinbs.cpp: Idem
+
+2017-07-8  Leah South  <leah.south@hdr.qut.edu.au>
+
+	* inst/include/algParams.h: Setting up a base class for adaptation (will add basic parameters later) 
+	* inst/include/sampler.h: Using a pointer to a parameter object which can be updated before MCMC steps.
+
+	* inst/include/LinReg.h: Adding a parameter object which gets
+	  the standard deviation of the parameters before the MCMC step.
+	* src/LinReg.cpp: Idem.
+	
+	* src/blockpfgaussianopt.cpp: Adjusting the call to the sampler
+	  constructor to include a NULL parameter object pointer.
+	* src/LinReg_LA.cpp: Idem
+	* src/nonLinPMMH.cpp: Idem
+	* src/pflineart.cpp: Idem
+	* src/pfnonlinbs.cpp: Idem
+
+2017-07-8  Leah South  <leah.south@hdr.qut.edu.au>
+
+	* inst/include/rngR.h: Removed because we are now using Rcpp attributes.
+	* inst/include/moveset.h: Removed use of rng class
+	* inst/include/sampler.h: Idem
+	* inst/include/smctc.h: Idem
+
+	* inst/include/blockpfgaussianopt.h: Removed use of rng class
+	* inst/include/LinReg.h: Idem
+	* inst/include/LinReg_LA.h: Idem
+	* inst/include/nonLinPMMH.h: Idem
+	* inst/include/pflineart.h: Idem
+	* inst/include/pfnonlinbs.h: Idem
+	* src/blockpfgaussianopt.cpp: Idem
+	* src/LinReg.cpp: Idem.
+	* src/LinReg_LA.cpp: Idem
+	* src/nonLinPMMH.cpp: Idem
+	* src/pflineart.cpp: Idem
+	* src/pfnonlinbs.cpp: Idem
+	
+2017-07-4  Leah South  <leah.south@hdr.qut.edu.au>
+
+	* DESCRIPTION: automatically added RoxygenNote.
+	* NAMESPACE: Updating names for linear regression examples (unnecessary BS in titles removed)
+	  and adding the non-linear PMMH example to exports.
+	* R/*.R: Adding documentation for Roxygen
+	* man/*.Rd: Newly produced Roxygen documentation
+	* rcppsmc.Rproj: enabling tools for automatic documentation
+	*src/LinReg.cpp: fixed function to not use BS in title
+	*src/LinReg_LA.cpp: fixed function to not use BS in title
+
+2017-06-30  Leah South  <leah.south@hdr.qut.edu.au>
+
+	* DESCRIPTION: Setting lazy data to true
+	* data/pfdata.rda: Switching the previous pf-data.csv to a new format and location
+	* data/radiata.rda: Switching the regression example radiata.csv data to a new format and location 
+	* R/LinRegBS.R: Taking account of the new data location
+	* R/LinRegLABS.R: Taking account of the new data location and switching to using a simple sequence
+	  of temperatures
+	* R/pfLineartBS.R: Taking account of the new data location
+
+2017-06-30  Leah South  <leah.south@hdr.qut.edu.au>
+
+	* src/nonLinPMMH.cpp: Replaces PMMH.cpp. Creating a function for the prior and cleaning up unnecessary commented lines.
+	* R/simNonLinPMMH.R: Creating a function to simulate data and removing the script (simPMMH.R)
+	  and the example simulated data (PMMH-data.csv).
+    * inst/include/nonLinPMMH.h: replaces PMMH.h.
+	* man/nonLin/nonLinPMMH.Rd: Replaces PMMH.Rd.
+	* R/nonLinPMMH.R: Replaces PMMH.R.
+	* src/pflineart.cpp: Removing unnecessary commented lines.
+	* src/LinReg.cpp: Removing unnecessary commented line.
+	* src/LinReg_LA.cpp: Removing unnecessary commented line.
+	* inst/include/rngR.h: removing commented lines for NormalTruncated.
+
+2017-06-29  Leah South  <leah.south@hdr.qut.edu.au>
+
+    * inst/include/PMMH.h: Implementing a new example based on using PMMH for a non-linear
+	state space model as in Andrieu et al. (2010).
+	* src/simPMMH.R: Generating synthetic data (not necessary for runs)
+	* inst/sampleData/PMMH-data.csv: Generated data to be used as a default
+	* src/PMMH.cpp: The new example.
+	* man/PMMH.Rd: Idem.
+	* R/PMMH.R: Idem.
+
+2017-06-29  Leah South  <leah.south@hdr.qut.edu.au>
+
+    * inst/include/sampler.h: Moving the path sampling methods into a single function. Putting the enums into namespaces.
+	
+	* src/LinReg_LA.cpp: Adjusting the resampling, history and path sampling types.
+	* src/blockpfgaussianopt.cpp: Adjusting the resampling and history types.
+	* src/LinReg.cpp: Idem.
+	* src/pflineart.cpp: Idem.
+	* src/pfnonlinbs.cpp: Idem.
+
+2017-06-29  Leah South  <leah.south@hdr.qut.edu.au>
+
+	* TODO: Adding point about storing ancestral lines in the particle history.
+	* src/Makevars: Removing C++11 dependency.
+	* src/blockpfgaussianopt.cpp: Idem.
+	* src/LinReg.cpp: Idem.
+	* src/LinReg_LA.cpp: Idem.
+	* src/pflineart.cpp: Idem.
+	* src/pfnonlinbs.cpp: Idem.
+
+2017-06-28  Leah South  <leah.south@hdr.qut.edu.au>
+
+    * inst/include/history.h: Removing the history class (functions to go into the sampler class instead).
+	  Adding the function Integrate_Var which gets the Monte Carlo estimate of the variance for a
+	  given integrand (used in second order path sampling correcting)
+	* inst/include/sampler.h: Moving objects previously in the history class to sampler. Adding alternative
+	  path sampling estimators based on the trapezoidal rule (and a second order correction of the trapezoidal rule).
+	  
+	* inst/sampleData/radiata-temps.csv: Adding the temperature zero explicitly (required for the new path sampling estimators)
+	* src/LinReg_LA.cpp: Adjusting to take into account that the temperature of zero is included and using C++11
+	
+	* src/Makevars: Using C++11
+	* src/blockpfgaussianopt.cpp: Idem.
+	* src/LinReg.cpp: Idem.
+	* src/pflineart.cpp: Idem.
+	* src/pfnonlinbs.cpp: Idem.
+	
+
+2017-06-26  Leah South  <leah.south@hdr.qut.edu.au>
+
+	* inst/include/sampler.h: Removing unnecessary push to history in the path sampling estimator.
+    * inst/include/history.h: Adjusting iterators to correspond to the above change.
+
+2017-06-26  Leah South  <leah.south@hdr.qut.edu.au>
+
+    * inst/include/history.h: re-introducing a history class and adding back in path sampling
+	  integration and stream operators.
+	* inst/include/population.h: Switching to const where appropriate
+	* inst/include/sampler.h: Switching to using the history class rather than std::list<historyelement...>,
+	  switching to const where appropriate, adding stream operators and changing the nAccepted
+	  to give the total accepted particles within the MCMC step.
+	* inst/include/moveset.h: Changing DoMCMC to return 0 if no MCMC step (rather than false)
+	
+	* inst/include/LinReg_LA.h: Adding in the required functions for path sampling evidence estimation
+	* src/LinReg_LA.cpp: Adding in path sampling evidence estimates
+	* src/LinReg.cpp: Adding in stream operators for the parameters
+	* src/pflineart.cpp: Adding in stream operators for the parameters
+
+2017-06-23  Leah South  <leah.south@hdr.qut.edu.au>
+
+    * inst/include/sampler.h: Switching to using STL list container for history
+	* inst/include/history.h: Idem (some functionality needs to be added back in)
+	
+2017-06-22  Leah South  <leah.south@hdr.qut.edu.au>
+
+	* inst/include/history.h: Switching back to pointers...
+    * inst/include/sampler.h: Changing so that a pointer to the population set is entered in
+	  History.Push and History.Pop.
+	  
+
+2017-06-20  Leah South  <leah.south@hdr.qut.edu.au>
+
+    * inst/include/moveset.h: Changing so that the user-defined initialisation
+	  function takes a reference to a particle value as input and does not return
+	  anything. User-defined move and MCMC functions now take references to particle
+	  values and log weights as inputs.
+	* inst/include/population.h: removing the particle level object
+	* inst/include/sampler.h: Switching to the new initialisation, move and MCMC functions
+	
+	* src/LinReg.cpp: Updating the initialisation and move functions to correspond to above changes.
+	* src/LinReg_LA.cpp: Idem
+	* src/blockpfgaussianopt.cpp: Idem
+	* src/pflineart.cpp: Idem
+	* src/pfnonlinbs.cpp: Idem
+	* inst/include/LinReg.h: Idem
+	* inst/include/LinReg_LA.h: Idem
+	* inst/include/blockpfgaussianopt.h: Idem
+	* inst/include/pflineart.h: Idem
+	* inst/include/pfnonlinbs.h: Idem
+
+2017-06-19  Leah South  <leah.south@hdr.qut.edu.au>
+
+    * inst/include/moveset.h: Moving the for loop for initialisation back into the library
+	* inst/include/population.h: Creating a particle level object to be used only in initialisation
+	* inst/include/sampler.h: Calling the new initialisation function
+	
+	* src/LinReg.cpp: Updating the initialisation function to return a particle level object.
+	* src/LinReg_LA.cpp: Idem
+	* src/blockpfgaussianopt.cpp: Idem
+	* src/pflineart.cpp: Idem
+	* src/pfnonlinbs.cpp: Idem
+	* inst/include/LinReg.h: Idem
+	* inst/include/LinReg_LA.h: Idem
+	* inst/include/blockpfgaussianopt.h: Idem
+	* inst/include/pflineart.h: Idem
+	* inst/include/pfnonlinbs.h: Idem
+
+2017-06-19  Leah South  <leah.south@hdr.qut.edu.au>
+
+    * inst/include/population.h: replaces particle.h. Renaming the template class for the particles to "population"
+	* inst/include/history.h: Idem
+	* inst/include/moveset.h: Idem
+	* inst/include/sampler.h: Idem
+	* inst/include/blockpfgaussianopt.h: Idem
+	* inst/include/pflineart.h: Idem
+	* inst/include/pfnonlinbs.h: Idem
+	* src/blockpfgaussianopt.cpp: Idem
+	* src/pflineart.cpp: Idem
+	* src/pfnonlinbs.cpp: Idem
+	
+	* NAMESPACE: Changing names so that radiata -> LinReg to specify the type
+	  of problem not the dataset. Changing "radiataPP" to "LinRegLA" where LA
+	  stands for likelihood annealing instead of power posteriors.
+	* R/LinRegBS.R: replaces radiataBS
+	* R/LinRegPPBS.R: replaces radiataPPBS
+	* inst/include/LinReg.h: replaces radiata
+	* inst/include/LinReg_LA.h: replaces radiata_pp
+	* inst/sampleData/radiata-temps.csv: replaces radiata-pptemps
+	* man/LinRegBS.Rd: replaces radiataBS
+	* man/LinRegLABS.Rd: replaces radiataPPBS
+	* src/LinReg.cpp: replaces radiata
+	* src/LinReg_LA.cpp: replaces radiata_pp
+	
+2017-06-19  Leah South  <leah.south@hdr.qut.edu.au>
+
+	* inst/include/history.h: Updating the description at the top of the file.
+	* inst/include/moveset.h: Idem
+	* inst/include/particle.h: Idem
+	* inst/include/rngR.h: Idem
+	* inst/include/sampler.h: Idem
+	* inst/include/smc-exception.h: Idem
+	* inst/include/smctc.h: Idem
+	* inst/include/blockpfgaussianopt.h: Idem
+	* inst/include/pflineart.h: Idem
+	* inst/include/radiata.h: Idem
+	* inst/include/radiata_pp.h: Idem
+	* inst/include/pfnonlinbs.h: Idem & updating the namespace for this example to include the number of particles.
+	* man/blockpfGaussianOpt.Rd: Updating authors
+	* man/pfLineartBS.Rd: Idem
+	* man/pfNonlinBS.Rd: Idem
+	* man/radiataBS.Rd: Idem
+	* man/radiataPPBS.Rd: Idem
+	* src/blockpfgaussianopt.cpp: Updating the description at the top of the file and starting switch to Rcpp attributes
+	* src/pflineart.cpp: Idem
+	* src/pfnonlinbs.cpp: Idem
+	* src/radiata.cpp: Idem
+	* src/radiata_pp.cpp: Idem
+	* src/init.c: Removed (now using Rcpp attributes)
+	* src/RcppExports.c: First time being automatically produced (with use of Rcpp attributes)
+	* R/bspfGaussianOptimal.R: Starting switch to Rcpp attributes
+	* R/pfLineartBS.R: Idem
+	* R/pfNonlinBS.R: Idem
+	* R/radiataBS.R: Idem
+	* R/radiataPPBS.R: Idem
+	* R/RcppExports.R: First time being automatically produced (with use of Rcpp attributes)
+	* TODO: Fixing a typo
+	
+
+2017-06-17  Leah South  <leah.south@hdr.qut.edu.au>
+
+	* inst/include/history.h: changing some functions to pass and return constant references.
+	* inst/include/particle.h: Idem
+	* inst/include/sampler.h: Idem
+
+2017-06-16  Leah South  <leah.south@hdr.qut.edu.au>
+
+	* DESCRIPTION: Linking to RcppArmadillo
+	* src/Makevars: Adding a line for Armadillo use
+	
+	* NAMESPACE: Adding a likelihood annealing implementation of the radiata pine regression example
+	* inst/include/radiata_pp.h: Idem
+	* inst/include/radiata-pptemps.csv: Idem
+	* src/radiata_pp.cpp: Idem
+	* R/radiataPPBS.R: Idem
+	
+	* inst/include/history.h: Switching to a population level object and using Armadillo vectors for weights
+	* inst/include/moveset.h: Idem
+	* inst/include/particle.h: Idem
+	* inst/include/rngR.h: Idem
+	* inst/include/sampler.h: Idem
+	* inst/include/smc-exception.h: Idem
+	* src/history.cppsrc/smc-exception.cpp: Idem
+	
+	* inst/include/blockpfgaussianopt.h: Making more use of the example namespaces & switching to population level objects
+	* inst/include/pflineart.h: Idem
+	* inst/include/radiata.h: Idem
+	* inst/include/pfnonlinbs.h: Idem
+	* src/blockpfgaussianopt.cpp: Idem
+	* src/pflineart.cpp: Idem
+	* src/pfnonlinbs.cpp: Idem
+	* src/radiata.cpp: Idem
+	* src/init.c: Idem
+	
+2017-06-06  Leah South  <leah.south@hdr.qut.edu.au>
+
+	* inst/include/sampler.h: added ability to estimate the ratio of normalising constants
+	* man/pfLineartBS.RD: Idem
+	* inst/include/pflineart.h: Idem
+	* src/pflineart.cpp: Idem
+	* inst/include/radiata.h: a new example based on estimating the parameters of a linear regression
+	* R/radiataBS.R: Idem
+	* man/radiataBS.RD: Idem
+	* src/radiata.cpp: Idem
+	* src/init.c: Adding the radiataBS function
+	* inst/sampleData/radiata-data.csv: default data for the radiata example
+	* NAMESPACE: added radiataBS
+
 2017-03-04  Dirk Eddelbuettel  <edd@debian.org>
 
 	* NAMESPACE: Use .registration=TRUE on useDynLib
