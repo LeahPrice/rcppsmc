@@ -30,8 +30,10 @@
 namespace nonlinbs {
     double logLikelihood(long lTime, const double & X);
 
-    void fInitialise(double & value, double & logweight);
-    void fMove(long lTime, double & value, double & logweight);
+    class params {};
+    
+    void fInitialise(double & value, double & logweight, params & param);
+    void fMove(long lTime, double & value, double & logweight, params & param);
 
     double integrand_mean_x(const double&, void*);
     double integrand_var_x(const double&, void*);

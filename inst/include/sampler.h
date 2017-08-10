@@ -36,7 +36,7 @@
 #include "population.h"
 #include "history.h"
 #include "moveset.h"
-#include "algParam.h"
+#include "adaptMethods.h"
 #include "smc-exception.h"
 #include "staticModelAdapt.h"
 
@@ -67,7 +67,7 @@ namespace HistoryType
 
 ///Class for additional algorithm parameters
 class nullParams{
-
+    
 };
 
 namespace smc {
@@ -97,11 +97,13 @@ namespace smc {
         ///The particles within the system.
         population<Space> pPopulation;
         ///The set of moves available.
-        moveset<Space> Moves;
-        ///An object for tracking and adapting additional algorithm parameters.
-        algParam<Space,Params>* pAlgParams;
+        moveset<Space,Params> Moves;
+        /// The additional algorithm parameters.
+        Params algParams;
+        /// An object for adapting additional algorithm parameters
+        adaptMethods<Space,Params>* pAdapt;
         ///A flag to track whether the adaptation object needs to be included in this destructor.
-        bool pAlgBelong;
+        bool adaptBelong;
 
         ///The number of MCMC moves which have been accepted during this iteration
         int nAccepted;
@@ -126,8 +128,6 @@ namespace smc {
     public:
         ///Create an particle system containing lSize uninitialised particles with the specified mode.
         sampler(long lSize, HistoryType::Enum htHistoryMode);
-        ///Create a particle system containing lSize uninitialised particles with the specified history mode and adaptation object.
-        sampler(long lSize, HistoryType::Enum htHistoryMode, algParam<Space,Params>* adaptSet);
         ///Dispose of a sampler.
         ~sampler();
         ///Calculates and Returns the Effective Sample Size.
@@ -146,8 +146,8 @@ namespace smc {
         long GetNumber(void) const {return N;}
         ///Returns the number of evolution times stored in the history.
         long GetHistoryLength(void) const {return History.size();}
-        ///Returns a pointer to the additional algorithm parameter and adaptation object.
-        algParam<Space,Params> * GetAlgParams(void) const { return pAlgParams; }
+        ///Returns the additional algorithm parameters.
+        const Params & GetAlgParams(void) const {return algParams;}
         ///Return the value of particle n
         const Space &  GetParticleValueN(long n) const { return pPopulation.GetValueN(n); }
         ///Return the logarithmic unnormalized weight of particle n
@@ -187,9 +187,13 @@ namespace smc {
         ///Resample the particle set using the specified resampling scheme.
         void Resample(ResampleType::Enum lMode);
         ///Sets the entire moveset to the one which is supplied
-        void SetMoveSet(moveset<Space>& pNewMoveset) { Moves = pNewMoveset; }
+        void SetMoveSet(moveset<Space,Params>& pNewMoveset) { Moves = pNewMoveset; }
         ///Set Resampling Parameters
         void SetResampleParams(ResampleType::Enum rtMode, double dThreshold);
+        ///Set additional algorithm parameters
+        void SetAlgParam(Params parameters) {algParams = parameters;}
+        ///Set the methods to adapt the additional algorithm parameters
+        void SetAdaptMethods(adaptMethods<Space,Params>* adaptMethod) {delete pAdapt; pAdapt = adaptMethod; adaptBelong = 0;}
         ///Sets the number of MCMC repeats
         void SetMcmcRepeats(int reps) {nRepeats = reps;}
         ///Dump a specified particle to the specified output stream in a human readable form
@@ -227,45 +231,22 @@ namespace smc {
         N = lSize;
         uRSCount = arma::zeros<arma::Col<int> >(static_cast<int>(N));
         
-        pAlgParams = new algParam<Space,Params>;
-        pAlgBelong = 1;
-        nRepeats = 1;
-
         //Some workable defaults.
         htHistoryMode = htHM;
         rtResampleMode = ResampleType::STRATIFIED;;
         dResampleThreshold = 0.5 * N;
-    }
-
-    /// The constructor prepares a sampler for use but does not assign any moves to the moveset, initialise the particles
-    /// or otherwise perform any sampling related tasks. Its main function is to allocate a region of memory in which to
-    /// store the particle set.
-    ///
-    /// \param lSize The number of particles present in the ensemble (at time 0 if this is a variable quantity)
-    /// \param htHM The history mode to use: set this to HistoryType::RAM to store the whole history of the system and SMC_HISTORY_NONE to avoid doing so.
-    /// \param adaptSet The class derived from algParam for parameter adaptation.
-    /// \tparam Space The class used to represent a point in the sample space.
-    /// \tparam Params The class used for additional algorithm parameters.
-    template <class Space, class Params>
-    sampler<Space,Params>::sampler(long lSize, HistoryType::Enum htHM, algParam<Space,Params>* adaptSet)
-    {
-        N = lSize;
-        pAlgParams = adaptSet;
-        pAlgBelong = 0;
+        
+        //Create an empty adaptation object by default
+        pAdapt = new adaptMethods<Space,Params>;
+        adaptBelong = 1;
         nRepeats = 1;
-        uRSCount = arma::zeros<arma::Col<int> >(static_cast<int>(N));
-
-        //Some workable defaults.
-        htHistoryMode = htHM;
-        rtResampleMode = ResampleType::STRATIFIED;
-        dResampleThreshold = 0.5 * N;
     }
 
     template <class Space, class Params>
     sampler<Space,Params>::~sampler()
     {
-        if(pAlgBelong)
-        delete pAlgParams;
+        if(adaptBelong)
+        delete pAdapt;
     }
 
     template <class Space, class Params>
@@ -298,7 +279,7 @@ namespace smc {
         std::vector<Space> InitVal(N);
         arma::vec InitWeights(N);
         pPopulation = population<Space>(InitVal,InitWeights);
-        Moves.DoInit(pPopulation,N);
+        Moves.DoInit(pPopulation,N,algParams);
 
         //Scaling weights by 1/N (for evidence computation)
         pPopulation.SetLogWeight(pPopulation.GetLogWeight() - log(static_cast<double>(N)));
@@ -315,16 +296,16 @@ namespace smc {
         double ESS = GetESS();
         if(ESS < dResampleThreshold) {
             nResampled = 1;
-            pAlgParams->updateForMCMC(pPopulation,acceptProb,nResampled,nRepeats);
+            pAdapt->updateForMCMC(algParams,pPopulation,acceptProb,nResampled,nRepeats);
             Resample(rtResampleMode);
         }
         else {
             nResampled = 0;
-            pAlgParams->updateForMCMC(pPopulation,acceptProb,nResampled,nRepeats);
+            pAdapt->updateForMCMC(algParams,pPopulation,acceptProb,nResampled,nRepeats);
         }
 
         //A possible MCMC step should be included here.
-        bool didMCMC =  Moves.DoMCMC(0,pPopulation, N, nRepeats, nAccepted);
+        bool didMCMC =  Moves.DoMCMC(0,pPopulation, N, nRepeats, nAccepted,algParams);
         if (didMCMC){
             acceptProb = static_cast<double>(nAccepted)/(static_cast<double>(N)*static_cast<double>(nRepeats));
         }
@@ -333,7 +314,7 @@ namespace smc {
         pPopulation.SetLogWeight(pPopulation.GetLogWeight() - CalcLogNC());
         
         //Perform any final updates to the additional algorithm parameters.
-        pAlgParams->updateEnd(pPopulation);
+        pAdapt->updateEnd(algParams,pPopulation);
         
         //Finally, the current particle set should be appended to the historical process.
         if(htHistoryMode != HistoryType::NONE) {
@@ -498,7 +479,7 @@ namespace smc {
     template <class Space, class Params>
     double sampler<Space,Params>::IterateEss(void)
     {
-        pAlgParams->updateForMove(pPopulation);
+        pAdapt->updateForMove(algParams,pPopulation);
 
         //Move the particle set.
         MoveParticles();
@@ -515,16 +496,16 @@ namespace smc {
         double ESS = GetESS();
         if(ESS < dResampleThreshold) {
             nResampled = 1;
-            pAlgParams->updateForMCMC(pPopulation,acceptProb,nResampled,nRepeats);
+            pAdapt->updateForMCMC(algParams,pPopulation,acceptProb,nResampled,nRepeats);
             Resample(rtResampleMode);
         }
         else {
             nResampled = 0;
-            pAlgParams->updateForMCMC(pPopulation,acceptProb,nResampled,nRepeats);
+            pAdapt->updateForMCMC(algParams,pPopulation,acceptProb,nResampled,nRepeats);
         }
         
         //A possible MCMC step should be included here.
-        bool didMCMC = Moves.DoMCMC(T+1,pPopulation, N, nRepeats, nAccepted);
+        bool didMCMC = Moves.DoMCMC(T+1,pPopulation, N, nRepeats, nAccepted,algParams);
         if (didMCMC){
             acceptProb = static_cast<double>(nAccepted)/(static_cast<double>(N)*static_cast<double>(nRepeats));
         }
@@ -533,7 +514,7 @@ namespace smc {
         pPopulation.SetLogWeight(pPopulation.GetLogWeight() - CalcLogNC());
         
         //Perform any final updates to the additional algorithm parameters.
-        pAlgParams->updateEnd(pPopulation);
+        pAdapt->updateEnd(algParams,pPopulation);
         
         //Finally, the current particle set should be appended to the historical process.
         if(htHistoryMode != HistoryType::NONE){
@@ -558,7 +539,7 @@ namespace smc {
     template <class Space, class Params>
     void sampler<Space,Params>::MoveParticles(void)
     {
-        Moves.DoMove(T+1,pPopulation, N);
+        Moves.DoMove(T+1,pPopulation, N,algParams);
     }
 
     template <class Space, class Params>

@@ -43,12 +43,14 @@ namespace LinReg_LA {
     long lIterates;
     arma::vec temps;
     
+    class params {};
+    
     double logLikelihood(const rad_state & value);
     double logPrior(const rad_state & value);
     
-    void fInitialise(rad_state & value, double & logweight);
-    void fMove(long lTime, rad_state & value, double & logweight);
-    bool fMCMC(long lTime, rad_state & value, double & logweight);
+    void fInitialise(rad_state & value, double & logweight, params & param);
+    void fMove(long lTime, rad_state & value, double & logweight, params & param);
+    bool fMCMC(long lTime, rad_state & value, double & logweight, params & param);
     
     double integrand_ps(long,const rad_state &, void *);
     double width_ps(long, void *);

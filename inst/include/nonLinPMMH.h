@@ -31,10 +31,12 @@ namespace nonLinPMMH {
         double sigv, sigw;
     };
     arma::vec y; //data
+        
+    class params{};
     
     double logPrior(const parameters & proposal);
-    void fInitialise(double & value, double & logweight);
-    void fMove(long lTime, double & value, double & logweight);
+    void fInitialise(double & value, double & logweight, params & param);
+    void fMove(long lTime, double & value, double & logweight, params & param);
     
     parameters theta_prop;
 }

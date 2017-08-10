@@ -23,6 +23,9 @@
 #include "smctc.h"
 
 namespace BSPFG {
-    void fInitialise(arma::vec & value, double & logweight);
-    void fMove(long lTime, arma::vec & value, double & logweight);
+
+    class params {};
+    
+    void fInitialise(arma::vec & value, double & logweight, params & param);
+    void fMove(long lTime, arma::vec & value, double & logweight, params & param);
 }

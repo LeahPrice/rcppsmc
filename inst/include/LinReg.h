@@ -36,12 +36,14 @@ namespace LinReg {
         arma::vec y, x;
     };
 
+    class params {};
+
     rad_obs data;
     double mean_x;
     
     double logWeight(long lTime, const rad_state & value);
     double logPosterior(long lTime, const rad_state & value);
-    void fInitialise(rad_state & value, double & logweight);
-    void fMove(long lTime, rad_state & value, double & logweight);
-    bool fMCMC(long lTime, rad_state & value, double & logweight);
+    void fInitialise(rad_state & value, double & logweight, params & param);
+    void fMove(long lTime, rad_state & value, double & logweight, params & param);
+    bool fMCMC(long lTime, rad_state & value, double & logweight, params & param);
 }
