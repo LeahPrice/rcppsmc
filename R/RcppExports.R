@@ -5,6 +5,10 @@ blockpfGaussianOpt_impl <- function(data, part, lag) {
     .Call(`_RcppSMC_blockpfGaussianOpt_impl`, data, part, lag)
 }
 
+linGauss_BPF_impl <- function(data, initial, lNumber, lMCMCits) {
+    .Call(`_RcppSMC_linGauss_BPF_impl`, data, initial, lNumber, lMCMCits)
+}
+
 LinReg_impl <- function(Data, lNumber) {
     .Call(`_RcppSMC_LinReg_impl`, Data, lNumber)
 }

@@ -1,3 +1,18 @@
+2017-08-12  Leah South  <leah.south@hdr.qut.edu.au>
+
+	* inst/include/LinGauss_BPF.h: Adding another example of PMMH with
+	a BPF. This example doesn't add any value to the package
+	but I'm working on an APF implementation and the aim is to eventually
+	add an iAPF implementation.
+	* src/LinGauss_BPF.cpp: Idem.
+	* R/linGauss_BPF.R: Idem.
+	* R/simLinGauss.R: A function to simulate from the model.
+
+	* NAMESPACE: Adding the new functions to the namespace.
+
+	* src/RcppExports.cpp: Regenerated.
+	* R/RcppExports.R: Idem.
+
 2017-08-11  Leah South  <leah.south@hdr.qut.edu.au>
 
 	* inst/include/adaptMethods.h: Changing the name (from algParams.h) and 
