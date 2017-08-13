@@ -20,7 +20,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // linGauss_BPF_impl
-Rcpp::DataFrame linGauss_BPF_impl(arma::mat data, arma::rowvec initial, unsigned long lNumber, unsigned long lMCMCits);
+Rcpp::List linGauss_BPF_impl(arma::mat data, arma::rowvec initial, unsigned long lNumber, unsigned long lMCMCits);
 RcppExport SEXP _RcppSMC_linGauss_BPF_impl(SEXP dataSEXP, SEXP initialSEXP, SEXP lNumberSEXP, SEXP lMCMCitsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;

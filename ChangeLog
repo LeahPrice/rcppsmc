@@ -1,3 +1,13 @@
+2017-08-13  Leah South  <leah.south@hdr.qut.edu.au>
+
+	* inst/include/LinGauss_BPF.h: Updating description and
+	adding logMvnPdf function.
+	* src/LinGauss_BPF.cpp: Fixing the way that proposals are made
+	(one parameter at a time), returning a list instead of a dataframe
+	and using logMvnPdf.
+
+	* src/RcppExports.cpp: Regenerated.
+
 2017-08-12  Leah South  <leah.south@hdr.qut.edu.au>
 
 	* inst/include/LinGauss_BPF.h: Adding another example of PMMH with

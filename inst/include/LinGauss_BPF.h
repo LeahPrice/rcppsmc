@@ -1,12 +1,9 @@
 // -*- mode: C++; c-indent-level: 4; c-basic-offset: 4; indent-tabs-mode: nil; -*-
 //
-// ADD DESCRIPTION HERE
-//
-//
-//
-//
-//
-//
+// LinReg_BPF.h: Example 5.2 of Guarniero, Johansen and Lee (2016):
+// Estimating the transition matrix for a multidimensional linear Gaussian
+// model. A bootstrap particle filter is used to estimate the likelihood
+// for use in particle marginal Metropolis Hastings.
 //
 // Copyright (C) 2017         Dirk Eddelbuettel, Adam Johansen and Leah South
 //
@@ -36,8 +33,12 @@ namespace linGauss_BPF {
     arma::mat A;
     arma::rowvec theta_prop;
     
+    arma::mat I;
+    
+    double logMvnPdf(arma::vec obs, arma::vec mu, arma::mat cov);
+    
     void GenA(arma::mat & A, const arma::rowvec & a);
     
-    void fInitialise(arma::vec & value, double & logweight, smc::nullParams & param);
-    void fMove(long lTime, arma::vec & value, double & logweight, smc::nullParams & param);
+    void fInitialise(arma::vec & X, double & logweight, smc::nullParams & param);
+    void fMove(long lTime, arma::vec & X, double & logweight, smc::nullParams & param);
 }

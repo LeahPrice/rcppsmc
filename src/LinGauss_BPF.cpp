@@ -1,12 +1,9 @@
 // -*- mode: C++; c-indent-level: 4; c-basic-offset: 4; indent-tabs-mode: nil; -*-
 //
-// ADD DESCRIPTION HERE
-//
-//
-//
-//
-//
-//
+// LinReg_BPF.cpp: Example 5.2 of Guarniero, Johansen and Lee (2016):
+// Estimating the transition matrix for a multidimensional linear Gaussian
+// model. A bootstrap particle filter is used to estimate the likelihood
+// for use in particle marginal Metropolis Hastings.
 //
 // Copyright (C) 2017         Dirk Eddelbuettel, Adam Johansen and Leah South
 //
@@ -31,9 +28,9 @@ using namespace std;
 using namespace linGauss_BPF;
 
 
-// linGauss_BPF() function callable from R via Rcpp::
+// linGauss_BPF_impl() function callable from R via Rcpp::
 // [[Rcpp::export]]
-Rcpp::DataFrame linGauss_BPF_impl(arma::mat data, arma::rowvec initial, unsigned long lNumber, unsigned long lMCMCits) {    
+Rcpp::List linGauss_BPF_impl(arma::mat data, arma::rowvec initial, unsigned long lNumber, unsigned long lMCMCits) {    
 
     try {
         long lIterates = data.n_rows;
@@ -42,6 +39,8 @@ Rcpp::DataFrame linGauss_BPF_impl(arma::mat data, arma::rowvec initial, unsigned
         lLength = lDim*(lDim+1)/2;
         y = data;
         arma::mat theta(lMCMCits,lLength);
+        
+        I = arma::eye(lDim,lDim);
         
         arma::vec loglike = arma::zeros(lMCMCits);
         
@@ -54,8 +53,7 @@ Rcpp::DataFrame linGauss_BPF_impl(arma::mat data, arma::rowvec initial, unsigned
         Sampler.SetResampleParams(ResampleType::MULTINOMIAL, 1.01*lNumber);
         Sampler.SetMoveSet(Moveset);
         
-        // Getting a particle filtering estimate of the log likelihood.
-        theta_prop = initial; //theta_prop = {0.9,0.3,0.7,0.1,0.2,0.6,0.4,0.1,0.1,0.3,0.1,0.2,0.5,0.2,0};
+        theta_prop = initial; 
         theta.row(0) = theta_prop;
         GenA(A,theta_prop);
         Sampler.Initialise();
@@ -67,7 +65,8 @@ Rcpp::DataFrame linGauss_BPF_impl(arma::mat data, arma::rowvec initial, unsigned
         double MH_ratio;
         for (unsigned int i = 1; i<lMCMCits; i++){
             // RW proposal for parameters
-            theta_prop = theta.row(i-1) + Rcpp::as<arma::rowvec>(Rcpp::rnorm(lLength,0,0.1));
+            theta_prop = theta.row(i-1);
+            theta_prop((i-1)%15) += R::rnorm(0.0,sqrt(0.1));
             GenA(A,theta_prop);
             
             // Evaluating prior
@@ -94,7 +93,7 @@ Rcpp::DataFrame linGauss_BPF_impl(arma::mat data, arma::rowvec initial, unsigned
             
         }
         
-        return Rcpp::DataFrame::create(Rcpp::Named("samples_theta") = theta,
+        return Rcpp::List::create(Rcpp::Named("samples_theta") = theta,
         Rcpp::Named("loglike") = loglike);
     }
     catch(smc::exception  e) {
@@ -104,6 +103,18 @@ Rcpp::DataFrame linGauss_BPF_impl(arma::mat data, arma::rowvec initial, unsigned
 }
 
 namespace linGauss_BPF {
+    
+    /// Calculates the log of the multivariate normal density
+
+    /// \param obs      The point at which the density is calculated
+    /// \param mu       The mean vector
+    /// \param cov      The covariance
+    double logMvnPdf(arma::vec obs, arma::vec mu, arma::mat cov){
+        double det, sign;
+        arma::log_det(det, sign, cov);
+        return ( -lDim*0.5*log(2.0*M_PI) - 0.5*det - 0.5*arma::as_scalar((obs-mu).t()*arma::inv(cov)*(obs-mu)));
+    }
+    
     /// Updates the matrix A based on the proposals
 
     /// \param A        A reference to the current A matrix
@@ -124,8 +135,8 @@ namespace linGauss_BPF {
     /// \param params       A reference to the (null) parameter values
     void fInitialise(arma::vec & X, double & logweight, smc::nullParams & params)
     {
-        X = Rcpp::as<arma::vec>(Rcpp::rnorm(lDim,0.0,1.0)); //mu_1
-        logweight = arma::sum(-log(sqrt(0.25)) - pow(y.row(0).t() - X,2.0)/(2.0*0.25) -0.5*log(2.0*M_PI)); //g_1
+        X = Rcpp::as<arma::vec>(Rcpp::rnorm(lDim)); //mu_1
+        logweight = logMvnPdf(y.row(0).t(),X,0.25*arma::eye(lDim,lDim)); //g_1
     }
 
     ///The proposal function.
@@ -135,7 +146,7 @@ namespace linGauss_BPF {
     ///\param params    A reference to the (null) parameter values
     void fMove(long lTime, arma::vec & X, double & logweight, smc::nullParams & params)
     {
-        X = A*X + Rcpp::as<arma::vec>(Rcpp::rnorm(lDim,0.0,1.0)); //f_t
-        logweight += arma::sum(-log(sqrt(0.25)) - pow(y.row(lTime).t() - X,2.0)/(2.0*0.25) -0.5*log(2.0*M_PI)); //g_t
+        X = A*X + Rcpp::as<arma::vec>(Rcpp::rnorm(lDim)); //f_t
+        logweight += logMvnPdf(y.row(lTime).t(),X,0.25*arma::eye(lDim,lDim)); //g_t
     }
 }
