@@ -33,6 +33,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// linGauss_fAPF_impl
+Rcpp::List linGauss_fAPF_impl(arma::mat data, arma::rowvec initial, unsigned long lNumber, unsigned long lMCMCits);
+RcppExport SEXP _RcppSMC_linGauss_fAPF_impl(SEXP dataSEXP, SEXP initialSEXP, SEXP lNumberSEXP, SEXP lMCMCitsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type data(dataSEXP);
+    Rcpp::traits::input_parameter< arma::rowvec >::type initial(initialSEXP);
+    Rcpp::traits::input_parameter< unsigned long >::type lNumber(lNumberSEXP);
+    Rcpp::traits::input_parameter< unsigned long >::type lMCMCits(lMCMCitsSEXP);
+    rcpp_result_gen = Rcpp::wrap(linGauss_fAPF_impl(data, initial, lNumber, lMCMCits));
+    return rcpp_result_gen;
+END_RCPP
+}
 // LinReg_impl
 Rcpp::List LinReg_impl(arma::mat Data, unsigned long lNumber);
 RcppExport SEXP _RcppSMC_LinReg_impl(SEXP DataSEXP, SEXP lNumberSEXP) {
@@ -115,6 +129,7 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_RcppSMC_blockpfGaussianOpt_impl", (DL_FUNC) &_RcppSMC_blockpfGaussianOpt_impl, 3},
     {"_RcppSMC_linGauss_BPF_impl", (DL_FUNC) &_RcppSMC_linGauss_BPF_impl, 4},
+    {"_RcppSMC_linGauss_fAPF_impl", (DL_FUNC) &_RcppSMC_linGauss_fAPF_impl, 4},
     {"_RcppSMC_LinReg_impl", (DL_FUNC) &_RcppSMC_LinReg_impl, 2},
     {"_RcppSMC_LinRegLA_impl", (DL_FUNC) &_RcppSMC_LinRegLA_impl, 3},
     {"_RcppSMC_LinRegLA_adapt_impl", (DL_FUNC) &_RcppSMC_LinRegLA_adapt_impl, 4},

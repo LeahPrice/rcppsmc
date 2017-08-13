@@ -9,6 +9,10 @@ linGauss_BPF_impl <- function(data, initial, lNumber, lMCMCits) {
     .Call(`_RcppSMC_linGauss_BPF_impl`, data, initial, lNumber, lMCMCits)
 }
 
+linGauss_fAPF_impl <- function(data, initial, lNumber, lMCMCits) {
+    .Call(`_RcppSMC_linGauss_fAPF_impl`, data, initial, lNumber, lMCMCits)
+}
+
 LinReg_impl <- function(Data, lNumber) {
     .Call(`_RcppSMC_LinReg_impl`, Data, lNumber)
 }

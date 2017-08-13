@@ -6,7 +6,15 @@
 	(one parameter at a time), returning a list instead of a dataframe
 	and using logMvnPdf.
 
+    * inst/include/LinGauss_fAPF.h: Adding another implementation using
+    the fully adapted (auxiliary) particle filter.
+	* src/LinGauss_fAPF.cpp: Idem.
+	* R/linGauss_fAPF.R: Idem.
+
+	* NAMESPACE: Adding the new function to the namespace.
+
 	* src/RcppExports.cpp: Regenerated.
+	* R/RcppExports.R: Idem.
 
 2017-08-12  Leah South  <leah.south@hdr.qut.edu.au>
 
