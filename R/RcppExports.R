@@ -9,12 +9,12 @@ LinReg_impl <- function(Data, lNumber) {
     .Call(`_RcppSMC_LinReg_impl`, Data, lNumber)
 }
 
-LinRegLA_adapt_impl <- function(Data, lNumber, resampTol, tempTol) {
-    .Call(`_RcppSMC_LinRegLA_adapt_impl`, Data, lNumber, resampTol, tempTol)
-}
-
 LinRegLA_impl <- function(Data, intemps, lNumber) {
     .Call(`_RcppSMC_LinRegLA_impl`, Data, intemps, lNumber)
+}
+
+LinRegLA_adapt_impl <- function(Data, lNumber, resampTol, tempTol) {
+    .Call(`_RcppSMC_LinRegLA_adapt_impl`, Data, lNumber, resampTol, tempTol)
 }
 
 nonLinPMMH_impl <- function(data, lNumber, lMCMCits) {
@@ -27,5 +27,9 @@ pfLineartBS_impl <- function(data, part, usef, fun) {
 
 pfNonlinBS_impl <- function(data, part) {
     .Call(`_RcppSMC_pfNonlinBS_impl`, data, part)
+}
+
+SMC2_Ricker <- function(data, num_outer, num_inner) {
+    .Call(`_RcppSMC_SMC2_Ricker`, data, num_outer, num_inner)
 }
 

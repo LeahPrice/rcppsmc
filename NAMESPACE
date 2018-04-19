@@ -18,5 +18,7 @@ export("blockpfGaussianOpt",
        "nonLinPMMH",
        "simGaussian",
        "simLineart",
-       "simNonlin")
+       "simNonlin",
+       "Run_Ricker",
+       "SMC2_Ricker")
 
