@@ -26,7 +26,7 @@
 #include "smctc.h"
 #include "pflineart.h"
 
-#include <cstdio> 
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 
@@ -39,7 +39,7 @@ namespace pflineart {
     const double scale_y = 0.1;
     const double nu_y = 10.0;
     const double Delta = 0.1;
-    
+
     ///The observations
     cv_obs y;
 }
@@ -63,7 +63,7 @@ Rcpp::DataFrame pfLineartBS_impl(arma::mat data, unsigned long part, bool usef, 
 
         //Initialise and run the sampler
 		myMove = new pflineart_move;
-        smc::sampler<cv_state,smc::nullParams> Sampler(lNumber, HistoryType::NONE, myMove);  
+        smc::sampler<cv_state,smc::nullParams> Sampler(lNumber, HistoryType::NONE, myMove);
         Sampler.SetResampleParams(ResampleType::RESIDUAL, 0.5);
         Sampler.Initialise();
 
@@ -76,7 +76,7 @@ Rcpp::DataFrame pfLineartBS_impl(arma::mat data, unsigned long part, bool usef, 
 
         for(int n=1; n < lIterates; ++n) {
             Sampler.Iterate();
-            
+
             Xm(n) = Sampler.Integrate(integrand_mean_x, NULL);
             Xv(n) = Sampler.Integrate(integrand_var_x, (void*)&Xm(n));
             Ym(n) = Sampler.Integrate(integrand_mean_y, NULL);
@@ -84,7 +84,7 @@ Rcpp::DataFrame pfLineartBS_impl(arma::mat data, unsigned long part, bool usef, 
 
             if (usef) fun(Xm, Ym);
         }
-		
+
 		delete myMove;
 
         return Rcpp::DataFrame::create(Rcpp::Named("Xm") = Xm,
@@ -95,7 +95,7 @@ Rcpp::DataFrame pfLineartBS_impl(arma::mat data, unsigned long part, bool usef, 
     catch(smc::exception  e) {
         Rcpp::Rcout << e;
     }
-    return R_NilValue;              // to provide a return 
+    return R_NilValue;              // to provide a return
 }
 
 
@@ -103,7 +103,7 @@ Rcpp::DataFrame pfLineartBS_impl(arma::mat data, unsigned long part, bool usef, 
 #include <cmath>
 
 namespace pflineart {
-    
+
     double integrand_mean_x(const cv_state& s, void *)
     {
         return s.x_pos;
@@ -131,40 +131,36 @@ namespace pflineart {
     ///The function corresponding to the log likelihood at specified time and position (up to normalisation)
 
     ///  \param lTime The current time (i.e. the index of the current distribution)
-    ///  \param X     The state to consider 
+    ///  \param X     The state to consider
     double logLikelihood(long lTime, const cv_state & X)
     {
         return - 0.5 * (nu_y + 1.0) * (log(1 + std::pow((X.x_pos - y.x_pos(lTime))/scale_y,2) / nu_y) + log(1 + std::pow((X.y_pos - y.y_pos(lTime))/scale_y,2) / nu_y));
     }
 
-    ///A function to initialise particles
+    void pflineart_move::DoInit(smc::population<cv_state> & pFrom, long N, smc::nullParams & params){
+        for (long i=0; i<N; i++){
 
-    /// \param value The value of the particle being moved
-    /// \param logweight The log weight of the particle being moved
-    /// \param param Additional algorithm parameters
-    void pflineart_move::pfInitialise(cv_state & value, double & logweight, smc::nullParams & param)
-    {
-        value.x_pos = R::rnorm(0.0,sqrt(var_s0));
-        value.y_pos = R::rnorm(0.0,sqrt(var_s0));
-        value.x_vel = R::rnorm(0.0,sqrt(var_u0));
-        value.y_vel = R::rnorm(0.0,sqrt(var_u0));
+            cv_state* pValue = &pFrom.GetValueRefN(i);
+            pValue->x_pos = R::rnorm(0.0,sqrt(var_s0));
+            pValue->y_pos = R::rnorm(0.0,sqrt(var_s0));
+            pValue->x_vel = R::rnorm(0.0,sqrt(var_u0));
+            pValue->y_vel = R::rnorm(0.0,sqrt(var_u0));
 
-        logweight = logLikelihood(0,value);
+            pFrom.GetLogWeightRefN(i) = logLikelihood(0,*pValue);
+        }
+
     }
+	void pflineart_move::DoMove(long lTime, smc::population<cv_state> & pFrom, long N, smc::nullParams & params){
+        for (long i=0; i<N; i++){
 
-    ///The proposal function.
+            cv_state* pValue = &pFrom.GetValueRefN(i);
+            pValue->x_pos += pValue->x_vel * Delta + R::rnorm(0.0,sqrt(var_s));
+            pValue->x_vel += R::rnorm(0.0,sqrt(var_u));
+            pValue->y_pos += pValue->y_vel * Delta + R::rnorm(0.0,sqrt(var_s));
+            pValue->y_vel += R::rnorm(0.0,sqrt(var_u));
 
-    ///\param lTime The sampler iteration.
-    ///\param value The value of the particle being moved
-    ///\param logweight The log weight of the particle being moved
-    /// \param param Additional algorithm parameters
-    void pflineart_move::pfMove(long lTime, cv_state & value, double & logweight, smc::nullParams & param)
-    {
-        value.x_pos += value.x_vel * Delta + R::rnorm(0.0,sqrt(var_s));
-        value.x_vel += R::rnorm(0.0,sqrt(var_u));
-        value.y_pos += value.y_vel * Delta + R::rnorm(0.0,sqrt(var_s));
-        value.y_vel += R::rnorm(0.0,sqrt(var_u));
+            pFrom.GetLogWeightRefN(i) += logLikelihood(lTime, *pValue);
 
-        logweight += logLikelihood(lTime, value);
+        }
     }
 }

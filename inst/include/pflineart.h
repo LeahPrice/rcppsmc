@@ -24,7 +24,7 @@
 #include "smctc.h"
 
 namespace pflineart {
-    class cv_state 
+    class cv_state
     {
     public:
         double x_pos, y_pos;
@@ -36,17 +36,17 @@ namespace pflineart {
     public:
         arma::vec x_pos, y_pos;
     };
-	
+
 	double logLikelihood(long lTime, const cv_state & X);
-	
+
 	//A derived class for the moves
     class pflineart_move:
     public smc::moveset<cv_state,smc::nullParams>
     {
     public:
-        
-		void pfInitialise(cv_state & value, double & logweight, smc::nullParams & param);
-        void pfMove(long lTime, cv_state & value, double & logweight, smc::nullParams & param);
+
+        void DoInit(smc::population<cv_state> & pFrom, long N, smc::nullParams & params);
+        void DoMove(long lTime, smc::population<cv_state> & pFrom, long N, smc::nullParams & params);
 
         ~pflineart_move() {};
 
@@ -56,7 +56,7 @@ namespace pflineart {
     double integrand_mean_y(const cv_state&, void*);
     double integrand_var_x(const cv_state&, void*);
     double integrand_var_y(const cv_state&, void*);
-	
+
 	smc::moveset<cv_state,smc::nullParams>* myMove;
 
 }

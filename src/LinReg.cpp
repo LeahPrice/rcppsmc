@@ -121,55 +121,49 @@ namespace LinReg {
         return (log_normpdf + log_prior);
     }
 
-    ///A function to initialise a particle
+    void LinReg_move::DoInit(smc::population<rad_state> & pFrom, long N, smc::nullParams & params){
+        for (long i=0; i<N; i++){
 
-    /// \param value        Reference to the empty particle value
-    /// \param logweight    Refernce to the empty particle log weight
-    /// \param param        Additional algorithm parameters
-    void LinReg_move::pfInitialise(rad_state & value, double & logweight, smc::nullParams & param)
-    {
-        value.theta = arma::zeros(3);
-        // drawing from the prior
-        value.theta(0) = R::rnorm(3000.0,1000.0);
-        value.theta(1) = R::rnorm(185.0,100.0);
-        value.theta(2) = log(std::pow(R::rgamma(3,std::pow(2.0*300.0*300.0,-1.0)),-1.0));
+            rad_state* pValue = &pFrom.GetValueRefN(i);
+            pValue->theta = arma::zeros(3);
+            pValue->theta = arma::zeros(3);
+            // drawing from the prior
+            pValue->theta(0) = R::rnorm(3000.0,1000.0);
+            pValue->theta(1) = R::rnorm(185.0,100.0);
+            pValue->theta(2) = log(std::pow(R::rgamma(3,std::pow(2.0*300.0*300.0,-1.0)),-1.0));
 
-        logweight = logWeight(0, value);
-    }
+            pFrom.GetLogWeightRefN(i) = logWeight(0,*pValue);
 
-    ///The proposal function.
-
-    /// \param lTime        The sampler iteration.
-    /// \param value        Reference to the current particle value
-    /// \param logweight    Refernce to the current particle log weight
-    /// \param param        Additional algorithm parameters
-    void LinReg_move::pfMove(long lTime, rad_state & value, double & logweight, smc::nullParams & param)
-    {
-        logweight += logWeight(lTime, value);
-    }
-
-    ///The MCMC function.
-
-    /// \param lTime        The sampler iteration.
-    /// \param value        Reference to the current particle value
-    /// \param logweight    Reference to the log weight of the particle being moved
-    /// \param param        Additional algorithm parameters
-    bool LinReg_move::pfMCMC(long lTime, rad_state & value, double & logweight, smc::nullParams & param)
-    {
-        double logposterior_curr = logPosterior(lTime, value);
-
-        rad_state value_prop;
-        value_prop.theta = value.theta + cholCovRW*Rcpp::as<arma::vec>(Rcpp::rnorm(3));
-
-        double logposterior_prop = logPosterior(lTime, value_prop);
-
-        double MH_ratio = exp(logposterior_prop - logposterior_curr);
-
-        if (MH_ratio>R::runif(0,1)){
-            value = value_prop;
-            logposterior_curr = logposterior_prop;
-            return TRUE;
         }
-        return FALSE;
+
+    }
+	void LinReg_move::DoMove(long lTime, smc::population<rad_state> & pFrom, long N, smc::nullParams & params){
+        for (long i=0; i<N; i++){
+            pFrom.GetLogWeightRefN(i) += logWeight(lTime, pFrom.GetValueRefN(i));
+        }
+    }
+
+    bool LinReg_move::DoMCMC(long lTime, smc::population<rad_state> & pFrom, long N, int nRepeats, int & nAccepted, smc::nullParams & params){
+        nAccepted = 0;
+        for (int j=0; j<nRepeats; j++){
+            for (long i=0; i<N; i++){
+
+                rad_state* pValue = &pFrom.GetValueRefN(i);
+                rad_state value_prop;
+
+                double logposterior_curr = logPosterior(lTime, *pValue);
+                value_prop.theta = pValue->theta + cholCovRW*Rcpp::as<arma::vec>(Rcpp::rnorm(3));
+
+                double logposterior_prop = logPosterior(lTime, value_prop);
+                double MH_ratio = exp(logposterior_prop - logposterior_curr);
+
+                if (MH_ratio>R::runif(0,1)){
+                    *pValue = value_prop;
+                    logposterior_curr = logposterior_prop;
+                    nAccepted += 1;
+                }
+            }
+        }
+        return TRUE;
     }
 }
