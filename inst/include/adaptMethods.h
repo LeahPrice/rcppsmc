@@ -28,13 +28,14 @@
 #define __SMC_ADAPTMETHODS_H 1.0
 
 #include <population.h>
+#include "smc-exception.h"
 
 
 namespace smc {
 
     /// A base class which contains the algorithm parameters and virtual functions to adapt them.
     template <class Space, class Params> class adaptMethods {
- 
+
     public:
 
         /// Free the workspace allocated for the algorithm parameters.
@@ -49,6 +50,10 @@ namespace smc {
 
         /// Holder function for updates to be done at the end of each iteration.
         virtual void updateEnd(Params &, const population<Space> & pop) {}
+
+        /// Virtual method to clone an adaptMethod class.
+        virtual adaptMethods* clone() const{throw SMC_EXCEPTION(SMCX_MISSING_ADAPT_CLONE, "A copy of a class derived from adaptMethods is being made but the clone function is missing");}
+
     };
 }
 

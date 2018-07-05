@@ -82,6 +82,9 @@ namespace smc {
         virtual bool DoMCMC(long lTime, population<Space> & pFrom, long N, int nRepeats, int & nAccepted, Params &);
         ///Select an appropriate move at time lTime and apply it to pFrom
         virtual void DoMove(long lTime, population<Space> & pFrom,long N, Params &);
+
+        /// Virtual method to clone an adaptMethod class.
+        virtual moveset* clone() const {throw SMC_EXCEPTION(SMCX_MISSING_MOVESET_CLONE, "A copy of a class derived from moveset is being made but the clone function is missing");}
     };
 
 

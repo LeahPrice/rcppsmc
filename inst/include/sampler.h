@@ -329,7 +329,7 @@ namespace smc {
         } else {
             // this can only happen if SetMoveSet was called,
             // i.e., pMoves points to an external object which should not be deleted with sampler
-            pMoves = sFrom.pMoves;
+            pMoves = sFrom.pMoves->clone();
             movesetBelong = 0;
         }
         // /// Moveset object
@@ -348,7 +348,7 @@ namespace smc {
         } else {
             // this can only happen if SetAdaptMethods was called,
             // i.e., pAdapt points to an external object which should not be deleted with sampler
-            pAdapt = sFrom.pAdapt;
+            pAdapt = sFrom.pAdapt->clone();
             adaptBelong = 0;
         }
         // /// An object for adapting additional algorithm parameters

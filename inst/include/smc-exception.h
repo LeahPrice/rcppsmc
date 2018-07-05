@@ -3,7 +3,7 @@
 // exception.h: Rcpp integration of SMC library -- handling exceptions
 //
 // Copyright (C) 2008 - 2009  Adam Johansen
-// 
+//
 // This file is part of RcppSMC.
 //
 // RcppSMC is free software: you can redistribute it and/or modify it
@@ -38,6 +38,10 @@
 #define SMCX_MISSING_HISTORY 0x0010
 ///Exception thrown if an attempt is made to instantiate a class of which a single instance is permitted more than once.
 #define SMCX_MULTIPLE_INSTANTIATION 0x1000
+///Exception thrown if an attempt is made to copy a sampler when no clone function is specified in the derived adaptMethods class.
+#define SMCX_MISSING_ADAPT_CLONE 0x0030
+///Exception thrown if an attempt is made to copy a sampler when no clone function is specified in the derived moveset class.
+#define SMCX_MISSING_MOVESET_CLONE 0x0040
 
 namespace smc {
   ///SMC Exception class
@@ -49,7 +53,7 @@ namespace smc {
     char const * szFile; //!< The source file from which the code generating the exception was generated.
     long lLine;   //!< The line of that source file which generates the exception.
     long lCode;   //!< A numerical code indicating the nature of the exception generated.
-    char const * szMessage; //!< A human-readable explanation of the cause of the exception.   
+    char const * szMessage; //!< A human-readable explanation of the cause of the exception.
 
     //! Generate an SMCTC Exception class with the specified initialisation.
 
@@ -62,9 +66,9 @@ namespace smc {
     //! \param szM An textual explanation of the problem.
     exception(char const * szN, long lL, long lC, char const * szM)
     {
-      szFile = szN; 
-      lLine = lL; 
-      lCode = lC; 
+      szFile = szN;
+      lLine = lL;
+      lCode = lC;
       szMessage = szM;
     }
   };
